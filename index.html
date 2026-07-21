@@ -1,1164 +1,841 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💰 Fondo de Emergencia - Especialidad Contabilidad</title>
-    <style>
-        :root {
-            --azul-pastel: #B8D4E3;
-            --verde-menta: #B5E8C3;
-            --amarillo-pastel: #FFF3C4;
-            --blanco: #FFFFFF;
-            --gris-claro: #F5F5F5;
-            --texto: #2D3748;
-            --texto-claro: #4A5568;
-            --exito: #48BB78;
-            --error: #FC8181;
-            --acento: #68D391;
-            --oro: #F6E05E;
-            --sombra: 0 10px 25px rgba(0,0,0,0.08);
-            --sombra-hover: 0 15px 35px rgba(0,0,0,0.12);
-            --borde-redondeado: 20px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #E8F4F8 0%, #F0F9F0 50%, #FFF9E6 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            overflow-x: hidden;
-        }
-
-        .app-container {
-            width: 100%;
-            max-width: 600px;
-            background: rgba(255,255,255,0.85);
-            backdrop-filter: blur(20px);
-            border-radius: 30px;
-            box-shadow: var(--sombra);
-            padding: 30px 25px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s ease;
-        }
-
-        /* Animaciones de fondo */
-        .bg-decoration {
-            position: fixed;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .floating-coin {
-            position: fixed;
-            font-size: 2rem;
-            animation: floatCoin 6s ease-in-out infinite;
-            opacity: 0.15;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        @keyframes floatCoin {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            25% { transform: translateY(-30px) rotate(15deg); }
-            50% { transform: translateY(-15px) rotate(-10deg); }
-            75% { transform: translateY(-40px) rotate(5deg); }
-        }
-
-        @keyframes floatBill {
-            0%, 100% { transform: translateY(0) translateX(0) rotate(0deg); }
-            25% { transform: translateY(-20px) translateX(15px) rotate(5deg); }
-            50% { transform: translateY(-10px) translateX(-10px) rotate(-3deg); }
-            75% { transform: translateY(-30px) translateX(20px) rotate(8deg); }
-        }
-
-        @keyframes fallCoin {
-            0% { transform: translateY(-100vh) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.3; }
-            90% { opacity: 0.3; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes bounceIn {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.05); }
-            70% { transform: scale(0.9); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        @keyframes sparkle {
-            0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
-            50% { opacity: 1; transform: scale(1) rotate(180deg); }
-        }
-
-        @keyframes confetti-fall {
-            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-8px); }
-            40% { transform: translateX(8px); }
-            60% { transform: translateX(-5px); }
-            80% { transform: translateX(5px); }
-        }
-
-        @keyframes coinFill {
-            0% { height: 0%; }
-            100% { height: 100%; }
-        }
-
-        /* Logo */
-        .logo-container {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        .logo-img {
-            height: 60px;
-            width: auto;
-            object-fit: contain;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-            transition: transform 0.3s ease;
-        }
-
-        .logo-img:hover {
-            transform: scale(1.05);
-        }
-
-        .logo-small {
-            height: 40px;
-        }
-
-        /* Tarjetas */
-        .card {
-            background: var(--blanco);
-            border-radius: var(--borde-redondeado);
-            padding: 25px 20px;
-            margin: 15px 0;
-            box-shadow: var(--sombra);
-            transition: all 0.3s ease;
-            animation: slideUp 0.5s ease-out;
-        }
-
-        .card:hover {
-            box-shadow: var(--sombra-hover);
-            transform: translateY(-2px);
-        }
-
-        /* Botones */
-        .btn {
-            display: inline-block;
-            padding: 16px 32px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            text-decoration: none;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #68D391, #48BB78);
-            color: white;
-            box-shadow: 0 6px 20px rgba(72,187,120,0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(72,187,120,0.4);
-        }
-
-        .btn-primary:active {
-            transform: translateY(-1px) scale(0.97);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #B8D4E3, #90CDF4);
-            color: var(--texto);
-            box-shadow: 0 6px 20px rgba(144,205,244,0.3);
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(144,205,244,0.4);
-        }
-
-        .btn-large {
-            padding: 20px 40px;
-            font-size: 1.3rem;
-            width: 100%;
-            text-align: center;
-        }
-
-        .btn-shine {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-shine::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
-            transform: rotate(45deg);
-            animation: shine 3s infinite;
-        }
-
-        @keyframes shine {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-
-        /* Barra de progreso */
-        .progress-container {
-            background: #E2E8F0;
-            border-radius: 50px;
-            height: 12px;
-            margin: 15px 0;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .progress-bar {
-            background: linear-gradient(90deg, #68D391, #48BB78, #38A169);
-            height: 100%;
-            border-radius: 50px;
-            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-        }
-
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 30px;
-            height: 100%;
-            background: rgba(255,255,255,0.3);
-            border-radius: 50px;
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            color: var(--texto-claro);
-            font-weight: 600;
-        }
-
-        /* Opciones de pregunta */
-        .option-btn {
-            display: block;
-            width: 100%;
-            padding: 16px 20px;
-            margin: 10px 0;
-            background: var(--gris-claro);
-            border: 3px solid transparent;
-            border-radius: 16px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: left;
-            font-weight: 500;
-            color: var(--texto);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .option-btn:hover:not(.disabled) {
-            background: white;
-            border-color: var(--azul-pastel);
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-
-        .option-btn.correct {
-            background: #C6F6D5;
-            border-color: var(--exito);
-            animation: pulse 0.5s ease;
-            color: #22543D;
-        }
-
-        .option-btn.incorrect {
-            background: #FED7D7;
-            border-color: var(--error);
-            animation: shake 0.5s ease;
-            color: #742A2A;
-        }
-
-        .option-btn.disabled {
-            opacity: 0.8;
-            cursor: not-allowed;
-        }
-
-        .option-letter {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            background: white;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 30px;
-            font-weight: 700;
-            margin-right: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        /* Personaje */
-        .character-container {
-            text-align: center;
-            margin: 20px 0;
-            position: relative;
-        }
-
-        .character {
-            font-size: 5rem;
-            display: inline-block;
-            transition: all 0.3s ease;
-            animation: pulse 2s infinite;
-        }
-
-        .character.happy {
-            animation: bounceIn 0.6s ease;
-            filter: brightness(1.2);
-        }
-
-        .character.sad {
-            animation: shake 0.5s ease;
-            filter: brightness(0.8);
-        }
-
-        .character-message {
-            background: white;
-            border-radius: 20px;
-            padding: 12px 20px;
-            margin-top: 10px;
-            display: inline-block;
-            box-shadow: var(--sombra);
-            font-weight: 600;
-            color: var(--texto);
-            position: relative;
-        }
-
-        .character-message::before {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-bottom: 10px solid white;
-        }
-
-        /* Estrellas y efectos */
-        .stars-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 999;
-        }
-
-        .star {
-            position: absolute;
-            animation: sparkle 0.8s ease-out forwards;
-            font-size: 1.5rem;
-        }
-
-        .confetti-piece {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            border-radius: 3px;
-            animation: confetti-fall 3s ease-out forwards;
-            pointer-events: none;
-            z-index: 998;
-        }
-
-        /* Pantallas */
-        .screen {
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .screen.active {
-            display: block;
-        }
-
-        /* Score */
-        .score-display {
-            text-align: center;
-            font-size: 3rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, #68D391, #48BB78);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .stars-display {
-            text-align: center;
-            font-size: 3rem;
-            margin: 20px 0;
-        }
-
-        .star-icon {
-            display: inline-block;
-            animation: bounceIn 0.5s ease forwards;
-            margin: 0 5px;
-        }
-
-        .star-icon:nth-child(2) { animation-delay: 0.2s; }
-        .star-icon:nth-child(3) { animation-delay: 0.4s; }
-        .star-icon:nth-child(4) { animation-delay: 0.6s; }
-        .star-icon:nth-child(5) { animation-delay: 0.8s; }
-
-        /* Especialidades grid */
-        .especialidades-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 12px;
-            margin: 20px 0;
-        }
-
-        .especialidad-item {
-            background: white;
-            border-radius: 15px;
-            padding: 15px 10px;
-            text-align: center;
-            box-shadow: var(--sombra);
-            transition: all 0.3s ease;
-            cursor: default;
-        }
-
-        .especialidad-item:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--sombra-hover);
-        }
-
-        .especialidad-item .emoji {
-            font-size: 2rem;
-            display: block;
-        }
-
-        .especialidad-item .name {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--texto-claro);
-            margin-top: 5px;
-        }
-
-        .especialidad-item.destacada {
-            border: 3px solid var(--exito);
-            background: #F0FFF4;
-        }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .app-container {
-                padding: 20px 15px;
-                border-radius: 25px;
-            }
-            .btn {
-                padding: 14px 24px;
-                font-size: 1rem;
-            }
-            .btn-large {
-                padding: 16px 30px;
-                font-size: 1.1rem;
-            }
-            .character {
-                font-size: 4rem;
-            }
-            .option-btn {
-                padding: 14px 16px;
-                font-size: 0.9rem;
-            }
-            .especialidades-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-            }
-            .logo-img {
-                height: 45px;
-            }
-            .logo-small {
-                height: 30px;
-            }
-        }
-
-        @media (min-width: 768px) {
-            .app-container {
-                padding: 40px 35px;
-            }
-            .especialidades-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafío Financiero: Fondo de Emergencia | Especialidad de Contabilidad</title>
+    <!-- Google Fonts & Canvas Confetti / FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --azul-pastel: #A2D2FF;
+            --azul-oscuro: #2B4C7E;
+            --verde-menta: #B8E9C0;
+            --verde-exito: #4E9F3D;
+            --rojo-alerta: #FF8B8B;
+            --amarillo-pastel: #FEF9D7;
+            --blanco: #FFFFFF;
+            --gris-claro: #F8F9FA;
+            --gris-texto: #4A5568;
+            --sombra-suave: 0 10px 25px rgba(0, 0, 0, 0.08);
+            --sombra-boton: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --borde-radio: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #E8F1F5 0%, #F5EFFF 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            color: var(--gris-texto);
+            overflow-x: hidden;
+        }
+
+        /* Canvas de Monedas/Efectos */
+        #effects-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Contenedor Principal App */
+        .app-card {
+            background: var(--blanco);
+            width: 100%;
+            max-width: 580px;
+            min-height: 650px;
+            border-radius: var(--borde-radio);
+            box-shadow: var(--sombra-suave);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            animation: fadeIn 0.5s ease-out;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+
+        /* Estructura del Header */
+        .app-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+
+        .school-logo {
+            max-height: 55px;
+            max-width: 180px;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .school-logo:hover {
+            transform: scale(1.03);
+        }
+
+        /* Placeholder Si No Carga Imagen */
+        .logo-placeholder {
+            background: var(--azul-pastel);
+            color: var(--azul-oscuro);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Barra de Progreso y Puntos */
+        .status-bar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .progress-container {
+            flex: 1;
+            height: 14px;
+            background: #E2E8F0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--azul-pastel), #B8E9C0);
+            border-radius: 10px;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .score-badge {
+            background: var(--amarillo-pastel);
+            border: 2px solid #FFE382;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #B7791F;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: var(--sombra-boton);
+        }
+
+        /* Área de Contenido General */
+        .screen {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            animation: slideIn 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Personaje Animado "Penny" */
+        .character-box {
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .character-svg {
+            width: 90px;
+            height: 90px;
+            filter: drop-shadow(0px 8px 12px rgba(0,0,0,0.1));
+            transition: transform 0.3s ease;
+        }
+
+        .character-svg.bounce {
+            animation: bounce 0.6s infinite alternate;
+        }
+
+        .character-speech {
+            background: var(--amarillo-pastel);
+            border: 2px solid #FFE89C;
+            padding: 10px 16px;
+            border-radius: 18px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #744210;
+            position: relative;
+            max-width: 90%;
+            box-shadow: var(--sombra-boton);
+        }
+
+        .character-speech::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 0 8px 8px 8px;
+            border-style: solid;
+            border-color: transparent transparent var(--amarillo-pastel) transparent;
+        }
+
+        /* Preguntas y Opciones */
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--azul-oscuro);
+            margin: 12px 0 16px 0;
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: var(--gris-claro);
+            border: 2px solid #E2E8F0;
+            padding: 12px 18px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--gris-texto);
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: #EDF2F7;
+            transform: translateY(-2px);
+            border-color: var(--azul-pastel);
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        .option-btn.correct {
+            background: var(--verde-menta) !important;
+            border-color: var(--verde-exito) !important;
+            color: #1C4523 !important;
+            animation: pulseCorrect 0.4s ease;
+        }
+
+        .option-btn.incorrect {
+            background: #FFE5E5 !important;
+            border-color: var(--rojo-alerta) !important;
+            color: #9B2C2C !important;
+            animation: shake 0.4s ease;
+        }
+
+        /* Retroalimentación Post-Respuesta */
+        .feedback-box {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 0.88rem;
+            text-align: left;
+            line-height: 1.35;
+            display: none;
+            width: 100%;
+        }
+
+        .feedback-box.correct {
+            background: #E6FFFA;
+            border: 1px solid #B2F5EA;
+            color: #234E52;
+            display: block;
+        }
+
+        .feedback-box.incorrect {
+            background: #FFF5F5;
+            border: 1px solid #FEB2B2;
+            color: #742A2A;
+            display: block;
+        }
+
+        /* Botones de Acción */
+        .main-btn {
+            background: linear-gradient(135deg, var(--azul-pastel) 0%, #70A6FF 100%);
+            color: var(--blanco);
+            border: none;
+            padding: 14px 28px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: var(--sombra-boton);
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .main-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(112, 166, 255, 0.4);
+        }
+
+        .main-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Pantallas Específicas */
+        .welcome-title {
+            font-size: 1.5rem;
+            color: var(--azul-oscuro);
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .welcome-sub {
+            font-size: 0.95rem;
+            color: #718096;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: var(--gris-claro);
+            border-radius: 16px;
+            padding: 15px;
+            text-align: left;
+            font-size: 0.88rem;
+            line-height: 1.4;
+            margin-bottom: 12px;
+            border-left: 5px solid var(--azul-pastel);
+        }
+
+        .specialty-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .specialty-tag {
+            background: var(--amarillo-pastel);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #744210;
+        }
+
+        .credits {
+            font-size: 0.78rem;
+            color: #A0AEC0;
+            margin-top: 12px;
+            font-weight: 600;
+        }
+
+        /* Animaciones CSS Keyframes */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-8px); }
+        }
+
+        @keyframes pulseCorrect {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        /* Responsividad en Teléfonos Pequeños */
+        @media (max-width: 480px) {
+            .app-card {
+                padding: 18px;
+                min-height: 580px;
+            }
+            .question-text {
+                font-size: 1rem;
+            }
+            .option-btn {
+                padding: 10px 14px;
+                font-size: 0.88rem;
+            }
+            .welcome-title {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Elementos decorativos de fondo -->
-    <span class="floating-coin" style="top:10%;left:5%;animation-delay:0s;">🪙</span>
-    <span class="floating-coin" style="top:20%;right:8%;animation-delay:1.5s;">💵</span>
-    <span class="floating-coin" style="top:40%;left:3%;animation-delay:3s;">🪙</span>
-    <span class="floating-coin" style="top:60%;right:5%;animation-delay:4.5s;">💰</span>
-    <span class="floating-coin" style="top:75%;left:7%;animation-delay:2s;">💵</span>
-    <span class="floating-coin" style="top:85%;right:10%;animation-delay:5s;">🪙</span>
+    <!-- Canvas para animación de monedas y estrellas -->
+    <canvas id="effects-canvas"></canvas>
 
-    <!-- Contenedor de estrellas -->
-    <div class="stars-container" id="starsContainer"></div>
+    <div class="app-card">
+        <!-- HEADER COMÚN -->
+        <div class="app-header">
+            <!-- Espacio reservado para Logo del Colegio -->
+            <img id="school-logo-img" class="school-logo" src="logo-colegio.PNG" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
+            <div id="logo-fallback" class="logo-placeholder" style="display:none;">🏫 ESFUERZO Y FUTURO</div>
 
-    <!-- App principal -->
-    <div class="app-container" id="appContainer">
-        
-        <!-- Pantalla de Bienvenida -->
-        <div class="screen active" id="welcomeScreen">
-            <div class="logo-container">
-                <img src="logo.PNG" alt="Logo Colegio" class="logo-img" id="logoWelcome" 
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                <div style="display:none; text-align:center; padding:15px; background:linear-gradient(135deg,#B8D4E3,#68D391); border-radius:15px; color:white; font-weight:700; font-size:1.2rem;">
-                    🏫 COLEGIO
-                </div>
-            </div>
-            
-            <div class="character-container">
-                <div class="character">🐷</div>
-                <div style="margin-top:10px;">
-                    <div style="background:#FFF3C4; border-radius:20px; padding:10px 20px; display:inline-block; font-weight:600;">
-                        ¡Hola! Soy Financito 🐷💛
-                    </div>
-                </div>
-            </div>
+            <div class="status-bar" id="status-bar" style="display: none;">
+                <div class="progress-container">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="score-badge">
+                    💰 <span id="score-text">0</span>
+                </div>
+            </div>
+        </div>
 
-            <h1 style="text-align:center; font-size:2rem; color:var(--texto); margin:20px 0; line-height:1.2;">
-                ¿Qué tanto sabes sobre el<br><span style="color:#48BB78;">Fondo de Emergencia?</span>
-            </h1>
-            
-            <p style="text-align:center; color:var(--texto-claro); font-size:1.05rem; margin-bottom:30px;">
-                Descubre cuánto sabes sobre educación financiera respondiendo este desafío.
-            </p>
+        <!-- 1. PANTALLA DE BIENVENIDA -->
+        <div class="screen active" id="screen-welcome">
+            <div class="character-box">
+                <svg class="character-svg bounce" viewBox="0 0 100 100">
+                    <ellipse cx="50" cy="55" rx="35" ry="28" fill="#FFB7B2" />
+                    <circle cx="20" cy="55" r="4" fill="#FF9AA2" />
+                    <circle cx="80" cy="55" r="8" fill="#FFB7B2" />
+                    <circle cx="83" cy="55" r="3" fill="#E27D60" />
+                    <ellipse cx="35" cy="45" rx="3" ry="5" fill="#2C3E50" />
+                    <ellipse cx="55" cy="45" rx="3" ry="5" fill="#2C3E50" />
+                    <path d="M 42 58 Q 45 62 48 58" stroke="#2C3E50" stroke-width="2" fill="none" />
+                    <rect x="42" y="24" width="12" height="4" rx="2" fill="#D4AF37" />
+                </svg>
+                <div class="character-speech">¡Hola! Soy Penny. ¡Te daré la bienvenida a nuestro desafío financiero! 🐷✨</div>
+            </div>
 
-            <button class="btn btn-primary btn-large btn-shine" onclick="startGame()">
-                🚀 Comenzar
-            </button>
-        </div>
+            <h1 class="welcome-title">¿Qué tanto sabes sobre el Fondo de Emergencia?</h1>
+            <p class="welcome-sub">Descubre cuánto sabes sobre educación financiera respondiendo este rápido desafío de 10 preguntas.</p>
 
-        <!-- Pantalla de Quiz -->
-        <div class="screen" id="quizScreen">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
-                <img src="logo.PNG" alt="Logo" class="logo-img logo-small" id="logoQuiz"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
-                <span style="display:none; background:linear-gradient(135deg,#B8D4E3,#68D391); padding:8px 15px; border-radius:20px; color:white; font-weight:700; font-size:0.9rem;">
-                    🏫 COLEGIO
-                </span>
-                <span style="font-weight:700; color:var(--texto-claro);" id="questionCounter">Pregunta 1 de 10</span>
-            </div>
+            <button class="main-btn" onclick="startQuiz()">🚀 Comenzar Desafío</button>
+        </div>
 
-            <div class="progress-container">
-                <div class="progress-bar" id="progressBar" style="width:0%;"></div>
-            </div>
-            <div class="progress-info">
-                <span>📊 Progreso</span>
-                <span id="progressPercent">0%</span>
-            </div>
+        <!-- 2. PANTALLA DE CUESTIONARIO -->
+        <div class="screen" id="screen-quiz">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #A0AEC0; margin-bottom: 4px;" id="question-number">Pregunta 1 de 10</div>
+            
+            <h2 class="question-text" id="question-text">Cargando pregunta...</h2>
 
-            <div style="display:flex; align-items:center; gap:10px; margin:10px 0;">
-                <span style="font-size:1.2rem;">⭐</span>
-                <span style="font-weight:700;" id="scoreDisplay">Puntos: 0</span>
-            </div>
+            <div class="options-grid" id="options-container">
+                <!-- Las opciones se generan dinámicamente -->
+            </div>
 
-            <div class="character-container">
-                <div class="character" id="quizCharacter">🐷</div>
-                <div class="character-message" id="characterMessage">
-                    ¡Elige la respuesta correcta!
-                </div>
-            </div>
+            <div class="feedback-box" id="feedback-box">
+                <!-- Explicación pedagógica -->
+            </div>
 
-            <div class="card" id="questionCard">
-                <h2 style="font-size:1.3rem; margin-bottom:20px; color:var(--texto);" id="questionText"></h2>
-                <div id="optionsContainer"></div>
-            </div>
+            <div class="character-box" style="margin-top: 10px;">
+                <div class="character-speech" id="quiz-character-speech">¡Lee con atención cada opción!</div>
+            </div>
 
-            <button class="btn btn-primary btn-large" id="nextBtn" style="display:none;" onclick="nextQuestion()">
-                Siguiente ➡️
-            </button>
-        </div>
+            <button class="main-btn" id="next-btn" onclick="nextQuestion()" disabled>Siguiente ➔</button>
+        </div>
 
-        <!-- Pantalla de Resultados -->
-        <div class="screen" id="resultScreen">
-            <div class="logo-container">
-                <img src="logo.PNG" alt="Logo Colegio" class="logo-img" id="logoResult"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                <div style="display:none; text-align:center; padding:15px; background:linear-gradient(135deg,#B8D4E3,#68D391); border-radius:15px; color:white; font-weight:700; font-size:1.2rem;">
-                    🏫 COLEGIO
-                </div>
-            </div>
+        <!-- 3. PANTALLA DE RESULTADOS -->
+        <div class="screen" id="screen-results">
+            <div class="character-box">
+                <svg class="character-svg" id="result-character-svg" viewBox="0 0 100 100">
+                    <ellipse cx="50" cy="55" rx="35" ry="28" fill="#FFB7B2" />
+                    <circle cx="35" cy="45" r="4" fill="#2C3E50" />
+                    <circle cx="55" cy="45" r="4" fill="#2C3E50" />
+                    <path d="M 40 60 Q 45 70 50 60" stroke="#2C3E50" stroke-width="3" fill="none" />
+                </svg>
+                <div class="character-speech" id="result-character-speech">¡Gran trabajo completando la trivia!</div>
+            </div>
 
-            <div class="character-container">
-                <div class="character happy" id="resultCharacter">🐷</div>
-                <div class="character-message" id="resultMessage"></div>
-            </div>
+            <h2 class="welcome-title" id="results-score-title">🎯 Obtuviste 0 de 10</h2>
+            <div class="info-card" id="results-feedback-card" style="text-align: center; font-weight: 600;">
+                Cargando retroalimentación...
+            </div>
 
-            <h2 style="text-align:center; color:var(--texto); margin:15px 0;">🎯 Resultados</h2>
-            
-            <div class="score-display" id="finalScore"></div>
-            <p style="text-align:center; color:var(--texto-claro); font-size:1.1rem;" id="scoreText"></p>
+            <button class="main-btn" onclick="goToFinalScreen()">Ver Mensaje Final 📜</button>
+        </div>
 
-            <div class="stars-display" id="starsDisplay"></div>
+        <!-- 4. PANTALLA FINAL INSTITUCIONAL -->
+        <div class="screen" id="screen-final">
+            <div class="info-card">
+                💡 <b>La Contabilidad en tu Vida Diario:</b><br>
+                La contabilidad no solo se utiliza en las empresas. También nos ayuda a organizar nuestros ingresos, controlar nuestros gastos, ahorrar y prepararnos para enfrentar imprevistos mediante herramientas como el fondo de emergencia.
+            </div>
 
-            <div class="progress-container" style="margin:20px 0;">
-                <div class="progress-bar" id="resultProgressBar" style="width:0%;"></div>
-            </div>
-            <p style="text-align:center; font-weight:700; color:var(--texto-claro);" id="resultPercent"></p>
+            <div class="info-card" style="border-left-color: var(--verde-menta); background: #F0FFF4;">
+                📊 <b>¡Conoce la especialidad de Contabilidad!</b><br>
+                Si te interesa aprender a administrar el dinero, comprender cómo funcionan las empresas y desarrollar habilidades útiles para tu futuro, ¡te invitamos a formar parte de nuestra especialidad!
+            </div>
 
-            <button class="btn btn-primary btn-large btn-shine" onclick="showFinalScreen()">
-                Ver más ➡️
-            </button>
-        </div>
+            <p style="font-size: 0.82rem; font-weight: 600; color: #4A5568; margin-top: 4px;">Otras especialidades de nuestro colegio:</p>
+            <div class="specialty-list">
+                <span class="specialty-tag">🍳 Gastronomía</span>
+                <span class="specialty-tag">👶 Atención de Párvulos</span>
+                <span class="specialty-tag" style="background: var(--verde-menta);">📊 Contabilidad</span>
+                <span class="specialty-tag">🥫 Elaboración Ind. Alimentos</span>
+                <span class="specialty-tag">⚡ Electrónica</span>
+            </div>
 
-        <!-- Pantalla Final -->
-        <div class="screen" id="finalScreen">
-            <div class="logo-container">
-                <img src="logo.PNG" alt="Logo Colegio" class="logo-img" id="logoFinal"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                <div style="display:none; text-align:center; padding:15px; background:linear-gradient(135deg,#B8D4E3,#68D391); border-radius:15px; color:white; font-weight:700; font-size:1.2rem;">
-                    🏫 COLEGIO
-                </div>
-            </div>
+            <p style="font-size: 0.95rem; font-weight: 700; color: var(--azul-oscuro); margin: 10px 0;">
+                "¡Tu futuro comienza con una buena educación financiera!"
+            </p>
 
-            <div class="card" style="text-align:center;">
-                <div style="font-size:4rem; margin:10px 0;">💰🐷📊</div>
-                <p style="color:var(--texto); line-height:1.7; font-size:1rem;">
-                    La contabilidad no solo se utiliza en las empresas. También nos ayuda a organizar nuestros ingresos, controlar nuestros gastos, ahorrar y prepararnos para enfrentar imprevistos mediante herramientas como el <strong>fondo de emergencia</strong>.
-                </p>
-            </div>
+            <button class="main-btn" onclick="restartQuiz()">🔄 Volver a Jugar</button>
 
-            <div class="card" style="background:linear-gradient(135deg,#F0FFF4,#FFF9E6);">
-                <h3 style="text-align:center; color:var(--texto);">📊 ¡Conoce la especialidad de Contabilidad!</h3>
-                <p style="color:var(--texto-claro); text-align:center; font-size:0.95rem; margin:10px 0;">
-                    Si te interesa aprender a administrar el dinero, comprender cómo funcionan las empresas y desarrollar habilidades útiles para tu vida y tu futuro laboral, te invitamos a conocer la especialidad de Contabilidad de nuestro colegio.
-                </p>
-            </div>
+            <div class="credits">
+                ✨ Desarrollado por <b>Valeska Romero</b> – Estudiante de la especialidad de Contabilidad
+            </div>
+        </div>
 
-            <p style="text-align:center; font-weight:700; color:var(--texto); margin:15px 0;">
-                También puedes conocer las demás especialidades:
-            </p>
+    </div>
 
-            <div class="especialidades-grid">
-                <div class="especialidad-item">
-                    <span class="emoji">🍳</span>
-                    <span class="name">Gastronomía</span>
-                </div>
-                <div class="especialidad-item">
-                    <span class="emoji">👶</span>
-                    <span class="name">Atención de Párvulos</span>
-                </div>
-                <div class="especialidad-item destacada">
-                    <span class="emoji">📊</span>
-                    <span class="name">Contabilidad</span>
-                </div>
-                <div class="especialidad-item">
-                    <span class="emoji">🥫</span>
-                    <span class="name">Elaboración Industrial</span>
-                </div>
-                <div class="especialidad-item">
-                    <span class="emoji">⚡</span>
-                    <span class="name">Electrónica</span>
-                </div>
-            </div>
+    <script>
+        /* BASE DE DATOS DE PREGUNTAS Y OPCIONES */
+        const questions = [
+            {
+                q: "1. ¿Qué es un fondo de emergencia?",
+                options: [
+                    "A) Dinero para comprar regalos.",
+                    "B) Un ahorro destinado a cubrir gastos inesperados.",
+                    "C) Un préstamo bancario.",
+                    "D) Dinero para vacaciones."
+                ],
+                correct: 1,
+                exp: "¡Exacto! Es un colchón financiero para imprevistos como emergencias médicas o reparaciones."
+            },
+            {
+                q: "2. ¿Cuál de estas situaciones corresponde a una emergencia?",
+                options: [
+                    "Hospitalización inesperada.",
+                    "Comprar ropa.",
+                    "Ir al cine.",
+                    "Comprar un celular nuevo."
+                ],
+                correct: 0,
+                exp: "¡Muy bien! Una urgencia médica no puede planificarse y requiere dinero inmediato."
+            },
+            {
+                q: "3. ¿Para qué sirve un fondo de emergencia?",
+                options: [
+                    "Comprar cosas por impulso.",
+                    "Ahorrar para vacaciones.",
+                    "Cubrir gastos inesperados sin endeudarse.",
+                    "Comprar tecnología."
+                ],
+                correct: 2,
+                exp: "¡Excelente! Evita que tengas que pedir préstamos o usar tarjetas con altas tasas de interés."
+            },
+            {
+                q: "4. ¿Cuándo es recomendable ahorrar?",
+                options: [
+                    "Solo cuando sobra dinero.",
+                    "Todos los meses.",
+                    "Una vez al año.",
+                    "Nunca."
+                ],
+                correct: 1,
+                exp: "¡Así se hace! El ahorro debe ser un hábito constante e integrado en tu presupuesto mensual."
+            },
+            {
+                q: "5. Si se rompe el refrigerador de tu casa, ¿qué sería lo más recomendable?",
+                options: [
+                    "Pedir un préstamo.",
+                    "Esperar varios meses.",
+                    "Utilizar el fondo de emergencia.",
+                    "No hacer nada."
+                ],
+                correct: 2,
+                exp: "¡Correcto! Conservar la comida es una necesidad básica imprevista perfecta para usar el fondo."
+            },
+            {
+                q: "6. ¿Cuál de estas opciones NO corresponde a una emergencia?",
+                options: [
+                    "Una operación médica.",
+                    "Una reparación urgente.",
+                    "Comprar el último modelo de celular.",
+                    "Reparar una fuga de agua."
+                ],
+                correct: 2,
+                exp: "¡Exacto! Un lujo o antojo tecnológico es un deseo, no una necesidad urgente."
+            },
+            {
+                q: "7. ¿Qué documento permite conocer cómo se distribuye el sueldo de un trabajador?",
+                options: [
+                    "Factura.",
+                    "Boleta.",
+                    "Planilla de remuneraciones.",
+                    "Balance general."
+                ],
+                correct: 2,
+                exp: "¡Muy bien! En la planilla se detallan los haberes, descuentos y el sueldo final."
+            },
+            {
+                q: "8. ¿Qué representa el sueldo líquido?",
+                options: [
+                    "El sueldo antes de descuentos.",
+                    "El dinero destinado a la AFP.",
+                    "El dinero que finalmente recibe el trabajador.",
+                    "Los impuestos."
+                ],
+                correct: 2,
+                exp: "¡Excelente! Es el monto real depositado en la cuenta del trabajador tras todos los descuentos legales."
+            },
+            {
+                q: "9. ¿Por qué la planilla de remuneraciones puede ayudar a crear un fondo de emergencia?",
+                options: [
+                    "Porque aumenta el sueldo.",
+                    "Porque elimina gastos.",
+                    "Porque permite saber cuánto dinero recibe una persona y cuánto puede ahorrar.",
+                    "Porque evita pagar impuestos."
+                ],
+                correct: 2,
+                exp: "¡Bien pensado! Conocer tus ingresos exactos permite destinar un porcentaje fijo al ahorro."
+            },
+            {
+                q: "10. ¿Cuál de las siguientes especialidades enseña sobre remuneraciones, educación financiera, administración y contabilidad?",
+                options: [
+                    "🍳 Gastronomía",
+                    "👶 Atención de Párvulos",
+                    "📊 Contabilidad",
+                    "⚡ Electrónica"
+                ],
+                correct: 2,
+                exp: "¡Correcto! Contabilidad te entrega todas las herramientas para gestionar finanzas personales y empresariales."
+            }
+        ];
 
-            <div class="card" style="text-align:center; background:linear-gradient(135deg,#FFF3C4,#FFF9E6);">
-                <p style="font-size:1.2rem; font-weight:700; color:var(--texto);">
-                    ✨ "¡Tu futuro comienza con una buena educación financiera!" ✨
-                </p>
-            </div>
+        /* ESTADO DE LA APLICACIÓN */
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
 
-            <button class="btn btn-primary btn-large btn-shine" onclick="restartGame()">
-                🔄 Volver a jugar
-            </button>
+        /* ELEMENTOS DEL DOM */
+        const statusBar = document.getElementById('status-bar');
+        const progressFill = document.getElementById('progress-fill');
+        const scoreText = document.getElementById('score-text');
+        const questionNumber = document.getElementById('question-number');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackBox = document.getElementById('feedback-box');
+        const quizSpeech = document.getElementById('quiz-character-speech');
+        const nextBtn = document.getElementById('next-btn');
 
-            <p style="text-align:center; color:var(--texto-claro); font-size:0.85rem; margin-top:20px;">
-                Créditos: Hecho por Valeska Romero<br>Estudiante de la especialidad de Contabilidad
-            </p>
-        </div>
-    </div>
+        /* NAVEGACIÓN Y CONTROL */
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
 
-    <script>
-        // Datos del quiz
-        const questions = [
-            {
-                question: "1. ¿Qué es un fondo de emergencia?",
-                options: [
-                    "A) Dinero para comprar regalos.",
-                    "B) Un ahorro destinado a cubrir gastos inesperados.",
-                    "C) Un préstamo bancario.",
-                    "D) Dinero para vacaciones."
-                ],
-                correct: 1,
-                explanation: "✅ ¡Correcto! Un fondo de emergencia es un ahorro destinado exclusivamente a cubrir gastos inesperados o urgentes.",
-                wrongExplanation: "❌ La respuesta correcta es la B. Un fondo de emergencia es un ahorro para gastos inesperados, no para compras planificadas o vacaciones."
-            },
-            {
-                question: "2. ¿Cuál de estas situaciones corresponde a una emergencia?",
-                options: [
-                    "A) Hospitalización inesperada.",
-                    "B) Comprar ropa.",
-                    "C) Ir al cine.",
-                    "D) Comprar un celular nuevo."
-                ],
-                correct: 0,
-                explanation: "✅ ¡Exacto! Una hospitalización inesperada es una emergencia real que puede requerir usar el fondo.",
-                wrongExplanation: "❌ La respuesta correcta es la A. Una hospitalización inesperada es una emergencia, las otras son gastos planificados o de entretención."
-            },
-            {
-                question: "3. ¿Para qué sirve un fondo de emergencia?",
-                options: [
-                    "A) Comprar cosas por impulso.",
-                    "B) Ahorrar para vacaciones.",
-                    "C) Cubrir gastos inesperados sin endeudarse.",
-                    "D) Comprar tecnología."
-                ],
-                correct: 2,
-                explanation: "✅ ¡Muy bien! El fondo de emergencia te protege de deudas cuando surgen imprevistos.",
-                wrongExplanation: "❌ La respuesta correcta es la C. Sirve para cubrir gastos inesperados sin tener que pedir préstamos."
-            },
-            {
-                question: "4. ¿Cuándo es recomendable ahorrar?",
-                options: [
-                    "A) Solo cuando sobra dinero.",
-                    "B) Todos los meses.",
-                    "C) Una vez al año.",
-                    "D) Nunca."
-                ],
-                correct: 1,
-                explanation: "✅ ¡Excelente! El hábito de ahorrar todos los meses, aunque sea poco, es clave.",
-                wrongExplanation: "❌ La respuesta correcta es la B. Se recomienda ahorrar todos los meses como un hábito financiero saludable."
-            },
-            {
-                question: "5. Si se rompe el refrigerador de tu casa, ¿qué sería lo más recomendable?",
-                options: [
-                    "A) Pedir un préstamo.",
-                    "B) Esperar varios meses.",
-                    "C) Utilizar el fondo de emergencia.",
-                    "D) No hacer nada."
-                ],
-                correct: 2,
-                explanation: "✅ ¡Correcto! Para eso existe el fondo de emergencia, para reparaciones urgentes del hogar.",
-                wrongExplanation: "❌ La respuesta correcta es la C. Lo ideal es usar el fondo de emergencia para reparaciones urgentes."
-            },
-            {
-                question: "6. ¿Cuál de estas opciones NO corresponde a una emergencia?",
-                options: [
-                    "A) Una operación médica.",
-                    "B) Una reparación urgente.",
-                    "C) Comprar el último modelo de celular.",
-                    "D) Reparar una fuga de agua."
-                ],
-                correct: 2,
-                explanation: "✅ ¡Bien! Comprar un celular nuevo no es una emergencia, es un gasto que se puede planificar.",
-                wrongExplanation: "❌ La respuesta correcta es la C. Comprar un celular no es una emergencia, es un gusto que puedes planificar."
-            },
-            {
-                question: "7. ¿Qué documento permite conocer cómo se distribuye el sueldo de un trabajador?",
-                options: [
-                    "A) Factura.",
-                    "B) Boleta.",
-                    "C) Planilla de remuneraciones.",
-                    "D) Balance general."
-                ],
-                correct: 2,
-                explanation: "✅ ¡Muy bien! La planilla de remuneraciones muestra todos los detalles del sueldo.",
-                wrongExplanation: "❌ La respuesta correcta es la C. La planilla de remuneraciones detalla la distribución del sueldo."
-            },
-            {
-                question: "8. ¿Qué representa el sueldo líquido?",
-                options: [
-                    "A) El sueldo antes de descuentos.",
-                    "B) El dinero destinado a la AFP.",
-                    "C) El dinero que finalmente recibe el trabajador.",
-                    "D) Los impuestos."
-                ],
-                correct: 2,
-                explanation: "✅ ¡Exacto! El sueldo líquido es lo que realmente recibes después de todos los descuentos.",
-                wrongExplanation: "❌ La respuesta correcta es la C. El sueldo líquido es el dinero final que recibe el trabajador."
-            },
-            {
-                question: "9. ¿Por qué la planilla de remuneraciones puede ayudar a crear un fondo de emergencia?",
-                options: [
-                    "A) Porque aumenta el sueldo.",
-                    "B) Porque elimina gastos.",
-                    "C) Porque permite saber cuánto dinero recibe una persona y cuánto puede ahorrar.",
-                    "D) Porque evita pagar impuestos."
-                ],
-                correct: 2,
-                explanation: "✅ ¡Correcto! Conocer tus ingresos te permite planificar cuánto puedes ahorrar.",
-                wrongExplanation: "❌ La respuesta correcta es la C. La planilla te ayuda a conocer tus ingresos reales para planificar el ahorro."
-            },
-            {
-                question: "10. ¿Cuál de las siguientes especialidades enseña sobre remuneraciones, educación financiera, administración y contabilidad?",
-                options: [
-                    "A) 🍳 Gastronomía",
-                    "B) 👶 Atención de Párvulos",
-                    "C) 📊 Contabilidad",
-                    "D) 🥫 Elaboración Industrial de Alimentos",
-                    "E) ⚡ Electrónica"
-                ],
-                correct: 2,
-                explanation: "✅ ¡Obvio! 😄 La especialidad de Contabilidad enseña todo sobre finanzas, remuneraciones y administración.",
-                wrongExplanation: "❌ La respuesta correcta es la C. 📊 Contabilidad es la especialidad que enseña estos temas."
-            }
-        ];
+        function startQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            scoreText.innerText = score;
+            statusBar.style.display = 'flex';
+            showScreen('screen-quiz');
+            loadQuestion();
+        }
 
-        let currentQuestion = 0;
-        let score = 0;
-        let answered = false;
+        function loadQuestion() {
+            answered = false;
+            nextBtn.disabled = true;
+            feedbackBox.className = 'feedback-box';
+            feedbackBox.style.display = 'none';
 
-        // Función para mostrar pantalla
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-            
-            // Scroll suave al inicio
-            document.getElementById('appContainer').scrollIntoView({ behavior: 'smooth' });
-        }
+            const q = questions[currentQuestion];
+            questionNumber.innerText = `Pregunta ${currentQuestion + 1} de ${questions.length}`;
+            questionText.innerText = q.q;
+            
+            // Actualizar Barra de Progreso
+            const progressPercent = ((currentQuestion) / questions.length) * 100;
+            progressFill.style.width = `${progressPercent}%`;
 
-        // Iniciar juego
-        function startGame() {
-            currentQuestion = 0;
-            score = 0;
-            answered = false;
-            showScreen('quizScreen');
-            updateScore();
-            loadQuestion();
-            
-            // Animación de inicio
-            createCoinFall();
-        }
+            // Cargar Opciones
+            optionsContainer.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span>${opt}</span><span class="icon"></span>`;
+                btn.onclick = () => selectOption(idx);
+                optionsContainer.appendChild(btn);
+            });
 
-        // Cargar pregunta
-        function loadQuestion() {
-            answered = false;
-            const q = questions[currentQuestion];
-            
-            document.getElementById('questionText').textContent = q.question;
-            document.getElementById('questionCounter').textContent = `Pregunta ${currentQuestion + 1} de 10`;
-            
-            const progressPercent = (currentQuestion / 10) * 100;
-            document.getElementById('progressBar').style.width = progressPercent + '%';
-            document.getElementById('progressPercent').textContent = Math.round(progressPercent) + '%';
-            
-            const optionsContainer = document.getElementById('optionsContainer');
-            optionsContainer.innerHTML = '';
-            
-            q.options.forEach((option, index) => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + index)}</span>${option.substring(2).trim()}`;
-                btn.onclick = () => selectAnswer(index);
-                optionsContainer.appendChild(btn);
-            });
-            
-            document.getElementById('nextBtn').style.display = 'none';
-            document.getElementById('characterMessage').textContent = '¡Elige la respuesta correcta!';
-            document.getElementById('quizCharacter').className = 'character';
-            
-            // Animación de la tarjeta
-            const card = document.getElementById('questionCard');
-            card.style.animation = 'none';
-            card.offsetHeight;
-            card.style.animation = 'slideUp 0.5s ease-out';
-        }
+            quizSpeech.innerText = "¡Analiza las respuestas cuidadosamente! 🧐";
+        }
 
-        // Seleccionar respuesta
-        function selectAnswer(index) {
-            if (answered) return;
-            answered = true;
-            
-            const q = questions[currentQuestion];
-            const options = document.querySelectorAll('.option-btn');
-            const isCorrect = index === q.correct;
-            
-            // Marcar opciones
-            options.forEach((btn, i) => {
-                btn.classList.add('disabled');
-                if (i === q.correct) btn.classList.add('correct');
-                if (i === index && !isCorrect) btn.classList.add('incorrect');
-            });
-            
-            const character = document.getElementById('quizCharacter');
-            const message = document.getElementById('characterMessage');
-            
-            if (isCorrect) {
-                score++;
-                updateScore();
-                character.className = 'character happy';
-                message.textContent = ['¡Muy bien! 🎉', '¡Excelente! ⭐', '¡Sigue así! 💪', '¡Cada vez sabes más! 📚'][Math.floor(Math.random() * 4)];
-                createStars(5);
-                createCoins(3);
-            } else {
-                character.className = 'character sad';
-                message.textContent = q.wrongExplanation.replace('❌ ', '');
-            }
-            
-            // Mostrar explicación
-            setTimeout(() => {
-                message.textContent = isCorrect ? q.explanation : q.wrongExplanation;
-            }, 1500);
-            
-            document.getElementById('nextBtn').style.display = 'block';
-            document.getElementById('nextBtn').style.animation = 'bounceIn 0.5s ease';
-            
-            // Actualizar barra
-            const progressPercent = ((currentQuestion + 1) / 10) * 100;
-            document.getElementById('progressBar').style.width = progressPercent + '%';
-            document.getElementById('progressPercent').textContent = Math.round(progressPercent) + '%';
-        }
+        function selectOption(index) {
+            if (answered) return;
+            answered = true;
 
-        // Siguiente pregunta
-        function nextQuestion() {
-            currentQuestion++;
-            
-            if (currentQuestion >= 10) {
-                showResults();
-            } else {
-                loadQuestion();
-                document.getElementById('quizScreen').scrollIntoView({ behavior: 'smooth' });
-            }
-        }
+            const q = questions[currentQuestion];
+            const buttons = optionsContainer.querySelectorAll('.option-btn');
+            nextBtn.disabled = false;
 
-        // Actualizar puntuación
-        function updateScore() {
-            document.getElementById('scoreDisplay').textContent = `Puntos: ${score}`;
-            
-            // Efecto de moneda al sumar puntos
-            if (score > 0) {
-                const scoreEl = document.getElementById('scoreDisplay');
-                scoreEl.style.animation = 'none';
-                scoreEl.offsetHeight;
-                scoreEl.style.animation = 'pulse 0.3s ease';
-            }
-        }
+            if (index === q.correct) {
+                // Correcto
+                score++;
+                scoreText.innerText = score;
+                buttons[index].classList.add('correct');
+                buttons[index].querySelector('.icon').innerText = '✔️';
+                
+                quizSpeech.innerText = getPositivePhrase();
+                feedbackBox.className = 'feedback-box correct';
+                feedbackBox.innerHTML = `<b>¡Muy bien!</b> ${q.exp}`;
+                
+                triggerCoinEffect();
+            } else {
+                // Incorrecto
+                buttons[index].classList.add('incorrect');
+                buttons[index].querySelector('.icon').innerText = '❌';
+                buttons[q.correct].classList.add('correct');
+                buttons[q.correct].querySelector('.icon').innerText = '✔️';
 
-        // Mostrar resultados
-        function showResults() {
-            showScreen('resultScreen');
-            
-            const percentage = (score / 10) * 100;
-            let message, stars;
-            
-            if (score === 10) {
-                message = '🏆 ¡Excelente! Dominas los conceptos básicos de educación financiera.';
-                stars = 5;
-            } else if (score >= 7) {
-                message = '👏 ¡Muy bien! Tienes muy buenos conocimientos.';
-                stars = 4;
-            } else if (score >= 4) {
-                message = '📚 Vas por buen camino. Sigue aprendiendo.';
-                stars = 3;
-            } else if (score >= 1) {
-                message = '💡 La educación financiera se aprende poco a poco. ¡Sigue intentándolo!';
-                stars = 2;
-            } else {
-                message = '💡 La educación financiera se aprende poco a poco. ¡Sigue intentándolo!';
-                stars = 1;
-            }
-            
-            document.getElementById('finalScore').textContent = `${score} / 10`;
-            document.getElementById('scoreText').textContent = `🎯 Obtuviste ${score} de 10 respuestas correctas`;
-            document.getElementById('resultMessage').textContent = message;
-            
-            // Estrellas
-            const starsDisplay = document.getElementById('starsDisplay');
-            starsDisplay.innerHTML = '';
-            for (let i = 0; i < 5; i++) {
-                const star = document.createElement('span');
-                star.className = 'star-icon';
-                star.textContent = i < stars ? '⭐' : '☆';
-                star.style.opacity = i < stars ? '1' : '0.3';
-                starsDisplay.appendChild(star);
-            }
-            
-            // Barra de porcentaje
-            setTimeout(() => {
-                document.getElementById('resultProgressBar').style.width = percentage + '%';
-                document.getElementById('resultPercent').textContent = Math.round(percentage) + '%';
-            }, 300);
-            
-            // Confeti si sacó más de 5
-            if (score >= 5) {
-                createConfetti();
-            }
-            
-            document.getElementById('resultCharacter').className = 'character happy';
-        }
+                quizSpeech.innerText = "¡No te preocupes! De los errores se aprende. 💪";
+                feedbackBox.className = 'feedback-box incorrect';
+                feedbackBox.innerHTML = `<b>Respuesta correcta:</b> ${q.options[q.correct]}<br>${q.exp}`;
+            }
 
-        // Pantalla final
-        function showFinalScreen() {
-            showScreen('finalScreen');
-            createConfetti();
-            document.getElementById('finalScreen').scrollIntoView({ behavior: 'smooth' });
-        }
+            feedbackBox.style.display = 'block';
+        }
 
-        // Reiniciar juego
-        function restartGame() {
-            currentQuestion = 0;
-            score = 0;
-            answered = false;
-            document.getElementById('progressBar').style.width = '0%';
-            document.getElementById('progressPercent').textContent = '0%';
-            document.getElementById('scoreDisplay').textContent = 'Puntos: 0';
-            document.getElementById('resultProgressBar').style.width = '0%';
-            showScreen('welcomeScreen');
-            document.getElementById('appContainer').scrollIntoView({ behavior: 'smooth' });
-        }
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
 
-        // Efectos visuales
-        function createStars(count) {
-            const container = document.getElementById('starsContainer');
-            for (let i = 0; i < count; i++) {
-                setTimeout(() => {
-                    const star = document.createElement('span');
-                    star.className = 'star';
-                    star.textContent = '⭐';
-                    star.style.left = Math.random() * 90 + '%';
-                    star.style.top = Math.random() * 60 + '%';
-                    star.style.fontSize = (1 + Math.random() * 2) + 'rem';
-                    container.appendChild(star);
-                    
-                    setTimeout(() => star.remove(), 800);
-                }, i * 100);
-            }
-        }
+        function getPositivePhrase() {
+            const phrases = ["¡Muy bien! 🎉", "¡Excelente! ⭐", "¡Sigue así! 🚀", "¡Cada vez sabes más! 💡", "¡Genial! 💰"];
+            return phrases[Math.floor(Math.random() * phrases.length)];
+        }
 
-        function createCoins(count) {
-            const container = document.getElementById('starsContainer');
-            for (let i = 0; i < count; i++) {
-                setTimeout(() => {
-                    const coin = document.createElement('span');
-                    coin.className = 'star';
-                    coin.textContent = '💰';
-                    coin.style.left = Math.random() * 80 + '%';
-                    coin.style.top = '40%';
-                    coin.style.fontSize = '2rem';
-                    coin.style.animation = 'fallCoin 2s ease-out forwards';
-                    container.appendChild(coin);
-                    
-                    setTimeout(() => coin.remove(), 2000);
-                }, i * 150);
-            }
-        }
+        function showResults() {
+            progressFill.style.width = '100%';
+            statusBar.style.display = 'none';
+            showScreen('screen-results');
 
-        function createCoinFall() {
-            const container = document.getElementById('starsContainer');
-            for (let i = 0; i < 8; i++) {
-                setTimeout(() => {
-                    const coin = document.createElement('span');
-                    coin.style.cssText = `
-                        position: fixed;
-                        font-size: 1.5rem;
-                        left: ${Math.random() * 90}%;
-                        top: -50px;
-                        animation: fallCoin ${2 + Math.random() * 3}s ease-in forwards;
-                        pointer-events: none;
-                        z-index: 0;
-                        opacity: 0.2;
-                    `;
-                    coin.textContent = ['🪙', '💰', '💵'][Math.floor(Math.random() * 3)];
-                    container.appendChild(coin);
-                    
-                    setTimeout(() => coin.remove(), 5000);
-                }, i * 200);
-            }
-        }
+            const title = document.getElementById('results-score-title');
+            const card = document.getElementById('results-feedback-card');
+            const speech = document.getElementById('result-character-speech');
 
-        function createConfetti() {
-            const colors = ['#68D391', '#F6E05E', '#FC8181', '#90CDF4', '#B5E8C3', '#FFF3C4', '#FBB6CE'];
-            const container = document.getElementById('starsContainer');
-            
-            for (let i = 0; i < 50; i++) {
-                setTimeout(() => {
-                    const confetti = document.createElement('div');
-                    confetti.className = 'confetti-piece';
-                    confetti.style.left = Math.random() * 100 + '%';
-                    confetti.style.top = -(Math.random() * 20) + 'px';
-                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                    confetti.style.width = (6 + Math.random() * 10) + 'px';
-                    confetti.style.height = (6 + Math.random() * 10) + 'px';
-                    confetti.style.animationDuration = (2 + Math.random() * 3) + 's';
-                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
-                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '3px';
-                    container.appendChild(confetti);
-                    
-                    setTimeout(() => confetti.remove(), 4000);
-                }, i * 30);
-            }
-        }
+            title.innerText = `🎯 Obtuviste ${score} de 10 respuestas correctas`;
 
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', () => {
-            // Verificar si hay logo, si no, mostrar placeholder
-            const logos = document.querySelectorAll('.logo-img');
-            logos.forEach(logo => {
-                logo.addEventListener('error', function() {
-                    this.style.display = 'none';
-                    const placeholder = this.nextElementSibling;
-                    if (placeholder) {
-                        placeholder.style.display = 'block';
-                    }
-                });
-            });
-            
-            // Animación inicial de monedas
-            setTimeout(createCoinFall, 500);
-        });
-    </script>
+            if (score === 10) {
+                speech.innerText = "¡Puntaje Perfecto! ¡Eres un experto en finanzas! 🏆";
+                card.innerHTML = "🏆 <b>¡Excelente!</b> Dominas los conceptos básicos de educación financiera y gestión del ahorro.";
+                confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+            } else if (score >= 7) {
+                speech.innerText = "¡Excelente resultado! Tienes bases muy sólidas. 👏";
+                card.innerHTML = "👏 <b>¡Muy bien!</b> Tienes muy buenos conocimientos sobre finanzas personales.";
+                confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
+            } else if (score >= 4) {
+                speech.innerText = "¡Buen esfuerzo! Sigue practicando. 📚";
+                card.innerHTML = "📚 <b>Vas por buen camino.</b> Sigue aprendiendo para construir un futuro financiero seguro.";
+            } else {
+                speech.innerText = "¡El aprendizaje es un camino diario! 💡";
+                card.innerHTML = "💡 <b>La educación financiera se aprende poco a poco.</b> ¡Te invitamos a reintentarlo!";
+            }
+        }
+
+        function goToFinalScreen() {
+            showScreen('screen-final');
+        }
+
+        function restartQuiz() {
+            startQuiz();
+        }
+
+        /* EFECTO CANVAS DE MONEDAS CAYENDO */
+        function triggerCoinEffect() {
+            const canvas = document.getElementById('effects-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+            for (let i = 0; i < 15; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: -20,
+                    size: Math.random() * 12 + 10,
+                    speedY: Math.random() * 3 + 2,
+                    speedX: (Math.random() - 0.5) * 2,
+                    rotation: Math.random() * 360
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, index) => {
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#B8860B';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.fillStyle = '#B8860B';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.fillText('$', -4, 4);
+                    ctx.restore();
+
+                    if (p.y > canvas.height) {
+                        particles.splice(index, 1);
+                    }
+                });
+
+                if (particles.length > 0) {
+                    requestAnimationFrame(animate);
+                }
+            }
+            animate();
+        }
+    </script>
 </body>
 </html>
 
