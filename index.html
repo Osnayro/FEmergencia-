@@ -10,16 +10,18 @@
     <style>
         :root {
             --azul-pastel: #A2D2FF;
-            --azul-oscuro: #2B4C7E;
+            --azul-oscuro: #1E3A63; /* Oscurecido para mejor contraste */
             --verde-menta: #B8E9C0;
-            --verde-exito: #4E9F3D;
-            --rojo-alerta: #FF8B8B;
+            --verde-exito: #2E7D32; /* Ajustado para accesibilidad */
+            --rojo-alerta: #D32F2F; /* Ajustado para accesibilidad */
             --amarillo-pastel: #FEF9D7;
             --blanco: #FFFFFF;
             --gris-claro: #F8F9FA;
-            --gris-texto: #4A5568;
+            --gris-texto: #2D3748; /* Oscurecido de #4A5568 a #2D3748 */
+            --texto-secundario: #526075;
+            --texto-etiqueta-amarilla: #4A2B00; /* Alto contraste sobre amarillo */
             --sombra-suave: 0 10px 25px rgba(0, 0, 0, 0.08);
-            --sombra-boton: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --sombra-boton: 0 4px 12px rgba(0, 0, 0, 0.12);
             --borde-radio: 24px;
         }
 
@@ -76,7 +78,7 @@
         }
 
         .splash-content {
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             padding: 35px 25px;
             border-radius: var(--borde-radio);
@@ -99,7 +101,7 @@
 
         .splash-tag {
             background: var(--amarillo-pastel);
-            color: #744210;
+            color: var(--texto-etiqueta-amarilla);
             font-size: 0.85rem;
             font-weight: 700;
             padding: 6px 14px;
@@ -139,7 +141,7 @@
         .loader-fill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #70A6FF, #4E9F3D);
+            background: linear-gradient(90deg, #3B82F6, var(--verde-exito));
             animation: loadProgress 3.2s linear forwards;
         }
 
@@ -219,18 +221,19 @@
         .progress-fill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, var(--azul-pastel), #B8E9C0);
+            background: linear-gradient(90deg, #3B82F6, #10B981);
             transition: width 0.4s ease;
         }
 
         .score-badge {
             background: var(--amarillo-pastel);
-            border: 2px solid #FFE382;
+            border: 2px solid #FCD34D;
             padding: 4px 12px;
             border-radius: 20px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: #B7791F;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--texto-etiqueta-amarilla);
+            transition: transform 0.2s ease;
         }
 
         .screen {
@@ -292,18 +295,18 @@
             transform: translateY(12px) rotate(55deg);
         }
         .rabbit-svg.incorrect .ear-inner {
-            fill: #E2E8F0 !important;
+            fill: #CBD5E1 !important;
             filter: none;
         }
 
         .character-speech {
             background: var(--amarillo-pastel);
-            border: 2px solid #FFE89C;
+            border: 2px solid #FDE68A;
             padding: 8px 14px;
             border-radius: 18px;
             font-size: 0.88rem;
-            font-weight: 600;
-            color: #744210;
+            font-weight: 700;
+            color: var(--texto-etiqueta-amarilla);
             max-width: 90%;
             box-shadow: var(--sombra-boton);
         }
@@ -325,7 +328,7 @@
 
         .option-btn {
             background: var(--gris-claro);
-            border: 2px solid #E2E8F0;
+            border: 2px solid #CBD5E1;
             padding: 10px 15px;
             border-radius: 14px;
             font-size: 0.88rem;
@@ -340,20 +343,22 @@
         }
 
         .option-btn:hover:not(:disabled) {
-            background: #EDF2F7;
-            border-color: var(--azul-pastel);
+            background: #E2E8F0;
+            border-color: #93C5FD;
         }
 
         .option-btn.correct {
-            background: var(--verde-menta) !important;
+            background: #DCFCE7 !important;
             border-color: var(--verde-exito) !important;
-            color: #1C4523 !important;
+            color: #14532D !important;
+            font-weight: 700;
         }
 
         .option-btn.incorrect {
-            background: #FFE5E5 !important;
+            background: #FEE2E2 !important;
             border-color: var(--rojo-alerta) !important;
-            color: #9B2C2C !important;
+            color: #7F1D1D !important;
+            font-weight: 700;
         }
 
         .feedback-box {
@@ -364,24 +369,25 @@
             text-align: left;
             display: none;
             width: 100%;
+            line-height: 1.4;
         }
 
         .feedback-box.correct {
-            background: #E6FFFA;
-            border: 1px solid #B2F5EA;
-            color: #234E52;
+            background: #F0FDF4;
+            border: 1px solid #86EFAC;
+            color: #166534;
             display: block;
         }
 
         .feedback-box.incorrect {
-            background: #FFF5F5;
-            border: 1px solid #FEB2B2;
-            color: #742A2A;
+            background: #FEF2F2;
+            border: 1px solid #FCA5A5;
+            color: #991B1B;
             display: block;
         }
 
         .main-btn {
-            background: linear-gradient(135deg, var(--azul-pastel) 0%, #70A6FF 100%);
+            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
             color: var(--blanco);
             border: none;
             padding: 12px 28px;
@@ -396,8 +402,14 @@
         }
 
         .main-btn:disabled {
-            opacity: 0.5;
+            background: #94A3B8;
+            opacity: 0.6;
             cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .main-btn.pulse-ready {
+            animation: btnPulse 1.2s infinite ease-in-out;
         }
 
         .welcome-title {
@@ -409,7 +421,7 @@
 
         .welcome-sub {
             font-size: 0.88rem;
-            color: #718096;
+            color: var(--texto-secundario);
             margin-bottom: 14px;
         }
 
@@ -419,9 +431,10 @@
             padding: 12px;
             text-align: left;
             font-size: 0.85rem;
-            line-height: 1.4;
+            line-height: 1.45;
             margin-bottom: 8px;
-            border-left: 4px solid var(--azul-pastel);
+            border-left: 4px solid #3B82F6;
+            color: var(--gris-texto);
         }
 
         .specialty-list {
@@ -437,13 +450,14 @@
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 0.78rem;
-            font-weight: 600;
-            color: #744210;
+            font-weight: 700;
+            color: var(--texto-etiqueta-amarilla);
+            border: 1px solid #FDE68A;
         }
 
         .credits {
             font-size: 0.78rem;
-            color: #A0AEC0;
+            color: var(--texto-secundario);
             margin-top: 8px;
             font-weight: 600;
         }
@@ -478,6 +492,12 @@
             50% { transform: translateY(-10px) scale(1.05); }
             100% { transform: translateY(0) scale(1); }
         }
+
+        @keyframes btnPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5); }
+            70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+        }
     </style>
 </head>
 <body>
@@ -485,7 +505,6 @@
     <!-- 0. SPLASH SCREEN -->
     <div id="splash-screen">
         <div class="splash-content">
-            <!-- LOGO ACTUALIZADO A .JPG -->
             <img id="splash-logo-img" class="splash-logo" src="logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('splash-logo-fallback').style.display='block';">
             <div id="splash-logo-fallback" class="logo-placeholder" style="display:none; font-size: 1.1rem; margin-bottom: 12px;">🏫 ESFUERZO Y FUTURO</div>
 
@@ -498,7 +517,7 @@
                 Estudiante de la especialidad de Contabilidad
             </div>
 
-            <div style="font-size: 0.78rem; color: #718096;">Cargando experiencia educativa...</div>
+            <div style="font-size: 0.78rem; color: var(--texto-secundario);">Cargando experiencia educativa...</div>
             <div class="loader-bar">
                 <div class="loader-fill"></div>
             </div>
@@ -514,7 +533,6 @@
     <div class="app-card">
         <!-- HEADER -->
         <div class="app-header">
-            <!-- LOGO ACTUALIZADO A .JPG -->
             <img id="school-logo-img" class="school-logo" src="logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
             <div id="logo-fallback" class="logo-placeholder" style="display:none;">🏫 ESFUERZO Y FUTURO</div>
 
@@ -522,7 +540,7 @@
                 <div class="progress-container">
                     <div class="progress-fill" id="progress-fill"></div>
                 </div>
-                <div class="score-badge">
+                <div class="score-badge" id="score-badge">
                     💰 <span id="score-text">0</span>
                 </div>
             </div>
@@ -533,22 +551,21 @@
             <div class="character-box">
                 <svg class="rabbit-svg" id="welcome-rabbit" viewBox="0 0 100 120">
                     <g class="ear ear-left">
-                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
                         <ellipse class="ear-inner" cx="38" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
                     </g>
                     <g class="ear ear-right">
-                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
                         <ellipse class="ear-inner" cx="62" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
                     </g>
-                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
                     <circle cx="32" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
                     <circle cx="68" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
-                    <circle cx="38" cy="64" r="3.5" fill="#2C3E50"/>
-                    <circle cx="62" cy="64" r="3.5" fill="#2C3E50"/>
+                    <circle cx="38" cy="64" r="3.5" fill="#1E293B"/>
+                    <circle cx="62" cy="64" r="3.5" fill="#1E293B"/>
                     <polygon points="48,70 52,70 50,73" fill="#FF9AA2"/>
-                    <path d="M 47 75 Q 50 78 53 75" stroke="#2C3E50" stroke-width="1.8" fill="none"/>
+                    <path d="M 47 75 Q 50 78 53 75" stroke="#1E293B" stroke-width="1.8" fill="none"/>
                 </svg>
-                <!-- NOMBRE ACTUALIZADO -->
                 <div class="character-speech">¡Hola! Soy Conti Conti. ¡Acompáñame en este juego financiero! 🐰✨</div>
             </div>
 
@@ -560,7 +577,7 @@
 
         <!-- 2. PANTALLA DE CUESTIONARIO -->
         <div class="screen" id="screen-quiz">
-            <div style="font-size: 0.8rem; font-weight: 700; color: #A0AEC0; margin-bottom: 2px;" id="question-number">Pregunta 1 de 10</div>
+            <div style="font-size: 0.82rem; font-weight: 700; color: var(--texto-secundario); margin-bottom: 2px;" id="question-number">Pregunta 1 de 10</div>
             
             <h2 class="question-text" id="question-text">Cargando pregunta...</h2>
 
@@ -571,20 +588,20 @@
             <div class="character-box">
                 <svg class="rabbit-svg" id="quiz-rabbit" viewBox="0 0 100 120">
                     <g class="ear ear-left">
-                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
                         <ellipse class="ear-inner" cx="38" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
                     </g>
                     <g class="ear ear-right">
-                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
                         <ellipse class="ear-inner" cx="62" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
                     </g>
-                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
                     <circle cx="32" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
                     <circle cx="68" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
-                    <circle id="eye-left" cx="38" cy="64" r="3.5" fill="#2C3E50"/>
-                    <circle id="eye-right" cx="62" cy="64" r="3.5" fill="#2C3E50"/>
+                    <circle id="eye-left" cx="38" cy="64" r="3.5" fill="#1E293B"/>
+                    <circle id="eye-right" cx="62" cy="64" r="3.5" fill="#1E293B"/>
                     <polygon points="48,70 52,70 50,73" fill="#FF9AA2"/>
-                    <path id="rabbit-mouth" d="M 47 75 Q 50 78 53 75" stroke="#2C3E50" stroke-width="1.8" fill="none"/>
+                    <path id="rabbit-mouth" d="M 47 75 Q 50 78 53 75" stroke="#1E293B" stroke-width="1.8" fill="none"/>
                 </svg>
 
                 <div class="character-speech" id="quiz-character-speech">¡Lee con atención cada opción! 🧐</div>
@@ -598,20 +615,20 @@
             <div class="character-box">
                 <svg class="rabbit-svg correct" viewBox="0 0 100 120">
                     <g class="ear ear-left">
-                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
                         <ellipse class="ear-inner" cx="38" cy="28" rx="4" ry="18" fill="#FFE066"/>
                     </g>
                     <g class="ear ear-right">
-                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
                         <ellipse class="ear-inner" cx="62" cy="28" rx="4" ry="18" fill="#FFE066"/>
                     </g>
-                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
                     <circle cx="32" cy="72" r="5" fill="#FFD1DC"/>
                     <circle cx="68" cy="72" r="5" fill="#FFD1DC"/>
-                    <circle cx="38" cy="64" r="3.5" fill="#2C3E50"/>
-                    <circle cx="62" cy="64" r="3.5" fill="#2C3E50"/>
+                    <circle cx="38" cy="64" r="3.5" fill="#1E293B"/>
+                    <circle cx="62" cy="64" r="3.5" fill="#1E293B"/>
                     <polygon points="48,70 52,70 50,73" fill="#FF9AA2"/>
-                    <path d="M 45 74 Q 50 82 55 74 Z" fill="#2C3E50"/>
+                    <path d="M 45 74 Q 50 82 55 74 Z" fill="#1E293B"/>
                 </svg>
                 <div class="character-speech" id="result-character-speech">¡Gran trabajo completando el desafío! 🐰🎉</div>
             </div>
@@ -631,17 +648,17 @@
                 La contabilidad no solo se utiliza en las empresas. También nos ayuda a organizar nuestros ingresos, controlar nuestros gastos, ahorrar y prepararnos para enfrentar imprevistos mediante herramientas como el fondo de emergencia.
             </div>
 
-            <div class="info-card" style="border-left-color: var(--verde-menta); background: #F0FFF4;">
+            <div class="info-card" style="border-left-color: #10B981; background: #F0FDF4;">
                 📊 <b>¡Conoce la especialidad de Contabilidad!</b><br>
                 Si te interesa aprender a administrar el dinero, comprender cómo funcionan las empresas y desarrollar habilidades útiles para tu futuro, ¡te invitamos a conocer nuestra especialidad!
             </div>
 
-            <p style="font-size: 0.8rem; font-weight: 600; color: #4A5568; margin-top: 2px;">Especialidades de nuestro colegio:</p>
+            <p style="font-size: 0.82rem; font-weight: 700; color: var(--gris-texto); margin-top: 2px;">Especialidades de nuestro colegio:</p>
             <div class="specialty-list">
                 <span class="specialty-tag">🍳 Gastronomía</span>
                 <span class="specialty-tag">👶 Atención de Párvulos</span>
-                <span class="specialty-tag" style="background: var(--verde-menta);">📊 Contabilidad</span>
-                <span class="specialty-tag">🥫 Elaboración Ind. Alimentos</span>
+                <span class="specialty-tag" style="background: var(--verde-menta); border-color: #86EFAC;">📊 Contabilidad</span>
+                <span class="specialty-tag">罐 Elaboración Ind. Alimentos</span>
                 <span class="specialty-tag">⚡ Electrónica</span>
             </div>
 
@@ -773,7 +790,7 @@
                     "🍳 Gastronomía",
                     "👶 Atención de Párvulos",
                     "📊 Contabilidad",
-                    "🥫 Elaboración Industrial de Alimentos",
+                    "罐 Elaboración Industrial de Alimentos",
                     "⚡ Electrónica"
                 ],
                 correct: 2,
@@ -788,6 +805,7 @@
         const statusBar = document.getElementById('status-bar');
         const progressFill = document.getElementById('progress-fill');
         const scoreText = document.getElementById('score-text');
+        const scoreBadge = document.getElementById('score-badge');
         const questionNumber = document.getElementById('question-number');
         const questionText = document.getElementById('question-text');
         const optionsContainer = document.getElementById('options-container');
@@ -814,6 +832,7 @@
         function loadQuestion() {
             answered = false;
             nextBtn.disabled = true;
+            nextBtn.classList.remove('pulse-ready');
             feedbackBox.className = 'feedback-box';
             feedbackBox.style.display = 'none';
 
@@ -846,6 +865,7 @@
             const q = questions[currentQuestion];
             const buttons = optionsContainer.querySelectorAll('.option-btn');
             nextBtn.disabled = false;
+            nextBtn.classList.add('pulse-ready');
 
             if (index === q.correct) {
                 score++;
@@ -860,6 +880,10 @@
                 feedbackBox.className = 'feedback-box correct';
                 feedbackBox.innerHTML = `<b>¡Muy bien!</b> ${q.exp}`;
                 
+                // Microinteracción en la insignia del puntaje
+                scoreBadge.style.transform = 'scale(1.25)';
+                setTimeout(() => scoreBadge.style.transform = 'scale(1)', 250);
+
                 triggerCoinEffect();
             } else {
                 buttons[index].classList.add('incorrect');
@@ -870,7 +894,6 @@
                 quizRabbit.classList.add('incorrect');
                 rabbitMouth.setAttribute('d', 'M 47 77 Q 50 73 53 77');
 
-                /* NOMBRE ACTUALIZADO EN DIÁLOGOS DE ERROR */
                 quizSpeech.innerText = "¡Oh no! Las orejitas de Conti Conti cayeron. ¡Aprendamos juntos! 💪";
                 feedbackBox.className = 'feedback-box incorrect';
                 feedbackBox.innerHTML = `<b>Respuesta correcta:</b> ${q.options[q.correct]}<br>${q.exp}`;
@@ -889,7 +912,6 @@
         }
 
         function getPositivePhrase() {
-            /* NOMBRE ACTUALIZADO EN DIÁLOGOS POSITIVOS */
             const phrases = [
                 "¡Genial! Las orejas de Conti Conti brillan de emoción 🌟", 
                 "¡Excelente! 🎉", 
@@ -911,7 +933,6 @@
 
             title.innerText = `🎯 Obtuviste ${score} de 10 respuestas correctas`;
 
-            /* NOMBRE ACTUALIZADO EN MENSAGES DE RESULTADO */
             if (score === 10) {
                 speech.innerText = "¡Puntaje Perfecto! Conti Conti está súper orgulloso. 🏆🐰";
                 card.innerHTML = "🏆 <b>¡Excelente!</b> Dominas los conceptos básicos de educación financiera y gestión del ahorro.";
@@ -937,49 +958,86 @@
             startQuiz();
         }
 
+        /* EFECTO DE MONEDAS EMITIDO DESDE EL BADGE DE PUNTAJE */
         function triggerCoinEffect() {
             const canvas = document.getElementById('effects-canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
+            // Obtener la posición del badge de puntaje en la pantalla
+            const badgeRect = scoreBadge.getBoundingClientRect();
+            const originX = badgeRect.left + badgeRect.width / 2;
+            const originY = badgeRect.top + badgeRect.height / 2;
+
             let particles = [];
-            for (let i = 0; i < 15; i++) {
+            const numCoins = 14;
+
+            for (let i = 0; i < numCoins; i++) {
+                const angle = (Math.PI * 2 * i) / numCoins + (Math.random() * 0.4 - 0.2);
+                const speed = Math.random() * 6 + 4;
                 particles.push({
-                    x: Math.random() * canvas.width,
-                    y: -20,
-                    size: Math.random() * 10 + 10,
-                    speedY: Math.random() * 3 + 2,
-                    speedX: (Math.random() - 0.5) * 2
+                    x: originX,
+                    y: originY,
+                    size: Math.random() * 8 + 10,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 3, // Ligero impulso inicial hacia arriba
+                    gravity: 0.35,
+                    alpha: 1,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.2
                 });
             }
 
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach((p, index) => {
-                    p.y += p.speedY;
-                    p.x += p.speedX;
-                    
-                    ctx.save();
-                    ctx.translate(p.x, p.y);
-                    ctx.fillStyle = '#FFD700';
-                    ctx.beginPath();
-                    ctx.arc(0, 0, p.size, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.strokeStyle = '#B8860B';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                    ctx.fillStyle = '#B8860B';
-                    ctx.font = 'bold 12px sans-serif';
-                    ctx.fillText('$', -4, 4);
-                    ctx.restore();
+                let activeParticles = false;
 
-                    if (p.y > canvas.height) {
-                        particles.splice(index, 1);
+                particles.forEach((p) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += p.gravity;
+                    p.rotation += p.rotSpeed;
+
+                    // Desvanecer progresivamente cuando cae
+                    if (p.y > originY + 50) {
+                        p.alpha -= 0.02;
+                    }
+
+                    if (p.alpha > 0) {
+                        activeParticles = true;
+                        ctx.save();
+                        ctx.globalAlpha = Math.max(0, p.alpha);
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate(p.rotation);
+                        
+                        // Sombra de la moneda
+                        ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                        ctx.shadowBlur = 4;
+
+                        // Cuerpo de la moneda
+                        ctx.fillStyle = '#FFD700';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Borde metálico
+                        ctx.strokeStyle = '#B8860B';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+
+                        // Símbolo de dólar
+                        ctx.fillStyle = '#B8860B';
+                        ctx.font = `bold ${p.size * 0.9}px sans-serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('$', 0, 1);
+                        
+                        ctx.restore();
                     }
                 });
 
-                if (particles.length > 0) {
+                if (activeParticles) {
                     requestAnimationFrame(animate);
                 }
             }
