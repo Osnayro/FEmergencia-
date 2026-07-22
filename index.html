@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,6 +8,13 @@
     <!-- Google Fonts & Canvas Confetti -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Configuración PWA App -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#A2D2FF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Conti Conti">
+    <link rel="apple-touch-icon" href="logo-colegio.jpg">
     <style>
         :root {
             --azul-pastel: #A2D2FF;
@@ -1100,6 +1108,15 @@
             }
             animate();
         }
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log('Service Worker cargado con éxito'))
+            .catch(err => console.log('Error en Service Worker:', err));
+        });
+      }
     </script>
 </body>
 </html>
