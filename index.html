@@ -108,7 +108,6 @@
             animation: float 3s infinite ease-in-out;
         }
 
-        /* NUEVO: Logo del conejo con uniforme */
         .conejo-uniforme-logo {
             max-height: 120px;
             max-width: 200px;
@@ -546,7 +545,6 @@
     <!-- 0. SPLASH SCREEN -->
     <div id="splash-screen">
         <div class="splash-content">
-            <!-- NUEVO: Logo del conejo con uniforme en el Splash -->
             <img class="conejo-uniforme-logo" src="conejo-uniforme.PNG" alt="Conti Conti" onerror="this.style.display='none';">
             
             <img id="splash-logo-img" class="splash-logo" src="logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('splash-logo-fallback').style.display='block';">
@@ -618,7 +616,7 @@
             </div>
 
             <h1 class="welcome-title">¿Qué tanto sabes sobre el Fondo de Emergencia?</h1>
-            <p class="welcome-sub">Descubre cuánto sabes sobre educación financiera respondiendo este rápido desafío de 10 preguntas.</p>
+            <p class="welcome-sub">Descubre cuánto sabes sobre educación financiera respondiendo este rápido desafío de 10 preguntas. ¡Cada vez las opciones cambian de orden!</p>
 
             <button class="main-btn" onclick="startQuiz()">🚀 Comenzar Desafío</button>
         </div>
@@ -691,7 +689,6 @@
 
         <!-- 4. PANTALLA FINAL INSTITUCIONAL -->
         <div class="screen" id="screen-final">
-            <!-- NUEVO: Logo del conejo con uniforme en la Pantalla Final -->
             <div style="text-align: center; margin-bottom: 10px;">
                 <img class="conejo-uniforme-logo" src="conejo-uniforme.PNG" alt="Conti Conti" style="max-height: 100px;" onerror="this.style.display='none';">
             </div>
@@ -741,7 +738,7 @@
             document.getElementById('splash-screen').classList.add('hidden');
         }
 
-        /* PREGUNTAS */
+        /* PREGUNTAS (con etiquetas de letra fijas) */
         const questions = [
             {
                 q: "1. ¿Qué es un fondo de emergencia?",
@@ -757,10 +754,10 @@
             {
                 q: "2. ¿Cuál de estas situaciones corresponde a una emergencia?",
                 options: [
-                    "Hospitalización inesperada.",
-                    "Comprar ropa.",
-                    "Ir al cine.",
-                    "Comprar un celular nuevo."
+                    "A) Hospitalización inesperada.",
+                    "B) Comprar ropa.",
+                    "C) Ir al cine.",
+                    "D) Comprar un celular nuevo."
                 ],
                 correct: 0,
                 exp: "¡Muy bien! Una emergencia de salud no se planifica y requiere fondos inmediatos."
@@ -768,10 +765,10 @@
             {
                 q: "3. ¿Para qué sirve un fondo de emergencia?",
                 options: [
-                    "Comprar cosas por impulso.",
-                    "Ahorrar para vacaciones.",
-                    "Cubrir gastos inesperados sin endeudarse.",
-                    "Comprar tecnología."
+                    "A) Comprar cosas por impulso.",
+                    "B) Ahorrar para vacaciones.",
+                    "C) Cubrir gastos inesperados sin endeudarse.",
+                    "D) Comprar tecnología."
                 ],
                 correct: 2,
                 exp: "¡Excelente! Te protege de pedir préstamos con intereses altos."
@@ -779,10 +776,10 @@
             {
                 q: "4. ¿Cuándo es recomendable ahorrar?",
                 options: [
-                    "Solo cuando sobra dinero.",
-                    "Todos los meses.",
-                    "Una vez al año.",
-                    "Nunca."
+                    "A) Solo cuando sobra dinero.",
+                    "B) Todos los meses.",
+                    "C) Una vez al año.",
+                    "D) Nunca."
                 ],
                 correct: 1,
                 exp: "¡Así se hace! El ahorro es un hábito constante que se planifica cada mes."
@@ -790,10 +787,10 @@
             {
                 q: "5. Si se rompe el refrigerador de tu casa, ¿qué sería lo más recomendable?",
                 options: [
-                    "Pedir un préstamo.",
-                    "Esperar varios meses.",
-                    "Utilizar el fondo de emergencia.",
-                    "No hacer nada."
+                    "A) Pedir un préstamo.",
+                    "B) Esperar varios meses.",
+                    "C) Utilizar el fondo de emergencia.",
+                    "D) No hacer nada."
                 ],
                 correct: 2,
                 exp: "¡Correcto! Es una urgencia doméstica para la cual está diseñado este fondo."
@@ -801,10 +798,10 @@
             {
                 q: "6. ¿Cuál de estas opciones NO corresponde a una emergencia?",
                 options: [
-                    "Una operación médica.",
-                    "Una reparación urgente.",
-                    "Comprar el último modelo de celular.",
-                    "Reparar una fuga de agua."
+                    "A) Una operación médica.",
+                    "B) Una reparación urgente.",
+                    "C) Comprar el último modelo de celular.",
+                    "D) Reparar una fuga de agua."
                 ],
                 correct: 2,
                 exp: "¡Exacto! Cambiar de teléfono por gusto es un deseo, no una emergencia."
@@ -812,10 +809,10 @@
             {
                 q: "7. ¿Qué documento permite conocer cómo se distribuye el sueldo de un trabajador?",
                 options: [
-                    "Factura.",
-                    "Boleta.",
-                    "Planilla de remuneraciones.",
-                    "Balance general."
+                    "A) Factura.",
+                    "B) Boleta.",
+                    "C) Planilla de remuneraciones.",
+                    "D) Balance general."
                 ],
                 correct: 2,
                 exp: "¡Muy bien! Ahí se detallan los haberes, descuentos y líquido a pagar."
@@ -823,10 +820,10 @@
             {
                 q: "8. ¿Qué representa el sueldo líquido?",
                 options: [
-                    "El sueldo antes de descuentos.",
-                    "El dinero destinado a la AFP.",
-                    "El dinero que finalmente recibe el trabajador.",
-                    "Los impuestos."
+                    "A) El sueldo antes de descuentos.",
+                    "B) El dinero destinado a la AFP.",
+                    "C) El dinero que finalmente recibe el trabajador.",
+                    "D) Los impuestos."
                 ],
                 correct: 2,
                 exp: "¡Excelente! Es el monto real entregado al trabajador después de los descuentos."
@@ -834,10 +831,10 @@
             {
                 q: "9. ¿Por qué la planilla de remuneraciones puede ayudar a crear un fondo de emergencia?",
                 options: [
-                    "Porque aumenta el sueldo.",
-                    "Porque elimina gastos.",
-                    "Porque permite saber cuánto dinero recibe una persona y cuánto puede ahorrar.",
-                    "Porque evita pagar impuestos."
+                    "A) Porque aumenta el sueldo.",
+                    "B) Porque elimina gastos.",
+                    "C) Porque permite saber cuánto dinero recibe una persona y cuánto puede ahorrar.",
+                    "D) Porque evita pagar impuestos."
                 ],
                 correct: 2,
                 exp: "¡Bien pensado! Saber tus ingresos exactos permite calcular tu capacidad de ahorro."
@@ -845,16 +842,30 @@
             {
                 q: "10. ¿Cuál de las siguientes especialidades enseña sobre remuneraciones, educación financiera, administración y contabilidad?",
                 options: [
-                    "🍳 Gastronomía",
-                    "👶 Atención de Párvulos",
-                    "📊 Contabilidad",
-                    "罐 Elaboración Industrial de Alimentos",
-                    "⚡ Electrónica"
+                    "A) 🍳 Gastronomía",
+                    "B) 👶 Atención de Párvulos",
+                    "C) 📊 Contabilidad",
+                    "D) 罐 Elaboración Industrial de Alimentos",
+                    "E) ⚡ Electrónica"
                 ],
                 correct: 2,
                 exp: "¡Correcto! Contabilidad entrega las herramientas para administrar el dinero y las organizaciones."
             }
         ];
+
+        // 🆕 FUNCIÓN PARA ALEATORIZAR OPCIONES
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // 🆕 VARIABLES GLOBALES PARA CADA PREGUNTA
+        let currentQuestionData = null;  // Datos de la pregunta actual (ya mezclada)
+        let correctAnswerIndex = null;   // Índice correcto DESPUÉS de mezclar
 
         let currentQuestion = 0;
         let score = 0;
@@ -887,6 +898,7 @@
             loadQuestion();
         }
 
+        // 🆕 NUEVA FUNCIÓN loadQuestion CON ALEATORIZACIÓN
         function loadQuestion() {
             answered = false;
             nextBtn.disabled = true;
@@ -904,28 +916,44 @@
             const progressPercent = ((currentQuestion) / questions.length) * 100;
             progressFill.style.width = `${progressPercent}%`;
 
+            // 🆕 CREAR ÍNDICES Y MEZCLAR
+            const indices = q.options.map((_, i) => i);
+            const shuffledIndices = shuffleArray(indices);
+            
+            // Guardar datos de la pregunta actual
+            currentQuestionData = {
+                originalOptions: q.options,
+                shuffledIndices: shuffledIndices,
+                originalCorrect: q.correct,
+                exp: q.exp
+            };
+            
+            // Encontrar el nuevo índice correcto
+            correctAnswerIndex = shuffledIndices.indexOf(q.correct);
+
+            // Renderizar opciones en orden aleatorio
             optionsContainer.innerHTML = '';
-            q.options.forEach((opt, idx) => {
+            shuffledIndices.forEach((originalIdx, displayIdx) => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
-                btn.innerHTML = `<span>${opt}</span><span class="icon"></span>`;
-                btn.onclick = () => selectOption(idx);
+                btn.innerHTML = `<span>${q.options[originalIdx]}</span><span class="icon"></span>`;
+                btn.onclick = () => selectOption(displayIdx);
                 optionsContainer.appendChild(btn);
             });
 
-            quizSpeech.innerText = "¡Analiza las respuestas cuidadosamente! 🧐";
+            quizSpeech.innerText = "¡Las opciones están en orden aleatorio! Analiza bien 🧐";
         }
 
+        // 🆕 selectOption AHORA USA correctAnswerIndex
         function selectOption(index) {
             if (answered) return;
             answered = true;
 
-            const q = questions[currentQuestion];
             const buttons = optionsContainer.querySelectorAll('.option-btn');
             nextBtn.disabled = false;
             nextBtn.classList.add('pulse-ready');
 
-            if (index === q.correct) {
+            if (index === correctAnswerIndex) {
                 score++;
                 scoreText.innerText = score;
                 buttons[index].classList.add('correct');
@@ -936,7 +964,7 @@
                 
                 quizSpeech.innerText = getPositivePhrase();
                 feedbackBox.className = 'feedback-box correct';
-                feedbackBox.innerHTML = `<b>¡Muy bien!</b> ${q.exp}`;
+                feedbackBox.innerHTML = `<b>¡Muy bien!</b> ${currentQuestionData.exp}`;
                 
                 scoreBadge.style.transform = 'scale(1.25)';
                 setTimeout(() => scoreBadge.style.transform = 'scale(1)', 250);
@@ -945,15 +973,17 @@
             } else {
                 buttons[index].classList.add('incorrect');
                 buttons[index].querySelector('.icon').innerText = '❌';
-                buttons[q.correct].classList.add('correct');
-                buttons[q.correct].querySelector('.icon').innerText = '✔️';
+                buttons[correctAnswerIndex].classList.add('correct');
+                buttons[correctAnswerIndex].querySelector('.icon').innerText = '✔️';
 
                 quizRabbit.classList.add('incorrect');
                 rabbitMouth.setAttribute('d', 'M 47 77 Q 50 73 53 77');
 
                 quizSpeech.innerText = "¡Oh no! Las orejitas de Conti Conti cayeron. ¡Aprendamos juntos! 💪";
                 feedbackBox.className = 'feedback-box incorrect';
-                feedbackBox.innerHTML = `<b>Respuesta correcta:</b> ${q.options[q.correct]}<br>${q.exp}`;
+                
+                const correctOptionText = currentQuestionData.originalOptions[currentQuestionData.originalCorrect];
+                feedbackBox.innerHTML = `<b>Respuesta correcta:</b> ${correctOptionText}<br>${currentQuestionData.exp}`;
             }
 
             feedbackBox.style.display = 'block';
