@@ -10,16 +10,17 @@
     <style>
         :root {
             --azul-pastel: #A2D2FF;
-            --azul-oscuro: #1E3A63; /* Oscurecido para mejor contraste */
+            --azul-oscuro: #1E3A63;
             --verde-menta: #B8E9C0;
-            --verde-exito: #2E7D32; /* Ajustado para accesibilidad */
-            --rojo-alerta: #D32F2F; /* Ajustado para accesibilidad */
+            --verde-exito: #2E7D32;
+            --rojo-alerta: #D32F2F;
+            --rojo-llamativo: #E63946; /* Rojo vibrante para resaltar */
             --amarillo-pastel: #FEF9D7;
             --blanco: #FFFFFF;
             --gris-claro: #F8F9FA;
-            --gris-texto: #2D3748; /* Oscurecido de #4A5568 a #2D3748 */
+            --gris-texto: #2D3748;
             --texto-secundario: #526075;
-            --texto-etiqueta-amarilla: #4A2B00; /* Alto contraste sobre amarillo */
+            --texto-etiqueta-amarilla: #4A2B00;
             --sombra-suave: 0 10px 25px rgba(0, 0, 0, 0.08);
             --sombra-boton: 0 4px 12px rgba(0, 0, 0, 0.12);
             --borde-radio: 24px;
@@ -118,6 +119,21 @@
             margin-bottom: 12px;
         }
 
+        /* MEJORA 2: Título destacado en rojo */
+        .highlight-red-title {
+            color: var(--rojo-llamativo);
+            background: linear-gradient(45deg, #D32F2F, #FF5252);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            filter: drop-shadow(0px 2px 4px rgba(211, 47, 47, 0.2));
+            display: block;
+            margin-top: 4px;
+        }
+
         .splash-credits-box {
             background: var(--gris-claro);
             border-left: 4px solid var(--azul-pastel);
@@ -138,11 +154,12 @@
             margin-top: 8px;
         }
 
+        /* MEJORA 1: Animación ajustada a 6 segundos */
         .loader-fill {
             height: 100%;
             width: 0%;
             background: linear-gradient(90deg, #3B82F6, var(--verde-exito));
-            animation: loadProgress 3.2s linear forwards;
+            animation: loadProgress 6s linear forwards;
         }
 
         .skip-splash-btn {
@@ -250,7 +267,6 @@
             display: flex;
         }
 
-        /* ESTILOS Y ANIMACIÓN DE CONTI CONTI */
         .character-box {
             margin: 8px 0;
             display: flex;
@@ -274,30 +290,14 @@
         .ear-left { transform: rotate(-5deg); }
         .ear-right { transform: rotate(5deg); }
 
-        .rabbit-svg.correct .ear-left {
-            transform: translateY(-8px) rotate(-18deg);
-        }
-        .rabbit-svg.correct .ear-right {
-            transform: translateY(-8px) rotate(18deg);
-        }
-        .rabbit-svg.correct .ear-inner {
-            fill: #FFE066 !important;
-            filter: drop-shadow(0px 0px 6px #FFD700);
-        }
-        .rabbit-svg.correct {
-            animation: rabbitBounce 0.5s ease-out;
-        }
+        .rabbit-svg.correct .ear-left { transform: translateY(-8px) rotate(-18deg); }
+        .rabbit-svg.correct .ear-right { transform: translateY(-8px) rotate(18deg); }
+        .rabbit-svg.correct .ear-inner { fill: #FFE066 !important; filter: drop-shadow(0px 0px 6px #FFD700); }
+        .rabbit-svg.correct { animation: rabbitBounce 0.5s ease-out; }
 
-        .rabbit-svg.incorrect .ear-left {
-            transform: translateY(12px) rotate(-55deg);
-        }
-        .rabbit-svg.incorrect .ear-right {
-            transform: translateY(12px) rotate(55deg);
-        }
-        .rabbit-svg.incorrect .ear-inner {
-            fill: #CBD5E1 !important;
-            filter: none;
-        }
+        .rabbit-svg.incorrect .ear-left { transform: translateY(12px) rotate(-55deg); }
+        .rabbit-svg.incorrect .ear-right { transform: translateY(12px) rotate(55deg); }
+        .rabbit-svg.incorrect .ear-inner { fill: #CBD5E1 !important; filter: none; }
 
         .character-speech {
             background: var(--amarillo-pastel);
@@ -437,6 +437,27 @@
             color: var(--gris-texto);
         }
 
+        /* MEJORA 3: Estilo especial para el mensaje de reconocimiento a las profesoras */
+        .teacher-tribute-card {
+            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+            border: 2px solid #F59E0B;
+            border-left: 6px solid #D97706;
+            border-radius: 16px;
+            padding: 14px;
+            margin: 10px 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
+            animation: highlightPulse 2s infinite ease-in-out;
+        }
+
+        .teacher-tribute-text {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #78350F;
+            line-height: 1.5;
+            font-style: italic;
+        }
+
         .specialty-list {
             display: flex;
             flex-wrap: wrap;
@@ -498,6 +519,11 @@
             70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
         }
+
+        @keyframes highlightPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.015); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.25); }
+        }
     </style>
 </head>
 <body>
@@ -509,7 +535,12 @@
             <div id="splash-logo-fallback" class="logo-placeholder" style="display:none; font-size: 1.1rem; margin-bottom: 12px;">🏫 ESFUERZO Y FUTURO</div>
 
             <div class="splash-tag">📊 Especialidad de Contabilidad</div>
-            <h1 class="splash-title">Desafío Interactivo:<br>Fondo de Emergencia</h1>
+            
+            <!-- MEJORA 2: Título en Rojo Llamativo -->
+            <h1 class="splash-title">
+                Desafío Interactivo:
+                <span class="highlight-red-title">Fondo de Emergencia</span>
+            </h1>
 
             <div class="splash-credits-box">
                 <b>Proyecto Presentado por:</b><br>
@@ -653,6 +684,13 @@
                 Si te interesa aprender a administrar el dinero, comprender cómo funcionan las empresas y desarrollar habilidades útiles para tu futuro, ¡te invitamos a conocer nuestra especialidad!
             </div>
 
+            <!-- MEJORA 3: Frase especial sobre las profesoras resaltada -->
+            <div class="teacher-tribute-card">
+                <div class="teacher-tribute-text">
+                    🌟 "La excelencia de la especialidad de Contabilidad se refleja en el compromiso, la dedicación y la calidad profesional de sus profesoras, quienes inspiran a sus estudiantes a dar siempre lo mejor de sí." ✨
+                </div>
+            </div>
+
             <p style="font-size: 0.82rem; font-weight: 700; color: var(--gris-texto); margin-top: 2px;">Especialidades de nuestro colegio:</p>
             <div class="specialty-list">
                 <span class="specialty-tag">🍳 Gastronomía</span>
@@ -676,8 +714,8 @@
     </div>
 
     <script>
-        /* AUTO-DISMISS DE SPLASH */
-        let splashTimer = setTimeout(() => { dismissSplash(); }, 3500);
+        /* MEJORA 1: AUTO-DISMISS DE SPLASH AUMENTADO A 6 SEGUNDOS */
+        let splashTimer = setTimeout(() => { dismissSplash(); }, 6000);
         function dismissSplash() {
             clearTimeout(splashTimer);
             document.getElementById('splash-screen').classList.add('hidden');
@@ -880,7 +918,6 @@
                 feedbackBox.className = 'feedback-box correct';
                 feedbackBox.innerHTML = `<b>¡Muy bien!</b> ${q.exp}`;
                 
-                // Microinteracción en la insignia del puntaje
                 scoreBadge.style.transform = 'scale(1.25)';
                 setTimeout(() => scoreBadge.style.transform = 'scale(1)', 250);
 
@@ -950,22 +987,47 @@
             }
         }
 
+        /* MEJORA 3: LLEGAR A PANTALLA FINAL CON CONFETI FESTIVO PARA LAS PROFESORAS */
         function goToFinalScreen() {
             showScreen('screen-final');
+            
+            // Disparo de Confeti Dorado y Multicolores de Homenaje
+            var duration = 2.5 * 1000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+              confetti({
+                particleCount: 4,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: ['#FFD700', '#F59E0B', '#3B82F6', '#10B981']
+              });
+              confetti({
+                particleCount: 4,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: ['#FFD700', '#F59E0B', '#3B82F6', '#10B981']
+              });
+
+              if (Date.now() < end) {
+                requestAnimationFrame(frame);
+              }
+            }());
         }
 
         function restartQuiz() {
             startQuiz();
         }
 
-        /* EFECTO DE MONEDAS EMITIDO DESDE EL BADGE DE PUNTAJE */
+        /* EFECTO DE MONEDAS EN CANVAS */
         function triggerCoinEffect() {
             const canvas = document.getElementById('effects-canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            // Obtener la posición del badge de puntaje en la pantalla
             const badgeRect = scoreBadge.getBoundingClientRect();
             const originX = badgeRect.left + badgeRect.width / 2;
             const originY = badgeRect.top + badgeRect.height / 2;
@@ -981,7 +1043,7 @@
                     y: originY,
                     size: Math.random() * 8 + 10,
                     vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed - 3, // Ligero impulso inicial hacia arriba
+                    vy: Math.sin(angle) * speed - 3,
                     gravity: 0.35,
                     alpha: 1,
                     rotation: Math.random() * Math.PI * 2,
@@ -999,7 +1061,6 @@
                     p.vy += p.gravity;
                     p.rotation += p.rotSpeed;
 
-                    // Desvanecer progresivamente cuando cae
                     if (p.y > originY + 50) {
                         p.alpha -= 0.02;
                     }
@@ -1011,22 +1072,18 @@
                         ctx.translate(p.x, p.y);
                         ctx.rotate(p.rotation);
                         
-                        // Sombra de la moneda
                         ctx.shadowColor = 'rgba(0,0,0,0.2)';
                         ctx.shadowBlur = 4;
 
-                        // Cuerpo de la moneda
                         ctx.fillStyle = '#FFD700';
                         ctx.beginPath();
                         ctx.arc(0, 0, p.size, 0, Math.PI * 2);
                         ctx.fill();
 
-                        // Borde metálico
                         ctx.strokeStyle = '#B8860B';
                         ctx.lineWidth = 2;
                         ctx.stroke();
 
-                        // Símbolo de dólar
                         ctx.fillStyle = '#B8860B';
                         ctx.font = `bold ${p.size * 0.9}px sans-serif`;
                         ctx.textAlign = 'center';
