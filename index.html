@@ -164,7 +164,7 @@
             height: 100%;
             width: 0%;
             background: linear-gradient(90deg, #3B82F6, var(--verde-exito));
-            animation: loadProgress 6s linear forwards;
+            animation: loadProgress 3.5s linear forwards;
         }
 
         .skip-splash-btn {
@@ -280,53 +280,59 @@
             gap: 6px;
         }
 
-        /* PERSONAJE IMAGEN CON UNIFORME */
+        /* PERSONAJE CON UNIFORME (INICIO Y RESULTADOS) */
         .rabbit-avatar {
             width: 115px;
             height: 115px;
             object-fit: contain;
             filter: drop-shadow(0px 6px 10px rgba(0,0,0,0.12));
-            transition: transform 0.3s ease, filter 0.3s ease;
-        }
-
-        /* PERSONAJE SVG INTERACTIVO (CON OREJAS DINÁMICAS) */
-        .rabbit-svg-box {
-            width: 110px;
-            height: 110px;
-            filter: drop-shadow(0px 6px 10px rgba(0,0,0,0.12));
             transition: transform 0.3s ease;
         }
 
-        .ear-left, .ear-right {
-            transform-origin: 50px 38px;
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        /* PERSONAJE SVG INTERACTIVO (CUESTIONARIO) */
+        .rabbit-svg {
+            width: 105px;
+            height: 105px;
+            filter: drop-shadow(0px 8px 12px rgba(0,0,0,0.1));
+            overflow: visible;
         }
 
-        /* OREJAS ARRIBA (CORRECTO) */
-        .rabbit-svg-box.correct {
-            animation: rabbitJump 0.5s ease-out;
-        }
-        .rabbit-svg-box.correct .ear-left {
-            transform: translateY(-8px) rotate(-12deg);
-        }
-        .rabbit-svg-box.correct .ear-right {
-            transform: translateY(-8px) rotate(12deg);
+        .ear {
+            transform-origin: bottom center;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), fill 0.4s ease;
         }
 
-        /* OREJAS CAÍDAS (INCORRECTO) */
-        .rabbit-svg-box.incorrect {
-            animation: rabbitShake 0.4s ease-in-out;
+        .ear-left { transform: rotate(-5deg); }
+        .ear-right { transform: rotate(5deg); }
+
+        .rabbit-svg.correct .ear-left {
+            transform: translateY(-8px) rotate(-18deg);
         }
-        .rabbit-svg-box.incorrect .ear-left {
-            transform: translateY(10px) rotate(-45deg);
+        .rabbit-svg.correct .ear-right {
+            transform: translateY(-8px) rotate(18deg);
         }
-        .rabbit-svg-box.incorrect .ear-right {
-            transform: translateY(10px) rotate(45deg);
+        .rabbit-svg.correct .ear-inner {
+            fill: #FFE066 !important;
+            filter: drop-shadow(0px 0px 6px #FFD700);
+        }
+        .rabbit-svg.correct {
+            animation: rabbitBounce 0.5s ease-out;
+        }
+
+        .rabbit-svg.incorrect .ear-left {
+            transform: translateY(12px) rotate(-55deg);
+        }
+        .rabbit-svg.incorrect .ear-right {
+            transform: translateY(12px) rotate(55deg);
+        }
+        .rabbit-svg.incorrect .ear-inner {
+            fill: #E2E8F0 !important;
+            filter: none;
         }
 
         .character-speech {
             background: var(--amarillo-pastel);
-            border: 2px solid #FDE68A;
+            border: 2px solid #FFE89C;
             padding: 8px 14px;
             border-radius: 18px;
             font-size: 0.88rem;
@@ -532,16 +538,10 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
-        @keyframes rabbitJump {
+        @keyframes rabbitBounce {
             0% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-12px) scale(1.05); }
+            50% { transform: translateY(-10px) scale(1.05); }
             100% { transform: translateY(0) scale(1); }
-        }
-
-        @keyframes rabbitShake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-6px); }
-            40%, 80% { transform: translateX(6px); }
         }
 
         @keyframes btnPulse {
@@ -606,10 +606,10 @@
             </div>
         </div>
 
-        <!-- 1. PANTALLA DE BIENVENIDA (Usa el personaje con UNIFORME) -->
+        <!-- 1. PANTALLA DE BIENVENIDA (Usa la imagen del personaje con UNIFORME) -->
         <div class="screen active" id="screen-welcome">
             <div class="character-box">
-                <img class="rabbit-avatar" src="./conejo-uniforme.PNG" alt="Conti Conti con Uniforme">
+                <img class="rabbit-avatar" src="./conejo-uniforme.PNG" alt="Conti Conti con Uniforme" onerror="this.style.display='none';">
                 <div class="character-speech">¡Hola! Soy Conti Conti. ¡Acompáñame en este juego financiero! 🐰✨</div>
             </div>
 
@@ -619,7 +619,7 @@
             <button class="main-btn" onclick="startQuiz()">🚀 Comenzar Desafío</button>
         </div>
 
-        <!-- 2. PANTALLA DE CUESTIONARIO (CONEJO SVG INTERACTIVO CON OREJAS DINÁMICAS) -->
+        <!-- 2. PANTALLA DE CUESTIONARIO (Usa el CONEJO SVG INTERACTIVO) -->
         <div class="screen" id="screen-quiz">
             <div style="font-size: 0.82rem; font-weight: 700; color: var(--texto-secundario); margin-bottom: 2px;" id="question-number">Pregunta 1 de 10</div>
             
@@ -630,46 +630,34 @@
             <div class="feedback-box" id="feedback-box"></div>
 
             <div class="character-box">
-                <div class="rabbit-svg-box" id="quiz-rabbit-svg">
-                    <svg viewBox="0 0 100 100" width="100%" height="100%">
-                        <!-- Orejas Animadas -->
-                        <g class="ear-left">
-                            <ellipse cx="38" cy="22" rx="7" ry="20" fill="#FFFFFF" stroke="#1E3A63" stroke-width="2.5"/>
-                            <ellipse cx="38" cy="22" rx="4" ry="14" fill="#FFC0CB"/>
-                        </g>
-                        <g class="ear-right">
-                            <ellipse cx="62" cy="22" rx="7" ry="20" fill="#FFFFFF" stroke="#1E3A63" stroke-width="2.5"/>
-                            <ellipse cx="62" cy="22" rx="4" ry="14" fill="#FFC0CB"/>
-                        </g>
-                        <!-- Cabeza -->
-                        <circle cx="50" cy="55" r="26" fill="#FFFFFF" stroke="#1E3A63" stroke-width="2.5"/>
-                        <!-- Ojos -->
-                        <circle cx="41" cy="50" r="3" fill="#1E3A63"/>
-                        <circle cx="59" cy="50" r="3" fill="#1E3A63"/>
-                        <circle cx="42" cy="49" r="1" fill="#FFFFFF"/>
-                        <circle cx="60" cy="49" r="1" fill="#FFFFFF"/>
-                        <!-- Nariz y Boca -->
-                        <polygon points="50,56 47,53 53,53" fill="#FF8A8A"/>
-                        <path d="M 47 59 Q 50 62 53 59" fill="none" stroke="#1E3A63" stroke-width="2" stroke-linecap="round"/>
-                        <!-- Mejillas -->
-                        <circle cx="36" cy="56" r="3.5" fill="#FFD1DC" opacity="0.8"/>
-                        <circle cx="64" cy="56" r="3.5" fill="#FFD1DC" opacity="0.8"/>
-                        <!-- Lentes / Anteojos Inteligentes -->
-                        <circle cx="41" cy="50" r="7" fill="none" stroke="#2563EB" stroke-width="2"/>
-                        <circle cx="59" cy="50" r="7" fill="none" stroke="#2563EB" stroke-width="2"/>
-                        <line x1="48" y1="50" x2="52" y2="50" stroke="#2563EB" stroke-width="2"/>
-                    </svg>
-                </div>
+                <svg class="rabbit-svg" id="quiz-rabbit" viewBox="0 0 100 120">
+                    <g class="ear ear-left">
+                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                        <ellipse class="ear-inner" cx="38" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
+                    </g>
+                    <g class="ear ear-right">
+                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                        <ellipse class="ear-inner" cx="62" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
+                    </g>
+                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                    <circle cx="32" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
+                    <circle cx="68" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
+                    <circle id="eye-left" cx="38" cy="64" r="3.5" fill="#2C3E50"/>
+                    <circle id="eye-right" cx="62" cy="64" r="3.5" fill="#2C3E50"/>
+                    <polygon points="48,70 52,70 50,73" fill="#FF9AA2"/>
+                    <path id="rabbit-mouth" d="M 47 75 Q 50 78 53 75" stroke="#2C3E50" stroke-width="1.8" fill="none"/>
+                </svg>
+
                 <div class="character-speech" id="quiz-character-speech">¡Lee con atención cada opción! 🧐</div>
             </div>
 
             <button class="main-btn" id="next-btn" onclick="nextQuestion()" disabled>Siguiente ➔</button>
         </div>
 
-        <!-- 3. PANTALLA DE RESULTADOS (Usa el personaje con UNIFORME) -->
+        <!-- 3. PANTALLA DE RESULTADOS (Usa la imagen del personaje con UNIFORME) -->
         <div class="screen" id="screen-results">
             <div class="character-box">
-                <img class="rabbit-avatar" src="./conejo-uniforme.PNG" alt="Conti Conti con Uniforme">
+                <img class="rabbit-avatar" src="./conejo-uniforme.PNG" alt="Conti Conti con Uniforme" onerror="this.style.display='none';">
                 <div class="character-speech" id="result-character-speech">¡Gran trabajo completando el desafío! 🐰🎉</div>
             </div>
 
@@ -704,7 +692,7 @@
                 <span class="specialty-tag">🍳 Gastronomía</span>
                 <span class="specialty-tag">👶 Atención de Párvulos</span>
                 <span class="specialty-tag" style="background: var(--verde-menta); border-color: #86EFAC;">📊 Contabilidad</span>
-                <span class="specialty-tag">罐 Elaboración Ind. Alimentos</span>
+                <span class="specialty-tag">🥫 Elaboración Ind. Alimentos</span>
                 <span class="specialty-tag">⚡ Electrónica</span>
             </div>
 
@@ -722,7 +710,8 @@
     </div>
 
     <script>
-        let splashTimer = setTimeout(() => { dismissSplash(); }, 6000);
+        /* AUTO-DISMISS DE SPLASH */
+        let splashTimer = setTimeout(() => { dismissSplash(); }, 3500);
         function dismissSplash() {
             clearTimeout(splashTimer);
             document.getElementById('splash-screen').classList.add('hidden');
@@ -857,7 +846,8 @@
         const feedbackBox = document.getElementById('feedback-box');
         const quizSpeech = document.getElementById('quiz-character-speech');
         const nextBtn = document.getElementById('next-btn');
-        const quizRabbitSvg = document.getElementById('quiz-rabbit-svg');
+        const quizRabbit = document.getElementById('quiz-rabbit');
+        const rabbitMouth = document.getElementById('rabbit-mouth');
 
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -880,9 +870,8 @@
             feedbackBox.className = 'feedback-box';
             feedbackBox.style.display = 'none';
 
-            if (quizRabbitSvg) {
-                quizRabbitSvg.classList.remove('correct', 'incorrect');
-            }
+            quizRabbit.classList.remove('correct', 'incorrect');
+            rabbitMouth.setAttribute('d', 'M 47 75 Q 50 78 53 75');
 
             const q = questions[currentQuestion];
             questionNumber.innerText = `Pregunta ${currentQuestion + 1} de ${questions.length}`;
@@ -918,10 +907,8 @@
                 buttons[index].classList.add('correct');
                 buttons[index].querySelector('.icon').innerText = '✔️';
                 
-                if (quizRabbitSvg) {
-                    quizRabbitSvg.classList.remove('incorrect');
-                    quizRabbitSvg.classList.add('correct');
-                }
+                quizRabbit.classList.add('correct');
+                rabbitMouth.setAttribute('d', 'M 45 74 Q 50 82 55 74 Z');
                 
                 quizSpeech.innerText = getPositivePhrase();
                 feedbackBox.className = 'feedback-box correct';
@@ -937,12 +924,10 @@
                 buttons[q.correct].classList.add('correct');
                 buttons[q.correct].querySelector('.icon').innerText = '✔️';
 
-                if (quizRabbitSvg) {
-                    quizRabbitSvg.classList.remove('correct');
-                    quizRabbitSvg.classList.add('incorrect');
-                }
+                quizRabbit.classList.add('incorrect');
+                rabbitMouth.setAttribute('d', 'M 47 77 Q 50 73 53 77');
 
-                quizSpeech.innerText = "¡Oh no! A Conti Conti se le cayeron las orejas 😿 ¡Aprendamos juntos!";
+                quizSpeech.innerText = "¡Oh no! Las orejitas de Conti Conti cayeron. ¡Aprendamos juntos! 💪";
                 feedbackBox.className = 'feedback-box incorrect';
                 feedbackBox.innerHTML = `<b>Respuesta correcta:</b> ${q.options[q.correct]}<br>${q.exp}`;
             }
@@ -961,8 +946,8 @@
 
         function getPositivePhrase() {
             const phrases = [
-                "¡Genial! Conti Conti levanta las orejas de alegría 🌟", 
-                "¡Excelente trabajo! 🎉", 
+                "¡Genial! Las orejas de Conti Conti brillan de emoción 🌟", 
+                "¡Excelente! 🎉", 
                 "¡Respuesta correcta! 🚀", 
                 "¡Cada vez sabes más! 💡", 
                 "¡Muy bien pensado! 💰"
@@ -1030,7 +1015,7 @@
             startQuiz();
         }
 
-        /* EFECTO DE MONEDAS EN CANVAS */
+        /* EFECTO DE MONEDAS DESDE EL MARCADOR */
         function triggerCoinEffect() {
             const canvas = document.getElementById('effects-canvas');
             const ctx = canvas.getContext('2d');
