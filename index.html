@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -22,7 +21,7 @@
             --verde-menta: #B8E9C0;
             --verde-exito: #2E7D32;
             --rojo-alerta: #D32F2F;
-            --rojo-llamativo: #E63946; /* Rojo vibrante para resaltar */
+            --rojo-llamativo: #E63946;
             --amarillo-pastel: #FEF9D7;
             --blanco: #FFFFFF;
             --gris-claro: #F8F9FA;
@@ -127,7 +126,6 @@
             margin-bottom: 12px;
         }
 
-        /* MEJORA 2: Título destacado en rojo */
         .highlight-red-title {
             color: var(--rojo-llamativo);
             background: linear-gradient(45deg, #D32F2F, #FF5252);
@@ -162,7 +160,6 @@
             margin-top: 8px;
         }
 
-        /* MEJORA 1: Animación ajustada a 6 segundos */
         .loader-fill {
             height: 100%;
             width: 0%;
@@ -445,7 +442,6 @@
             color: var(--gris-texto);
         }
 
-        /* MEJORA 3: Estilo especial para el mensaje de reconocimiento a las profesoras */
         .teacher-tribute-card {
             background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
             border: 2px solid #F59E0B;
@@ -544,7 +540,6 @@
 
             <div class="splash-tag">📊 Especialidad de Contabilidad</div>
             
-            <!-- MEJORA 2: Título en Rojo Llamativo -->
             <h1 class="splash-title">
                 Desafío Interactivo:
                 <span class="highlight-red-title">Fondo de Emergencia</span>
@@ -692,7 +687,6 @@
                 Si te interesa aprender a administrar el dinero, comprender cómo funcionan las empresas y desarrollar habilidades útiles para tu futuro, ¡te invitamos a conocer nuestra especialidad!
             </div>
 
-            <!-- MEJORA 3: Frase especial sobre las profesoras resaltada -->
             <div class="teacher-tribute-card">
                 <div class="teacher-tribute-text">
                     🌟 "La excelencia de la especialidad de Contabilidad se refleja en el compromiso, la dedicación y la calidad profesional de sus profesoras, quienes inspiran a sus estudiantes a dar siempre lo mejor de sí." ✨
@@ -722,7 +716,6 @@
     </div>
 
     <script>
-        /* MEJORA 1: AUTO-DISMISS DE SPLASH AUMENTADO A 6 SEGUNDOS */
         let splashTimer = setTimeout(() => { dismissSplash(); }, 6000);
         function dismissSplash() {
             clearTimeout(splashTimer);
@@ -995,13 +988,11 @@
             }
         }
 
-        /* MEJORA 3: LLEGAR A PANTALLA FINAL CON CONFETI FESTIVO PARA LAS PROFESORAS */
         function goToFinalScreen() {
             showScreen('screen-final');
             
-            // Disparo de Confeti Dorado y Multicolores de Homenaje
-            var duration = 2.5 * 1000;
-            var end = Date.now() + duration;
+            const duration = 2.5 * 1000;
+            const end = Date.now() + duration;
 
             (function frame() {
               confetti({
