@@ -108,6 +108,16 @@
             animation: float 3s infinite ease-in-out;
         }
 
+        /* NUEVO: Logo del conejo con uniforme */
+        .conejo-uniforme-logo {
+            max-height: 120px;
+            max-width: 200px;
+            object-fit: contain;
+            margin-bottom: 12px;
+            animation: float 3s infinite ease-in-out;
+            filter: drop-shadow(0px 8px 16px rgba(0, 0, 0, 0.2));
+        }
+
         .splash-tag {
             background: var(--amarillo-pastel);
             color: var(--texto-etiqueta-amarilla);
@@ -536,6 +546,9 @@
     <!-- 0. SPLASH SCREEN -->
     <div id="splash-screen">
         <div class="splash-content">
+            <!-- NUEVO: Logo del conejo con uniforme en el Splash -->
+            <img class="conejo-uniforme-logo" src="conejo-uniforme.PNG" alt="Conti Conti" onerror="this.style.display='none';">
+            
             <img id="splash-logo-img" class="splash-logo" src="logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('splash-logo-fallback').style.display='block';">
             <div id="splash-logo-fallback" class="logo-placeholder" style="display:none; font-size: 1.1rem; margin-bottom: 12px;">🏫 ESFUERZO Y FUTURO</div>
 
@@ -678,6 +691,11 @@
 
         <!-- 4. PANTALLA FINAL INSTITUCIONAL -->
         <div class="screen" id="screen-final">
+            <!-- NUEVO: Logo del conejo con uniforme en la Pantalla Final -->
+            <div style="text-align: center; margin-bottom: 10px;">
+                <img class="conejo-uniforme-logo" src="conejo-uniforme.PNG" alt="Conti Conti" style="max-height: 100px;" onerror="this.style.display='none';">
+            </div>
+
             <div class="info-card">
                 💡 <b>La Contabilidad en tu Vida Diaria:</b><br>
                 La contabilidad no solo se utiliza en las empresas. También nos ayuda a organizar nuestros ingresos, controlar nuestros gastos, ahorrar y prepararnos para enfrentar imprevistos mediante herramientas como el fondo de emergencia.
