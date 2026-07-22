@@ -8,12 +8,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <!-- Configuración PWA App -->
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#A2D2FF">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Conti Conti">
-    <link rel="apple-touch-icon" href="icono-app.PNG">
+    <link rel="apple-touch-icon" href="./icono-app.PNG">
     <style>
         :root {
             --azul-pastel: #A2D2FF;
@@ -280,29 +280,24 @@
             gap: 6px;
         }
 
-        .rabbit-svg {
-            width: 105px;
-            height: 105px;
-            filter: drop-shadow(0px 8px 12px rgba(0,0,0,0.1));
-            overflow: visible;
+        /* ESTILOS DEL PERSONAJE CON UNIFORME */
+        .rabbit-avatar {
+            width: 115px;
+            height: 115px;
+            object-fit: contain;
+            filter: drop-shadow(0px 6px 10px rgba(0,0,0,0.12));
+            transition: transform 0.3s ease, filter 0.3s ease;
         }
 
-        .ear {
-            transform-origin: bottom center;
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), fill 0.4s ease;
+        .rabbit-avatar.correct {
+            animation: rabbitBounce 0.5s ease-out;
+            filter: drop-shadow(0px 8px 15px rgba(46, 125, 50, 0.4));
         }
 
-        .ear-left { transform: rotate(-5deg); }
-        .ear-right { transform: rotate(5deg); }
-
-        .rabbit-svg.correct .ear-left { transform: translateY(-8px) rotate(-18deg); }
-        .rabbit-svg.correct .ear-right { transform: translateY(-8px) rotate(18deg); }
-        .rabbit-svg.correct .ear-inner { fill: #FFE066 !important; filter: drop-shadow(0px 0px 6px #FFD700); }
-        .rabbit-svg.correct { animation: rabbitBounce 0.5s ease-out; }
-
-        .rabbit-svg.incorrect .ear-left { transform: translateY(12px) rotate(-55deg); }
-        .rabbit-svg.incorrect .ear-right { transform: translateY(12px) rotate(55deg); }
-        .rabbit-svg.incorrect .ear-inner { fill: #CBD5E1 !important; filter: none; }
+        .rabbit-avatar.incorrect {
+            transform: translateY(6px) rotate(-6deg);
+            filter: grayscale(0.2) drop-shadow(0px 4px 8px rgba(0,0,0,0.15));
+        }
 
         .character-speech {
             background: var(--amarillo-pastel);
@@ -535,7 +530,7 @@
     <!-- 0. SPLASH SCREEN -->
     <div id="splash-screen">
         <div class="splash-content">
-            <img id="splash-logo-img" class="splash-logo" src="logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('splash-logo-fallback').style.display='block';">
+            <img id="splash-logo-img" class="splash-logo" src="./logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('splash-logo-fallback').style.display='block';">
             <div id="splash-logo-fallback" class="logo-placeholder" style="display:none; font-size: 1.1rem; margin-bottom: 12px;">🏫 ESFUERZO Y FUTURO</div>
 
             <div class="splash-tag">📊 Especialidad de Contabilidad</div>
@@ -567,7 +562,7 @@
     <div class="app-card">
         <!-- HEADER -->
         <div class="app-header">
-            <img id="school-logo-img" class="school-logo" src="logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
+            <img id="school-logo-img" class="school-logo" src="./logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
             <div id="logo-fallback" class="logo-placeholder" style="display:none;">🏫 ESFUERZO Y FUTURO</div>
 
             <div class="status-bar" id="status-bar" style="display: none;">
@@ -583,23 +578,7 @@
         <!-- 1. PANTALLA DE BIENVENIDA -->
         <div class="screen active" id="screen-welcome">
             <div class="character-box">
-                <svg class="rabbit-svg" id="welcome-rabbit" viewBox="0 0 100 120">
-                    <g class="ear ear-left">
-                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                        <ellipse class="ear-inner" cx="38" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
-                    </g>
-                    <g class="ear ear-right">
-                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                        <ellipse class="ear-inner" cx="62" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
-                    </g>
-                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                    <circle cx="32" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
-                    <circle cx="68" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
-                    <circle cx="38" cy="64" r="3.5" fill="#1E293B"/>
-                    <circle cx="62" cy="64" r="3.5" fill="#1E293B"/>
-                    <polygon points="48,70 52,70 50,73" fill="#FF9AA2"/>
-                    <path d="M 47 75 Q 50 78 53 75" stroke="#1E293B" stroke-width="1.8" fill="none"/>
-                </svg>
+                <img class="rabbit-avatar" src="./conejo-uniforme.PNG" alt="Conti Conti con Uniforme">
                 <div class="character-speech">¡Hola! Soy Conti Conti. ¡Acompáñame en este juego financiero! 🐰✨</div>
             </div>
 
@@ -620,24 +599,7 @@
             <div class="feedback-box" id="feedback-box"></div>
 
             <div class="character-box">
-                <svg class="rabbit-svg" id="quiz-rabbit" viewBox="0 0 100 120">
-                    <g class="ear ear-left">
-                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                        <ellipse class="ear-inner" cx="38" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
-                    </g>
-                    <g class="ear ear-right">
-                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                        <ellipse class="ear-inner" cx="62" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
-                    </g>
-                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                    <circle cx="32" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
-                    <circle cx="68" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
-                    <circle id="eye-left" cx="38" cy="64" r="3.5" fill="#1E293B"/>
-                    <circle id="eye-right" cx="62" cy="64" r="3.5" fill="#1E293B"/>
-                    <polygon points="48,70 52,70 50,73" fill="#FF9AA2"/>
-                    <path id="rabbit-mouth" d="M 47 75 Q 50 78 53 75" stroke="#1E293B" stroke-width="1.8" fill="none"/>
-                </svg>
-
+                <img id="quiz-rabbit-img" class="rabbit-avatar" src="./conejo-uniforme.PNG" alt="Conti Conti con Uniforme">
                 <div class="character-speech" id="quiz-character-speech">¡Lee con atención cada opción! 🧐</div>
             </div>
 
@@ -647,23 +609,7 @@
         <!-- 3. PANTALLA DE RESULTADOS -->
         <div class="screen" id="screen-results">
             <div class="character-box">
-                <svg class="rabbit-svg correct" viewBox="0 0 100 120">
-                    <g class="ear ear-left">
-                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                        <ellipse class="ear-inner" cx="38" cy="28" rx="4" ry="18" fill="#FFE066"/>
-                    </g>
-                    <g class="ear ear-right">
-                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                        <ellipse class="ear-inner" cx="62" cy="28" rx="4" ry="18" fill="#FFE066"/>
-                    </g>
-                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                    <circle cx="32" cy="72" r="5" fill="#FFD1DC"/>
-                    <circle cx="68" cy="72" r="5" fill="#FFD1DC"/>
-                    <circle cx="38" cy="64" r="3.5" fill="#1E293B"/>
-                    <circle cx="62" cy="64" r="3.5" fill="#1E293B"/>
-                    <polygon points="48,70 52,70 50,73" fill="#FF9AA2"/>
-                    <path d="M 45 74 Q 50 82 55 74 Z" fill="#1E293B"/>
-                </svg>
+                <img class="rabbit-avatar correct" src="./conejo-uniforme.PNG" alt="Conti Conti con Uniforme">
                 <div class="character-speech" id="result-character-speech">¡Gran trabajo completando el desafío! 🐰🎉</div>
             </div>
 
@@ -851,8 +797,7 @@
         const feedbackBox = document.getElementById('feedback-box');
         const quizSpeech = document.getElementById('quiz-character-speech');
         const nextBtn = document.getElementById('next-btn');
-        const quizRabbit = document.getElementById('quiz-rabbit');
-        const rabbitMouth = document.getElementById('rabbit-mouth');
+        const quizRabbitImg = document.getElementById('quiz-rabbit-img');
 
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -875,8 +820,9 @@
             feedbackBox.className = 'feedback-box';
             feedbackBox.style.display = 'none';
 
-            quizRabbit.classList.remove('correct', 'incorrect');
-            rabbitMouth.setAttribute('d', 'M 47 75 Q 50 78 53 75');
+            if (quizRabbitImg) {
+                quizRabbitImg.classList.remove('correct', 'incorrect');
+            }
 
             const q = questions[currentQuestion];
             questionNumber.innerText = `Pregunta ${currentQuestion + 1} de ${questions.length}`;
@@ -912,8 +858,7 @@
                 buttons[index].classList.add('correct');
                 buttons[index].querySelector('.icon').innerText = '✔️';
                 
-                quizRabbit.classList.add('correct');
-                rabbitMouth.setAttribute('d', 'M 45 74 Q 50 82 55 74 Z');
+                if (quizRabbitImg) quizRabbitImg.classList.add('correct');
                 
                 quizSpeech.innerText = getPositivePhrase();
                 feedbackBox.className = 'feedback-box correct';
@@ -929,10 +874,9 @@
                 buttons[q.correct].classList.add('correct');
                 buttons[q.correct].querySelector('.icon').innerText = '✔️';
 
-                quizRabbit.classList.add('incorrect');
-                rabbitMouth.setAttribute('d', 'M 47 77 Q 50 73 53 77');
+                if (quizRabbitImg) quizRabbitImg.classList.add('incorrect');
 
-                quizSpeech.innerText = "¡Oh no! Las orejitas de Conti Conti cayeron. ¡Aprendamos juntos! 💪";
+                quizSpeech.innerText = "¡Oh no! No te preocupes, ¡aprendamos juntos! 💪";
                 feedbackBox.className = 'feedback-box incorrect';
                 feedbackBox.innerHTML = `<b>Respuesta correcta:</b> ${q.options[q.correct]}<br>${q.exp}`;
             }
@@ -951,8 +895,8 @@
 
         function getPositivePhrase() {
             const phrases = [
-                "¡Genial! Las orejas de Conti Conti brillan de emoción 🌟", 
-                "¡Excelente! 🎉", 
+                "¡Genial! Conti Conti está muy feliz con tu respuesta 🌟", 
+                "¡Excelente trabajo! 🎉", 
                 "¡Respuesta correcta! 🚀", 
                 "¡Cada vez sabes más! 💡", 
                 "¡Muy bien pensado! 💰"
