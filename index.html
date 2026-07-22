@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,12 +9,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <!-- Configuración PWA App -->
-    <link rel="manifest" href="./manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A2D2FF">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Conti Conti">
-    <link rel="apple-touch-icon" href="./icono-app.PNG">
+    <link rel="apple-touch-icon" href="icono-app.PNG">
     <style>
         :root {
             --azul-pastel: #A2D2FF;
@@ -164,7 +165,7 @@
             height: 100%;
             width: 0%;
             background: linear-gradient(90deg, #3B82F6, var(--verde-exito));
-            animation: loadProgress 3.5s linear forwards;
+            animation: loadProgress 6s linear forwards;
         }
 
         .skip-splash-btn {
@@ -280,16 +281,6 @@
             gap: 6px;
         }
 
-        /* PERSONAJE CON UNIFORME (INICIO Y RESULTADOS) */
-        .rabbit-avatar {
-            width: 115px;
-            height: 115px;
-            object-fit: contain;
-            filter: drop-shadow(0px 6px 10px rgba(0,0,0,0.12));
-            transition: transform 0.3s ease;
-        }
-
-        /* PERSONAJE SVG INTERACTIVO (CUESTIONARIO) */
         .rabbit-svg {
             width: 105px;
             height: 105px;
@@ -305,34 +296,18 @@
         .ear-left { transform: rotate(-5deg); }
         .ear-right { transform: rotate(5deg); }
 
-        .rabbit-svg.correct .ear-left {
-            transform: translateY(-8px) rotate(-18deg);
-        }
-        .rabbit-svg.correct .ear-right {
-            transform: translateY(-8px) rotate(18deg);
-        }
-        .rabbit-svg.correct .ear-inner {
-            fill: #FFE066 !important;
-            filter: drop-shadow(0px 0px 6px #FFD700);
-        }
-        .rabbit-svg.correct {
-            animation: rabbitBounce 0.5s ease-out;
-        }
+        .rabbit-svg.correct .ear-left { transform: translateY(-8px) rotate(-18deg); }
+        .rabbit-svg.correct .ear-right { transform: translateY(-8px) rotate(18deg); }
+        .rabbit-svg.correct .ear-inner { fill: #FFE066 !important; filter: drop-shadow(0px 0px 6px #FFD700); }
+        .rabbit-svg.correct { animation: rabbitBounce 0.5s ease-out; }
 
-        .rabbit-svg.incorrect .ear-left {
-            transform: translateY(12px) rotate(-55deg);
-        }
-        .rabbit-svg.incorrect .ear-right {
-            transform: translateY(12px) rotate(55deg);
-        }
-        .rabbit-svg.incorrect .ear-inner {
-            fill: #E2E8F0 !important;
-            filter: none;
-        }
+        .rabbit-svg.incorrect .ear-left { transform: translateY(12px) rotate(-55deg); }
+        .rabbit-svg.incorrect .ear-right { transform: translateY(12px) rotate(55deg); }
+        .rabbit-svg.incorrect .ear-inner { fill: #CBD5E1 !important; filter: none; }
 
         .character-speech {
             background: var(--amarillo-pastel);
-            border: 2px solid #FFE89C;
+            border: 2px solid #FDE68A;
             padding: 8px 14px;
             border-radius: 18px;
             font-size: 0.88rem;
@@ -561,7 +536,7 @@
     <!-- 0. SPLASH SCREEN -->
     <div id="splash-screen">
         <div class="splash-content">
-            <img id="splash-logo-img" class="splash-logo" src="./logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('splash-logo-fallback').style.display='block';">
+            <img id="splash-logo-img" class="splash-logo" src="logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('splash-logo-fallback').style.display='block';">
             <div id="splash-logo-fallback" class="logo-placeholder" style="display:none; font-size: 1.1rem; margin-bottom: 12px;">🏫 ESFUERZO Y FUTURO</div>
 
             <div class="splash-tag">📊 Especialidad de Contabilidad</div>
@@ -593,7 +568,7 @@
     <div class="app-card">
         <!-- HEADER -->
         <div class="app-header">
-            <img id="school-logo-img" class="school-logo" src="./logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
+            <img id="school-logo-img" class="school-logo" src="logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
             <div id="logo-fallback" class="logo-placeholder" style="display:none;">🏫 ESFUERZO Y FUTURO</div>
 
             <div class="status-bar" id="status-bar" style="display: none;">
@@ -606,10 +581,26 @@
             </div>
         </div>
 
-        <!-- 1. PANTALLA DE BIENVENIDA (Usa la imagen del personaje con UNIFORME) -->
+        <!-- 1. PANTALLA DE BIENVENIDA -->
         <div class="screen active" id="screen-welcome">
             <div class="character-box">
-                <img class="rabbit-avatar" src="./conejo-uniforme.PNG" alt="Conti Conti con Uniforme" onerror="this.style.display='none';">
+                <svg class="rabbit-svg" id="welcome-rabbit" viewBox="0 0 100 120">
+                    <g class="ear ear-left">
+                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                        <ellipse class="ear-inner" cx="38" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
+                    </g>
+                    <g class="ear ear-right">
+                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                        <ellipse class="ear-inner" cx="62" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
+                    </g>
+                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                    <circle cx="32" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
+                    <circle cx="68" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
+                    <circle cx="38" cy="64" r="3.5" fill="#1E293B"/>
+                    <circle cx="62" cy="64" r="3.5" fill="#1E293B"/>
+                    <polygon points="48,70 52,70 50,73" fill="#FF9AA2"/>
+                    <path d="M 47 75 Q 50 78 53 75" stroke="#1E293B" stroke-width="1.8" fill="none"/>
+                </svg>
                 <div class="character-speech">¡Hola! Soy Conti Conti. ¡Acompáñame en este juego financiero! 🐰✨</div>
             </div>
 
@@ -619,7 +610,7 @@
             <button class="main-btn" onclick="startQuiz()">🚀 Comenzar Desafío</button>
         </div>
 
-        <!-- 2. PANTALLA DE CUESTIONARIO (Usa el CONEJO SVG INTERACTIVO) -->
+        <!-- 2. PANTALLA DE CUESTIONARIO -->
         <div class="screen" id="screen-quiz">
             <div style="font-size: 0.82rem; font-weight: 700; color: var(--texto-secundario); margin-bottom: 2px;" id="question-number">Pregunta 1 de 10</div>
             
@@ -632,20 +623,20 @@
             <div class="character-box">
                 <svg class="rabbit-svg" id="quiz-rabbit" viewBox="0 0 100 120">
                     <g class="ear ear-left">
-                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
                         <ellipse class="ear-inner" cx="38" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
                     </g>
                     <g class="ear ear-right">
-                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
                         <ellipse class="ear-inner" cx="62" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
                     </g>
-                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
                     <circle cx="32" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
                     <circle cx="68" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
-                    <circle id="eye-left" cx="38" cy="64" r="3.5" fill="#2C3E50"/>
-                    <circle id="eye-right" cx="62" cy="64" r="3.5" fill="#2C3E50"/>
+                    <circle id="eye-left" cx="38" cy="64" r="3.5" fill="#1E293B"/>
+                    <circle id="eye-right" cx="62" cy="64" r="3.5" fill="#1E293B"/>
                     <polygon points="48,70 52,70 50,73" fill="#FF9AA2"/>
-                    <path id="rabbit-mouth" d="M 47 75 Q 50 78 53 75" stroke="#2C3E50" stroke-width="1.8" fill="none"/>
+                    <path id="rabbit-mouth" d="M 47 75 Q 50 78 53 75" stroke="#1E293B" stroke-width="1.8" fill="none"/>
                 </svg>
 
                 <div class="character-speech" id="quiz-character-speech">¡Lee con atención cada opción! 🧐</div>
@@ -654,10 +645,26 @@
             <button class="main-btn" id="next-btn" onclick="nextQuestion()" disabled>Siguiente ➔</button>
         </div>
 
-        <!-- 3. PANTALLA DE RESULTADOS (Usa la imagen del personaje con UNIFORME) -->
+        <!-- 3. PANTALLA DE RESULTADOS -->
         <div class="screen" id="screen-results">
             <div class="character-box">
-                <img class="rabbit-avatar" src="./conejo-uniforme.PNG" alt="Conti Conti con Uniforme" onerror="this.style.display='none';">
+                <svg class="rabbit-svg correct" viewBox="0 0 100 120">
+                    <g class="ear ear-left">
+                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                        <ellipse class="ear-inner" cx="38" cy="28" rx="4" ry="18" fill="#FFE066"/>
+                    </g>
+                    <g class="ear ear-right">
+                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                        <ellipse class="ear-inner" cx="62" cy="28" rx="4" ry="18" fill="#FFE066"/>
+                    </g>
+                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+                    <circle cx="32" cy="72" r="5" fill="#FFD1DC"/>
+                    <circle cx="68" cy="72" r="5" fill="#FFD1DC"/>
+                    <circle cx="38" cy="64" r="3.5" fill="#1E293B"/>
+                    <circle cx="62" cy="64" r="3.5" fill="#1E293B"/>
+                    <polygon points="48,70 52,70 50,73" fill="#FF9AA2"/>
+                    <path d="M 45 74 Q 50 82 55 74 Z" fill="#1E293B"/>
+                </svg>
                 <div class="character-speech" id="result-character-speech">¡Gran trabajo completando el desafío! 🐰🎉</div>
             </div>
 
@@ -692,7 +699,7 @@
                 <span class="specialty-tag">🍳 Gastronomía</span>
                 <span class="specialty-tag">👶 Atención de Párvulos</span>
                 <span class="specialty-tag" style="background: var(--verde-menta); border-color: #86EFAC;">📊 Contabilidad</span>
-                <span class="specialty-tag">🥫 Elaboración Ind. Alimentos</span>
+                <span class="specialty-tag">罐 Elaboración Ind. Alimentos</span>
                 <span class="specialty-tag">⚡ Electrónica</span>
             </div>
 
@@ -710,8 +717,7 @@
     </div>
 
     <script>
-        /* AUTO-DISMISS DE SPLASH */
-        let splashTimer = setTimeout(() => { dismissSplash(); }, 3500);
+        let splashTimer = setTimeout(() => { dismissSplash(); }, 6000);
         function dismissSplash() {
             clearTimeout(splashTimer);
             document.getElementById('splash-screen').classList.add('hidden');
@@ -1015,7 +1021,7 @@
             startQuiz();
         }
 
-        /* EFECTO DE MONEDAS DESDE EL MARCADOR */
+        /* EFECTO DE MONEDAS EN CANVAS */
         function triggerCoinEffect() {
             const canvas = document.getElementById('effects-canvas');
             const ctx = canvas.getContext('2d');
