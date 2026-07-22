@@ -289,7 +289,7 @@
             transition: transform 0.3s ease, filter 0.3s ease;
         }
 
-        /* PERSONAJE SVG INTERACTIVO (CON OREJAS) */
+        /* PERSONAJE SVG INTERACTIVO (CON OREJAS DINÁMICAS) */
         .rabbit-svg-box {
             width: 110px;
             height: 110px;
@@ -298,29 +298,30 @@
         }
 
         .ear-left, .ear-right {
-            transform-origin: bottom center;
-            transition: transform 0.3s ease;
+            transform-origin: 50px 38px;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        /* ANIMACIONES INTERACTIVAS DEL SVG */
+        /* OREJAS ARRIBA (CORRECTO) */
         .rabbit-svg-box.correct {
             animation: rabbitJump 0.5s ease-out;
         }
         .rabbit-svg-box.correct .ear-left {
-            transform: rotate(-15deg);
+            transform: translateY(-8px) rotate(-12deg);
         }
         .rabbit-svg-box.correct .ear-right {
-            transform: rotate(15deg);
+            transform: translateY(-8px) rotate(12deg);
         }
 
+        /* OREJAS CAÍDAS (INCORRECTO) */
         .rabbit-svg-box.incorrect {
             animation: rabbitShake 0.4s ease-in-out;
         }
         .rabbit-svg-box.incorrect .ear-left {
-            transform: rotate(25deg);
+            transform: translateY(10px) rotate(-45deg);
         }
         .rabbit-svg-box.incorrect .ear-right {
-            transform: rotate(-25deg);
+            transform: translateY(10px) rotate(45deg);
         }
 
         .character-speech {
@@ -618,7 +619,7 @@
             <button class="main-btn" onclick="startQuiz()">🚀 Comenzar Desafío</button>
         </div>
 
-        <!-- 2. PANTALLA DE CUESTIONARIO (Usa el CONEJO SVG INTERACTIVO CON OREJAS) -->
+        <!-- 2. PANTALLA DE CUESTIONARIO (CONEJO SVG INTERACTIVO CON OREJAS DINÁMICAS) -->
         <div class="screen" id="screen-quiz">
             <div style="font-size: 0.82rem; font-weight: 700; color: var(--texto-secundario); margin-bottom: 2px;" id="question-number">Pregunta 1 de 10</div>
             
@@ -917,7 +918,10 @@
                 buttons[index].classList.add('correct');
                 buttons[index].querySelector('.icon').innerText = '✔️';
                 
-                if (quizRabbitSvg) quizRabbitSvg.classList.add('correct');
+                if (quizRabbitSvg) {
+                    quizRabbitSvg.classList.remove('incorrect');
+                    quizRabbitSvg.classList.add('correct');
+                }
                 
                 quizSpeech.innerText = getPositivePhrase();
                 feedbackBox.className = 'feedback-box correct';
@@ -933,9 +937,12 @@
                 buttons[q.correct].classList.add('correct');
                 buttons[q.correct].querySelector('.icon').innerText = '✔️';
 
-                if (quizRabbitSvg) quizRabbitSvg.classList.add('incorrect');
+                if (quizRabbitSvg) {
+                    quizRabbitSvg.classList.remove('correct');
+                    quizRabbitSvg.classList.add('incorrect');
+                }
 
-                quizSpeech.innerText = "¡Oh no! No te preocupes, ¡aprendamos juntos! 💪";
+                quizSpeech.innerText = "¡Oh no! A Conti Conti se le cayeron las orejas 😿 ¡Aprendamos juntos!";
                 feedbackBox.className = 'feedback-box incorrect';
                 feedbackBox.innerHTML = `<b>Respuesta correcta:</b> ${q.options[q.correct]}<br>${q.exp}`;
             }
@@ -954,7 +961,7 @@
 
         function getPositivePhrase() {
             const phrases = [
-                "¡Genial! Conti Conti mueve las orejas de alegría 🌟", 
+                "¡Genial! Conti Conti levanta las orejas de alegría 🌟", 
                 "¡Excelente trabajo! 🎉", 
                 "¡Respuesta correcta! 🚀", 
                 "¡Cada vez sabes más! 💡", 
