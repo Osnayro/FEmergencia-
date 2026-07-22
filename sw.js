@@ -3,6 +3,7 @@ const ASSETS = [
   './index.html',
   './manifest.json',
   './logo-colegio.jpg',
+  './icono-app.PNG',
   'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap',
   'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js'
 ];
