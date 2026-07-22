@@ -616,7 +616,7 @@
             </div>
 
             <h1 class="welcome-title">¿Qué tanto sabes sobre el Fondo de Emergencia?</h1>
-            <p class="welcome-sub">Descubre cuánto sabes sobre educación financiera respondiendo este rápido desafío de 10 preguntas. ¡Cada vez las opciones cambian de orden!</p>
+            <p class="welcome-sub">Descubre cuánto sabes sobre educación financiera respondiendo este rápido desafío de 10 preguntas.</p>
 
             <button class="main-btn" onclick="startQuiz()">🚀 Comenzar Desafío</button>
         </div>
@@ -738,7 +738,7 @@
             document.getElementById('splash-screen').classList.add('hidden');
         }
 
-        /* PREGUNTAS (con etiquetas de letra fijas) */
+        /* PREGUNTAS */
         const questions = [
             {
                 q: "1. ¿Qué es un fondo de emergencia?",
@@ -853,7 +853,7 @@
             }
         ];
 
-        // 🆕 FUNCIÓN PARA ALEATORIZAR OPCIONES
+        // FUNCIÓN PARA ALEATORIZAR OPCIONES
         function shuffleArray(array) {
             const shuffled = [...array];
             for (let i = shuffled.length - 1; i > 0; i--) {
@@ -863,9 +863,9 @@
             return shuffled;
         }
 
-        // 🆕 VARIABLES GLOBALES PARA CADA PREGUNTA
-        let currentQuestionData = null;  // Datos de la pregunta actual (ya mezclada)
-        let correctAnswerIndex = null;   // Índice correcto DESPUÉS de mezclar
+        // VARIABLES GLOBALES PARA CADA PREGUNTA
+        let currentQuestionData = null;
+        let correctAnswerIndex = null;
 
         let currentQuestion = 0;
         let score = 0;
@@ -898,7 +898,6 @@
             loadQuestion();
         }
 
-        // 🆕 NUEVA FUNCIÓN loadQuestion CON ALEATORIZACIÓN
         function loadQuestion() {
             answered = false;
             nextBtn.disabled = true;
@@ -916,11 +915,10 @@
             const progressPercent = ((currentQuestion) / questions.length) * 100;
             progressFill.style.width = `${progressPercent}%`;
 
-            // 🆕 CREAR ÍNDICES Y MEZCLAR
+            // CREAR ÍNDICES Y MEZCLAR
             const indices = q.options.map((_, i) => i);
             const shuffledIndices = shuffleArray(indices);
             
-            // Guardar datos de la pregunta actual
             currentQuestionData = {
                 originalOptions: q.options,
                 shuffledIndices: shuffledIndices,
@@ -928,7 +926,6 @@
                 exp: q.exp
             };
             
-            // Encontrar el nuevo índice correcto
             correctAnswerIndex = shuffledIndices.indexOf(q.correct);
 
             // Renderizar opciones en orden aleatorio
@@ -941,10 +938,9 @@
                 optionsContainer.appendChild(btn);
             });
 
-            quizSpeech.innerText = "¡Las opciones están en orden aleatorio! Analiza bien 🧐";
+            quizSpeech.innerText = "¡Analiza las respuestas cuidadosamente! 🧐";
         }
 
-        // 🆕 selectOption AHORA USA correctAnswerIndex
         function selectOption(index) {
             if (answered) return;
             answered = true;
