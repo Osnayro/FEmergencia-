@@ -1,0 +1,22 @@
+{
+  "name": "Desafío Financiero - Conti Conti",
+  "short_name": "Conti Conti",
+  "description": "Juego interactivo de educación financiera para la especialidad de Contabilidad.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#A2D2FF",
+  "theme_color": "#A2D2FF",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "logo-colegio.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "logo-colegio.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
