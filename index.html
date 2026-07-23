@@ -31,7 +31,7 @@
             </h1>
             <div class="splash-credits-box">
                 <strong>🏆 Desafío de Contabilidad y Finanzas</strong><br>
-                <small>Demuestra tus conocimientos y conviértete en un experto financiero</small>
+                <small>Demuestra tus conocimientos en 2 niveles</small>
             </div>
             <div class="loader-bar">
                 <div class="loader-fill" id="loader-fill"></div>
@@ -57,6 +57,7 @@
             <div class="lives-display" id="lives-display">❤️❤️❤️</div>
             <div class="streak-display" id="streak-display">🔥 0</div>
             <div class="timer-display" id="timer-display">⏱️ 30s</div>
+            <div class="level-display" id="level-display" style="background: #10B981; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 0.8rem;">🟢 Nivel 1</div>
         </div>
 
         <!-- Power-ups Bar -->
@@ -95,7 +96,7 @@
                 </div>
             </div>
             <h2 class="welcome-title">¿Qué tanto sabes sobre el Fondo de Emergencia?</h2>
-            <p class="welcome-sub">Descubre cuánto sabes sobre educación financiera respondiendo este rápido desafío de 10 preguntas.</p>
+            <p class="welcome-sub">Completa 2 niveles demostrando tus conocimientos financieros</p>
 
             <div class="splash-credits-box">
                 <b>🎓 Proyecto Presentado por:</b><br>
@@ -104,12 +105,9 @@
             </div>
 
             <div class="info-card">
-                <strong>🎯 Temas del desafío:</strong><br>
-                • Fondo de emergencia<br>
-                • Presupuesto y ahorro<br>
-                • Inversiones y riesgo<br>
-                • Crédito y deudas<br>
-                • Conceptos contables básicos
+                <strong>🎯 Niveles del desafío:</strong><br>
+                🟢 <b>Nivel 1:</b> Fondo de Emergencia (10 preguntas)<br>
+                🔵 <b>Nivel 2:</b> Contabilidad y Finanzas (10 preguntas)
             </div>
 
             <div class="mode-grid">
@@ -131,7 +129,7 @@
             <button class="main-btn secondary" onclick="showScreen('screen-badges')">
                 Ver Insignias 🏅
             </button>
-            <p class="credits">Desarrollado por Romeroweb | v1.0</p>
+            <p class="credits">Desarrollado por Romeroweb | v2.0</p>
         </div>
 
         <!-- Pantalla de Pregunta -->
@@ -165,7 +163,46 @@
             </button>
         </div>
 
-        <!-- Pantalla de Resultados -->
+        <!-- Pantalla de Transición Nivel 1 -->
+        <div class="screen" id="screen-level-transition">
+            <div class="character-box">
+                <svg class="rabbit-svg correct" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="60" cy="110" rx="35" ry="12" fill="#E2E8F0" opacity="0.6"/>
+                    <ellipse cx="60" cy="70" rx="30" ry="35" fill="#F5F5F5"/>
+                    <ellipse cx="50" cy="60" rx="4" ry="5" fill="#2D3748"/>
+                    <ellipse cx="70" cy="60" rx="4" ry="5" fill="#2D3748"/>
+                    <circle cx="51" cy="58" r="1.5" fill="white"/>
+                    <circle cx="71" cy="58" r="1.5" fill="white"/>
+                    <ellipse cx="60" cy="72" rx="6" ry="4" fill="#FFB6C1"/>
+                    <path d="M52 78 Q60 90 68 78" stroke="#2D3748" stroke-width="1.5" fill="none"/>
+                    <ellipse cx="48" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-left"/>
+                    <ellipse cx="48" cy="42" rx="5" ry="13" fill="#FFE066" class="ear-inner"/>
+                    <ellipse cx="72" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-right"/>
+                    <ellipse cx="72" cy="42" rx="5" ry="13" fill="#FFE066" class="ear-inner"/>
+                </svg>
+                <div class="character-speech">¡Excelente! Has completado el Nivel 1 🎉</div>
+            </div>
+
+            <h2 class="welcome-title">🟢 Nivel 1 Completado</h2>
+            
+            <div class="share-card" id="level1-share-card">
+                <div class="share-label">Puntuación Nivel 1</div>
+                <div class="share-score" id="level1-score">0</div>
+                <div class="share-label">puntos</div>
+            </div>
+
+            <div class="teacher-tribute-card">
+                <div class="teacher-tribute-text">
+                    🌟 "La excelencia de la especialidad de Contabilidad se refleja en el compromiso, la dedicación y la calidad profesional de sus profesoras, quienes inspiran a sus estudiantes a dar siempre lo mejor de sí." ✨
+                </div>
+            </div>
+
+            <button class="main-btn pulse-ready" onclick="startLevel2()">
+                Siguiente Nivel 🔵
+            </button>
+        </div>
+
+        <!-- Pantalla de Resultados Final -->
         <div class="screen" id="screen-results">
             <div class="character-box">
                 <svg class="rabbit-svg correct" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
