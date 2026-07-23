@@ -1,14 +1,14 @@
 
-
-
 // ===== ESTADO GLOBAL =====
 const state = {
     score: 0,
+    levelScore: 0,
     lives: 3,
     streak: 0,
     maxStreak: 0,
     currentQuestion: 0,
     totalQuestions: 10,
+    currentLevel: 1,
     mode: 'normal',
     timer: 30,
     timerInterval: null,
@@ -434,9 +434,6 @@ const fondoEmergenciaQuestions = [
     }
 ];
 
-// Banco completo combinado
-const questionBank = [...generalQuestions, ...fondoEmergenciaQuestions];
-
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', () => {
     setupSplashScreen();
@@ -500,22 +497,21 @@ function selectMode(mode) {
 // ===== INICIO DEL JUEGO =====
 function startGame() {
     state.score = 0;
+    state.levelScore = 0;
     state.lives = 3;
     state.streak = 0;
     state.maxStreak = 0;
     state.currentQuestion = 0;
+    state.currentLevel = 1;
     state.answeredCorrectly = {};
     state.topicScores = {};
     state.isFrozen = false;
     
-    // Seleccionar preguntas: 2 de fondo de emergencia + 8 aleatorias del resto
-    const fondoQuestions = shuffleArray([...fondoEmergenciaQuestions]).slice(0, 2);
-    const otherQuestions = shuffleArray([...generalQuestions]).slice(0, 8);
-    
-    // Las 2 primeras son de fondo de emergencia, el resto mezcladas
-    state.questions = [...fondoQuestions, ...shuffleArray(otherQuestions)];
+    // Nivel 1: 10 preguntas de fondo de emergencia
+    state.questions = shuffleArray([...fondoEmergenciaQuestions]).slice(0, 10);
     state.totalQuestions = state.questions.length;
     
+    updateLevelDisplay();
     updateScore();
     updateLives();
     updateStreak();
@@ -523,6 +519,37 @@ function startGame() {
     
     showScreen('screen-question');
     loadQuestion();
+}
+
+function startLevel2() {
+    state.currentQuestion = 0;
+    state.lives = 3;
+    state.streak = 0;
+    state.currentLevel = 2;
+    state.isFrozen = false;
+    
+    // Nivel 2: 10 preguntas del banco general
+    state.questions = shuffleArray([...generalQuestions]).slice(0, 10);
+    state.totalQuestions = state.questions.length;
+    
+    updateLevelDisplay();
+    updateLives();
+    updateStreak();
+    updateProgress();
+    
+    showScreen('screen-question');
+    loadQuestion();
+}
+
+function updateLevelDisplay() {
+    const levelDisplay = document.getElementById('level-display');
+    if (state.currentLevel === 1) {
+        levelDisplay.textContent = '🟢 Nivel 1';
+        levelDisplay.style.background = '#10B981';
+    } else {
+        levelDisplay.textContent = '🔵 Nivel 2';
+        levelDisplay.style.background = '#3B82F6';
+    }
 }
 
 function shuffleArray(array) {
@@ -537,7 +564,7 @@ function shuffleArray(array) {
 // ===== CARGA DE PREGUNTAS =====
 function loadQuestion() {
     if (state.currentQuestion >= state.totalQuestions) {
-        endGame();
+        endLevel();
         return;
     }
     
@@ -640,12 +667,11 @@ function loadMultipleChoice(question) {
     question._shuffledIndices = shuffledIndices;
     
     // Renderizar opciones en orden aleatorio
-    shuffledIndices.forEach((originalIndex, displayIndex) => {
+    shuffledIndices.forEach((originalIndex) => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
         btn.textContent = question.options[originalIndex];
         btn.dataset.originalIndex = originalIndex;
-        btn.dataset.displayIndex = displayIndex;
         btn.addEventListener('click', () => checkMultipleAnswer(originalIndex, question));
         optionsGrid.appendChild(btn);
     });
@@ -807,7 +833,7 @@ function loadDrag(question) {
     itemsContainer.style.gap = '8px';
     itemsContainer.style.marginTop = '10px';
     
-    shuffleArray(question.items).forEach((item, index) => {
+    shuffleArray(question.items).forEach((item) => {
         const draggable = document.createElement('div');
         draggable.className = 'draggable-item';
         draggable.textContent = item;
@@ -856,11 +882,9 @@ function checkMultipleAnswer(originalIndex, question) {
     const options = document.querySelectorAll('.option-btn');
     options.forEach(btn => btn.disabled = true);
     
-    // Encontrar el índice visual del botón correcto
     const shuffledIndices = question._shuffledIndices;
     const correctDisplayIndex = shuffledIndices.indexOf(question.correct);
     
-    // Encontrar el índice visual del botón clickeado
     let clickedDisplayIndex = -1;
     options.forEach((btn, i) => {
         if (parseInt(btn.dataset.originalIndex) === originalIndex) {
@@ -882,6 +906,7 @@ function checkMultipleAnswer(originalIndex, question) {
 
 function handleCorrectAnswer(points) {
     state.score += points;
+    state.levelScore += points;
     state.streak++;
     if (state.streak > state.maxStreak) state.maxStreak = state.streak;
     
@@ -922,7 +947,7 @@ function handleIncorrectAnswer(question) {
     document.getElementById('btn-next').style.display = 'block';
     
     if (state.lives <= 0) {
-        setTimeout(() => endGame(), 1500);
+        setTimeout(() => endLevel(), 1500);
     }
 }
 
@@ -936,6 +961,102 @@ function showFeedback(message, type) {
 function nextQuestion() {
     state.currentQuestion++;
     loadQuestion();
+}
+
+// ===== FIN DE NIVEL =====
+function endLevel() {
+    clearInterval(state.timerInterval);
+    
+    if (state.currentLevel === 1) {
+        // Mostrar pantalla de transición con puntuación del nivel 1
+        document.getElementById('level1-score').textContent = state.levelScore;
+        showScreen('screen-level-transition');
+    } else {
+        // Fin del juego - mostrar resultados finales
+        showFinalResults();
+    }
+}
+
+function showFinalResults() {
+    document.getElementById('final-score').textContent = state.score;
+    
+    const topicAnalysis = document.getElementById('topic-analysis');
+    topicAnalysis.innerHTML = '';
+    
+    const topicNames = {
+        'presupuesto': 'Presupuesto',
+        'ahorro': 'Ahorro',
+        'inversion': 'Inversión',
+        'credito': 'Crédito',
+        'contabilidad': 'Contabilidad',
+        'finanzas': 'Finanzas',
+        'fondo-emergencia': 'Fondo de Emergencia'
+    };
+    
+    const topicColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#E63946'];
+    let colorIndex = 0;
+    
+    for (const [topic, scores] of Object.entries(state.topicScores)) {
+        const percentage = Math.round((scores.correct / scores.total) * 100);
+        const bar = document.createElement('div');
+        bar.className = 'topic-bar';
+        bar.innerHTML = `
+            <span class="topic-label">${topicNames[topic] || topic}</span>
+            <div class="topic-progress">
+                <div class="topic-fill" style="width: ${percentage}%; background: ${topicColors[colorIndex]}"></div>
+            </div>
+            <span class="topic-score">${percentage}%</span>
+        `;
+        topicAnalysis.appendChild(bar);
+        colorIndex = (colorIndex + 1) % topicColors.length;
+    }
+    
+    const shareBadges = document.getElementById('share-badges');
+    shareBadges.innerHTML = '';
+    for (const [badge, unlocked] of Object.entries(state.badges)) {
+        if (unlocked) {
+            const badgeEl = document.createElement('span');
+            badgeEl.className = 'share-badge';
+            badgeEl.textContent = getBadgeIcon(badge);
+            shareBadges.appendChild(badgeEl);
+        }
+    }
+    
+    const resultCharacterSpeech = document.getElementById('result-character-speech');
+    if (state.score >= 1800) {
+        resultCharacterSpeech.textContent = '¡Puntaje Perfecto! Conti Conti está súper orgulloso. 🏆🐰';
+    } else if (state.score >= 1400) {
+        resultCharacterSpeech.textContent = '¡Excelente resultado! Tienes bases muy sólidas. 👏🐰';
+    } else if (state.score >= 800) {
+        resultCharacterSpeech.textContent = '¡Buen esfuerzo! Sigue practicando con Conti Conti. 📚🐰';
+    } else {
+        resultCharacterSpeech.textContent = '¡El aprendizaje es un camino diario! 💡🐰';
+    }
+    
+    showScreen('screen-results');
+    launchConfetti();
+    saveToLeaderboard();
+}
+
+function restartGame() {
+    state.currentQuestion = 0;
+    state.score = 0;
+    state.levelScore = 0;
+    state.lives = 3;
+    state.streak = 0;
+    state.currentLevel = 1;
+    updateScore();
+    updateLives();
+    updateStreak();
+    updateProgress();
+    updateLevelDisplay();
+    startGame();
+}
+
+// ===== PANTALLA FINAL =====
+function goToFinalScreen() {
+    showScreen('screen-final');
+    launchConfetti();
 }
 
 // ===== POWER-UPS =====
@@ -982,7 +1103,6 @@ function applyFiftyFifty() {
         }
     });
     
-    // Eliminar 2 opciones incorrectas aleatorias
     shuffleArray(incorrectDisplayIndexes).slice(0, 2).forEach(index => {
         options[index].style.display = 'none';
     });
@@ -1049,88 +1169,6 @@ function updateStreak() {
 function updateProgress() {
     const progress = (state.currentQuestion / state.totalQuestions) * 100;
     document.getElementById('progress-fill').style.width = `${progress}%`;
-}
-
-// ===== FIN DEL JUEGO =====
-function endGame() {
-    clearInterval(state.timerInterval);
-    
-    document.getElementById('final-score').textContent = state.score;
-    
-    const topicAnalysis = document.getElementById('topic-analysis');
-    topicAnalysis.innerHTML = '';
-    
-    const topicNames = {
-        'presupuesto': 'Presupuesto',
-        'ahorro': 'Ahorro',
-        'inversion': 'Inversión',
-        'credito': 'Crédito',
-        'contabilidad': 'Contabilidad',
-        'finanzas': 'Finanzas',
-        'fondo-emergencia': 'Fondo de Emergencia'
-    };
-    
-    const topicColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#E63946'];
-    let colorIndex = 0;
-    
-    for (const [topic, scores] of Object.entries(state.topicScores)) {
-        const percentage = Math.round((scores.correct / scores.total) * 100);
-        const bar = document.createElement('div');
-        bar.className = 'topic-bar';
-        bar.innerHTML = `
-            <span class="topic-label">${topicNames[topic] || topic}</span>
-            <div class="topic-progress">
-                <div class="topic-fill" style="width: ${percentage}%; background: ${topicColors[colorIndex]}"></div>
-            </div>
-            <span class="topic-score">${percentage}%</span>
-        `;
-        topicAnalysis.appendChild(bar);
-        colorIndex = (colorIndex + 1) % topicColors.length;
-    }
-    
-    const shareBadges = document.getElementById('share-badges');
-    shareBadges.innerHTML = '';
-    for (const [badge, unlocked] of Object.entries(state.badges)) {
-        if (unlocked) {
-            const badgeEl = document.createElement('span');
-            badgeEl.className = 'share-badge';
-            badgeEl.textContent = getBadgeIcon(badge);
-            shareBadges.appendChild(badgeEl);
-        }
-    }
-    
-    const resultCharacterSpeech = document.getElementById('result-character-speech');
-    if (state.score >= 900) {
-        resultCharacterSpeech.textContent = '¡Puntaje Perfecto! Conti Conti está súper orgulloso. 🏆🐰';
-    } else if (state.score >= 700) {
-        resultCharacterSpeech.textContent = '¡Excelente resultado! Tienes bases muy sólidas. 👏🐰';
-    } else if (state.score >= 400) {
-        resultCharacterSpeech.textContent = '¡Buen esfuerzo! Sigue practicando con Conti Conti. 📚🐰';
-    } else {
-        resultCharacterSpeech.textContent = '¡El aprendizaje es un camino diario! 💡🐰';
-    }
-    
-    showScreen('screen-results');
-    launchConfetti();
-    saveToLeaderboard();
-}
-
-function restartGame() {
-    state.currentQuestion = 0;
-    state.score = 0;
-    state.lives = 3;
-    state.streak = 0;
-    updateScore();
-    updateLives();
-    updateStreak();
-    updateProgress();
-    startGame();
-}
-
-// ===== PANTALLA FINAL =====
-function goToFinalScreen() {
-    showScreen('screen-final');
-    launchConfetti();
 }
 
 // ===== INSIGNIAS =====
