@@ -1,0 +1,162 @@
+
+{
+    "name": "Conti Conti - Desafío Financiero",
+    "short_name": "Conti Conti",
+    "description": "Aplicación educativa interactiva para aprender contabilidad y finanzas de forma divertida",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#A2D2FF",
+    "theme_color": "#A2D2FF",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "icono-app.PNG",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "icono-app.PNG",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": ["education", "finance"],
+    "lang": "es",
+    "dir": "ltr",
+    "scope": "/",
+    "prefer_related_applications": false
+}
+```
+
+---
+
+Archivo 5 de 5: service-worker.js
+
+Este archivo es opcional pero recomendado para funcionamiento offline. Cópialo y guárdalo como service-worker.js:
+
+```javascript
+const CACHE_NAME = 'conti-conti-v1';
+const urlsToCache = [
+    '/',
+    'index.html',
+    'styles.css',
+    'app.js',
+    'manifest.json',
+    'logo.svg',
+    'conejo-uniforme.svg',
+    'icono-app.PNG'
+];
+
+// Instalar Service Worker
+self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then(cache => {
+                console.log('Cache abierto');
+                return cache.addAll(urlsToCache);
+            })
+            .catch(error => {
+                console.log('Error al cachear:', error);
+            })
+    );
+});
+
+// Activar Service Worker
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) {
+                        console.log('Eliminando cache antiguo:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
+    );
+});
+
+// Interceptar peticiones
+self.addEventListener('fetch', event => {
+    event.respondWith(
+        caches.match(event.request)
+            .then(response => {
+                // Devuelve del cache si existe
+                if (response) {
+                    return response;
+                }
+                
+                // Si no está en cache, hace la petición a la red
+                return fetch(event.request)
+                    .then(response => {
+                        // Verificar si la respuesta es válida
+                        if (!response || response.status !== 200 || response.type !== 'basic') {
+                            return response;
+                        }
+                        
+                        // Clonar la respuesta para guardarla en cache
+                        const responseToCache = response.clone();
+                        caches.open(CACHE_NAME)
+                            .then(cache => {
+                                cache.put(event.request, responseToCache);
+                            });
+                        
+                        return response;
+                    })
+                    .catch(() => {
+                        // Si falla la red, intentar devolver una página offline
+                        if (event.request.mode === 'navigate') {
+                            return caches.match('index.html');
+                        }
+                    });
+            })
+    );
+});
+```
+
+---
+
+Archivos adicionales necesarios (imágenes SVG)
+
+También necesitarás crear estos archivos de imagen para que la aplicación funcione completamente:
+
+logo.svg (Logo de la aplicación)
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60">
+    <rect width="200" height="60" rx="12" fill="#1E3A63"/>
+    <text x="100" y="38" text-anchor="middle" fill="white" font-family="Poppins, sans-serif" font-size="24" font-weight="800">
+        Conti Conti
+    </text>
+</svg>
+```
+
+conejo-uniforme.svg (Mascota con uniforme)
+
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 130">
+    <!-- Cuerpo -->
+    <ellipse cx="60" cy="70" rx="30" ry="35" fill="#F5F5F5"/>
+    <!-- Uniforme escolar -->
+    <rect x="35" y="80" width="50" height="25" rx="8" fill="#1E3A63"/>
+    <rect x="42" y="80" width="16" height="25" fill="white"/>
+    <!-- Corbata -->
+    <polygon points="60,78 55,90 65,90" fill="#E63946"/>
+    <!-- Cabeza y detalles del conejo -->
+    <ellipse cx="50" cy="60" rx="4" ry="5" fill="#2D3748"/>
+    <ellipse cx="70" cy="60" rx="4" ry="5" fill="#2D3748"/>
+    <circle cx="51" cy="58" r="1.5" fill="white"/>
+    <circle cx="71" cy="58" r="1.5" fill="white"/>
+    <ellipse cx="60" cy="72" rx="6" ry="4" fill="#FFB6C1"/>
+    <!-- Orejas -->
+    <ellipse cx="48" cy="42" rx="8" ry="18" fill="#F5F5F5"/>
+    <ellipse cx="48" cy="42" rx="5" ry="13" fill="#FFB6C1"/>
+    <ellipse cx="72" cy="42" rx="8" ry="18" fill="#F5F5F5"/>
+    <ellipse cx="72" cy="42" rx="5" ry="13" fill="#FFB6C1"/>
+    <!-- Sombrero de graduación (opcional) -->
+    <polygon points="45,35 75,35 68,30 52,30" fill="#2D3748"/>
+    <rect x="58" y="28" width="4" height="4" fill="#FFD700"/>
+</svg>
