@@ -1,699 +1,211 @@
 
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Desafío Financiero: Fondo de Emergencia | Especialidad de Contabilidad</title>
-    <!-- Google Fonts & Canvas Confetti -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Conti Conti | Desafío Financiero Avanzado</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- Configuración PWA App -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A2D2FF">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Conti Conti">
     <link rel="apple-touch-icon" href="icono-app.PNG">
-    <style>
-        :root {
-            --azul-pastel: #A2D2FF;
-            --azul-oscuro: #1E3A63;
-            --verde-menta: #B8E9C0;
-            --verde-exito: #2E7D32;
-            --rojo-alerta: #D32F2F;
-            --rojo-llamativo: #E63946;
-            --amarillo-pastel: #FEF9D7;
-            --blanco: #FFFFFF;
-            --gris-claro: #F8F9FA;
-            --gris-texto: #2D3748;
-            --texto-secundario: #526075;
-            --texto-etiqueta-amarilla: #4A2B00;
-            --sombra-suave: 0 10px 25px rgba(0, 0, 0, 0.08);
-            --sombra-boton: 0 4px 12px rgba(0, 0, 0, 0.12);
-            --borde-radio: 24px;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Poppins', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background: linear-gradient(135deg, #E8F1F5 0%, #F5EFFF 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
-            color: var(--gris-texto);
-            overflow-x: hidden;
-        }
-
-        #effects-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 999;
-        }
-
-        /* SPLASH SCREEN OPTIMIZADO */
-        #splash-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: linear-gradient(135deg, #A2D2FF 0%, #B8E9C0 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            text-align: center;
-            padding: 20px;
-            transition: opacity 0.8s ease, visibility 0.8s;
-        }
-
-        #splash-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .splash-content {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 35px 25px;
-            border-radius: var(--borde-radio);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            max-width: 450px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            animation: zoomIn 0.6s ease-out;
-        }
-
-        .splash-logo {
-            max-height: 85px;
-            max-width: 210px;
-            object-fit: contain;
-            margin-bottom: 12px;
-            animation: float 3s infinite ease-in-out;
-        }
-
-        .conejo-uniforme-logo {
-            max-height: 120px;
-            max-width: 200px;
-            object-fit: contain;
-            margin-bottom: 12px;
-            animation: float 3s infinite ease-in-out;
-            filter: drop-shadow(0px 8px 16px rgba(0, 0, 0, 0.2));
-        }
-
-        .splash-tag {
-            background: var(--amarillo-pastel);
-            color: var(--texto-etiqueta-amarilla);
-            font-size: 0.85rem;
-            font-weight: 700;
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: 2px solid #FFE89C;
-            margin-bottom: 12px;
-        }
-
-        .splash-title {
-            font-size: 1.35rem;
-            color: var(--azul-oscuro);
-            font-weight: 800;
-            line-height: 1.3;
-            margin-bottom: 12px;
-        }
-
-        .highlight-red-title {
-            color: var(--rojo-llamativo);
-            background: linear-gradient(45deg, #D32F2F, #FF5252);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 1.5rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            filter: drop-shadow(0px 2px 4px rgba(211, 47, 47, 0.2));
-            display: block;
-            margin-top: 4px;
-        }
-
-        .splash-credits-box {
-            background: var(--gris-claro);
-            border-left: 4px solid var(--azul-pastel);
-            padding: 10px 15px;
-            border-radius: 12px;
-            font-size: 0.88rem;
-            color: var(--gris-texto);
-            margin-bottom: 16px;
-            width: 100%;
-        }
-
-        .loader-bar {
-            width: 100%;
-            height: 8px;
-            background: #E2E8F0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .loader-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #3B82F6, var(--verde-exito));
-            animation: loadProgress 6s linear forwards;
-        }
-
-        .skip-splash-btn {
-            background: transparent;
-            border: 2px solid var(--azul-oscuro);
-            color: var(--azul-oscuro);
-            padding: 8px 20px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            border-radius: 20px;
-            cursor: pointer;
-            margin-top: 12px;
-            transition: all 0.2s ease;
-        }
-
-        .skip-splash-btn:hover {
-            background: var(--azul-oscuro);
-            color: var(--blanco);
-        }
-
-        /* ESTRUCTURA APP */
-        .app-card {
-            background: var(--blanco);
-            width: 100%;
-            max-width: 580px;
-            min-height: 660px;
-            border-radius: var(--borde-radio);
-            box-shadow: var(--sombra-suave);
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            animation: fadeIn 0.5s ease-out;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-        }
-
-        .app-header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 10px;
-            gap: 8px;
-        }
-
-        .school-logo {
-            max-height: 50px;
-            max-width: 180px;
-            object-fit: contain;
-        }
-
-        .logo-placeholder {
-            background: var(--azul-pastel);
-            color: var(--azul-oscuro);
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 0.85rem;
-        }
-
-        .status-bar {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .progress-container {
-            flex: 1;
-            height: 14px;
-            background: #E2E8F0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #3B82F6, #10B981);
-            transition: width 0.4s ease;
-        }
-
-        .score-badge {
-            background: var(--amarillo-pastel);
-            border: 2px solid #FCD34D;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 800;
-            font-size: 0.95rem;
-            color: var(--texto-etiqueta-amarilla);
-            transition: transform 0.2s ease;
-        }
-
-        .screen {
-            display: none;
-            flex-direction: column;
-            flex: 1;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            animation: slideIn 0.4s ease-out;
-        }
-
-        .screen.active {
-            display: flex;
-        }
-
-        .character-box {
-            margin: 8px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .rabbit-svg {
-            width: 105px;
-            height: 105px;
-            filter: drop-shadow(0px 8px 12px rgba(0,0,0,0.1));
-            overflow: visible;
-        }
-
-        .ear {
-            transform-origin: bottom center;
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), fill 0.4s ease;
-        }
-
-        .ear-left { transform: rotate(-5deg); }
-        .ear-right { transform: rotate(5deg); }
-
-        .rabbit-svg.correct .ear-left { transform: translateY(-8px) rotate(-18deg); }
-        .rabbit-svg.correct .ear-right { transform: translateY(-8px) rotate(18deg); }
-        .rabbit-svg.correct .ear-inner { fill: #FFE066 !important; filter: drop-shadow(0px 0px 6px #FFD700); }
-        .rabbit-svg.correct { animation: rabbitBounce 0.5s ease-out; }
-
-        .rabbit-svg.incorrect .ear-left { transform: translateY(12px) rotate(-55deg); }
-        .rabbit-svg.incorrect .ear-right { transform: translateY(12px) rotate(55deg); }
-        .rabbit-svg.incorrect .ear-inner { fill: #CBD5E1 !important; filter: none; }
-
-        .character-speech {
-            background: var(--amarillo-pastel);
-            border: 2px solid #FDE68A;
-            padding: 8px 14px;
-            border-radius: 18px;
-            font-size: 0.88rem;
-            font-weight: 700;
-            color: var(--texto-etiqueta-amarilla);
-            max-width: 90%;
-            box-shadow: var(--sombra-boton);
-        }
-
-        .question-text {
-            font-size: 1.08rem;
-            font-weight: 700;
-            color: var(--azul-oscuro);
-            margin: 8px 0 12px 0;
-            line-height: 1.35;
-        }
-
-        .options-grid {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .option-btn {
-            background: var(--gris-claro);
-            border: 2px solid #CBD5E1;
-            padding: 10px 15px;
-            border-radius: 14px;
-            font-size: 0.88rem;
-            font-weight: 600;
-            color: var(--gris-texto);
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .option-btn:hover:not(:disabled) {
-            background: #E2E8F0;
-            border-color: #93C5FD;
-        }
-
-        .option-btn.correct {
-            background: #DCFCE7 !important;
-            border-color: var(--verde-exito) !important;
-            color: #14532D !important;
-            font-weight: 700;
-        }
-
-        .option-btn.incorrect {
-            background: #FEE2E2 !important;
-            border-color: var(--rojo-alerta) !important;
-            color: #7F1D1D !important;
-            font-weight: 700;
-        }
-
-        .feedback-box {
-            margin-top: 8px;
-            padding: 10px 14px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            text-align: left;
-            display: none;
-            width: 100%;
-            line-height: 1.4;
-        }
-
-        .feedback-box.correct {
-            background: #F0FDF4;
-            border: 1px solid #86EFAC;
-            color: #166534;
-            display: block;
-        }
-
-        .feedback-box.incorrect {
-            background: #FEF2F2;
-            border: 1px solid #FCA5A5;
-            color: #991B1B;
-            display: block;
-        }
-
-        .main-btn {
-            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-            color: var(--blanco);
-            border: none;
-            padding: 12px 28px;
-            font-size: 1rem;
-            font-weight: 700;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: var(--sombra-boton);
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .main-btn:disabled {
-            background: #94A3B8;
-            opacity: 0.6;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .main-btn.pulse-ready {
-            animation: btnPulse 1.2s infinite ease-in-out;
-        }
-
-        .welcome-title {
-            font-size: 1.35rem;
-            color: var(--azul-oscuro);
-            font-weight: 800;
-            margin-bottom: 6px;
-        }
-
-        .welcome-sub {
-            font-size: 0.88rem;
-            color: var(--texto-secundario);
-            margin-bottom: 14px;
-        }
-
-        .info-card {
-            background: var(--gris-claro);
-            border-radius: 16px;
-            padding: 12px;
-            text-align: left;
-            font-size: 0.85rem;
-            line-height: 1.45;
-            margin-bottom: 8px;
-            border-left: 4px solid #3B82F6;
-            color: var(--gris-texto);
-        }
-
-        .teacher-tribute-card {
-            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
-            border: 2px solid #F59E0B;
-            border-left: 6px solid #D97706;
-            border-radius: 16px;
-            padding: 14px;
-            margin: 10px 0;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
-            animation: highlightPulse 2s infinite ease-in-out;
-        }
-
-        .teacher-tribute-text {
-            font-size: 0.86rem;
-            font-weight: 700;
-            color: #78350F;
-            line-height: 1.5;
-            font-style: italic;
-        }
-
-        .specialty-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            justify-content: center;
-            margin: 6px 0;
-        }
-
-        .specialty-tag {
-            background: var(--amarillo-pastel);
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: var(--texto-etiqueta-amarilla);
-            border: 1px solid #FDE68A;
-        }
-
-        .credits {
-            font-size: 0.78rem;
-            color: var(--texto-secundario);
-            margin-top: 8px;
-            font-weight: 600;
-        }
-
-        @keyframes loadProgress {
-            0% { width: 0%; }
-            100% { width: 100%; }
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-
-        @keyframes zoomIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(15px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes rabbitBounce {
-            0% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-10px) scale(1.05); }
-            100% { transform: translateY(0) scale(1); }
-        }
-
-        @keyframes btnPulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5); }
-            70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
-        }
-
-        @keyframes highlightPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.015); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.25); }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Canvas para efectos visuales -->
+    <canvas id="effects-canvas"></canvas>
 
-    <!-- 0. SPLASH SCREEN -->
+    <!-- Splash Screen -->
     <div id="splash-screen">
         <div class="splash-content">
-            <img class="conejo-uniforme-logo" src="conejo-uniforme.PNG" alt="Conti Conti" onerror="this.style.display='none';">
-            
-            <img id="splash-logo-img" class="splash-logo" src="logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('splash-logo-fallback').style.display='block';">
-            <div id="splash-logo-fallback" class="logo-placeholder" style="display:none; font-size: 1.1rem; margin-bottom: 12px;">🏫 ESFUERZO Y FUTURO</div>
-
+            <img src="logo.jpg" alt="Conti Conti Logo" class="splash-logo" onerror="this.style.display='none'">
+            <img src="conejo-uniforme.PNG" alt="Mascota Conti" class="conejo-uniforme-logo" onerror="this.style.display='none'">
             <div class="splash-tag">📊 Especialidad de Contabilidad</div>
-            
             <h1 class="splash-title">
                 Desafío Interactivo:
                 <span class="highlight-red-title">Fondo de Emergencia</span>
             </h1>
-
             <div class="splash-credits-box">
-                <b>Proyecto Presentado por:</b><br>
-                🎓 <b>Valeska Romero</b><br>
-                Estudiante de la especialidad de Contabilidad
+                <strong>🏆 Desafío de Contabilidad y Finanzas</strong><br>
+                <small>Demuestra tus conocimientos y conviértete en un experto financiero</small>
             </div>
-
-            <div style="font-size: 0.78rem; color: var(--texto-secundario);">Cargando experiencia educativa...</div>
             <div class="loader-bar">
-                <div class="loader-fill"></div>
+                <div class="loader-fill" id="loader-fill"></div>
             </div>
-
-            <button class="skip-splash-btn" onclick="dismissSplash()">Ingresar Ahora ➔</button>
+            <button class="skip-splash-btn" id="skip-splash-btn">Iniciar Ahora ⚡</button>
         </div>
     </div>
 
-    <!-- Canvas de Efectos -->
-    <canvas id="effects-canvas"></canvas>
-
-    <!-- TARJETA PRINCIPAL -->
-    <div class="app-card">
-        <!-- HEADER -->
+    <!-- App Principal -->
+    <div class="app-card" id="app-card">
+        <!-- Header -->
         <div class="app-header">
-            <img id="school-logo-img" class="school-logo" src="logo-colegio.jpg" alt="Logo Colegio" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
-            <div id="logo-fallback" class="logo-placeholder" style="display:none;">🏫 ESFUERZO Y FUTURO</div>
-
-            <div class="status-bar" id="status-bar" style="display: none;">
-                <div class="progress-container">
-                    <div class="progress-fill" id="progress-fill"></div>
-                </div>
-                <div class="score-badge" id="score-badge">
-                    💰 <span id="score-text">0</span>
-                </div>
-            </div>
+            <img src="logo-colegio.jpg" alt="Logo Escolar" class="school-logo" onerror="this.classList.add('logo-placeholder'); this.alt='🏫 Institución Educativa';">
+            <div class="logo-placeholder" style="display:none;">🏫 Institución Educativa</div>
         </div>
 
-        <!-- 1. PANTALLA DE BIENVENIDA -->
+        <!-- Barra de Estado -->
+        <div class="status-bar">
+            <div class="progress-container">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="score-badge" id="score-badge">⭐ 0 pts</div>
+            <div class="lives-display" id="lives-display">❤️❤️❤️</div>
+            <div class="streak-display" id="streak-display">🔥 0</div>
+            <div class="timer-display" id="timer-display">⏱️ 30s</div>
+        </div>
+
+        <!-- Power-ups Bar -->
+        <div class="powerups-bar" id="powerups-bar">
+            <button class="powerup-btn" id="powerup-fifty" title="50/50: Elimina dos opciones incorrectas">
+                ✂️ 50/50 <small>(3)</small>
+            </button>
+            <button class="powerup-btn" id="powerup-time" title="Tiempo extra: +15 segundos">
+                ⏳ +Tiempo <small>(2)</small>
+            </button>
+            <button class="powerup-btn" id="powerup-freeze" title="Congelar tiempo: Detiene el reloj 10s">
+                ❄️ Congelar <small>(1)</small>
+            </button>
+        </div>
+
+        <!-- Pantallas -->
+        <!-- Pantalla de Bienvenida -->
         <div class="screen active" id="screen-welcome">
             <div class="character-box">
-                <svg class="rabbit-svg" id="welcome-rabbit" viewBox="0 0 100 120">
-                    <g class="ear ear-left">
-                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                        <ellipse class="ear-inner" cx="38" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
-                    </g>
-                    <g class="ear ear-right">
-                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                        <ellipse class="ear-inner" cx="62" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
-                    </g>
-                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                    <circle cx="32" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
-                    <circle cx="68" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
-                    <circle cx="38" cy="64" r="3.5" fill="#1E293B"/>
-                    <circle cx="62" cy="64" r="3.5" fill="#1E293B"/>
-                    <polygon points="48,70 52,70 50,73" fill="#FF9AA2"/>
-                    <path d="M 47 75 Q 50 78 53 75" stroke="#1E293B" stroke-width="1.8" fill="none"/>
+                <svg class="rabbit-svg thinking" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="60" cy="110" rx="35" ry="12" fill="#E2E8F0" opacity="0.6"/>
+                    <ellipse cx="60" cy="70" rx="30" ry="35" fill="#F5F5F5"/>
+                    <ellipse cx="50" cy="60" rx="4" ry="5" fill="#2D3748"/>
+                    <ellipse cx="70" cy="60" rx="4" ry="5" fill="#2D3748"/>
+                    <circle cx="51" cy="58" r="1.5" fill="white"/>
+                    <circle cx="71" cy="58" r="1.5" fill="white"/>
+                    <ellipse cx="60" cy="72" rx="6" ry="4" fill="#FFB6C1"/>
+                    <path d="M52 78 Q60 85 68 78" stroke="#2D3748" stroke-width="1.5" fill="none"/>
+                    <ellipse cx="48" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-left"/>
+                    <ellipse cx="48" cy="42" rx="5" ry="13" fill="#FFB6C1" class="ear-inner"/>
+                    <ellipse cx="72" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-right"/>
+                    <ellipse cx="72" cy="42" rx="5" ry="13" fill="#FFB6C1" class="ear-inner"/>
                 </svg>
-                <div class="character-speech">¡Hola! Soy Conti Conti. ¡Acompáñame en este juego financiero! 🐰✨</div>
+                <div class="character-speech" id="character-speech">
+                    ¡Hola! Soy Conti, tu guía financiero 🐰
+                </div>
             </div>
-
-            <h1 class="welcome-title">¿Qué tanto sabes sobre el Fondo de Emergencia?</h1>
+            <h2 class="welcome-title">¿Qué tanto sabes sobre el Fondo de Emergencia?</h2>
             <p class="welcome-sub">Descubre cuánto sabes sobre educación financiera respondiendo este rápido desafío de 10 preguntas.</p>
 
-            <button class="main-btn" onclick="startQuiz()">🚀 Comenzar Desafío</button>
-        </div>
-
-        <!-- 2. PANTALLA DE CUESTIONARIO -->
-        <div class="screen" id="screen-quiz">
-            <div style="font-size: 0.82rem; font-weight: 700; color: var(--texto-secundario); margin-bottom: 2px;" id="question-number">Pregunta 1 de 10</div>
-            
-            <h2 class="question-text" id="question-text">Cargando pregunta...</h2>
-
-            <div class="options-grid" id="options-container"></div>
-
-            <div class="feedback-box" id="feedback-box"></div>
-
-            <div class="character-box">
-                <svg class="rabbit-svg" id="quiz-rabbit" viewBox="0 0 100 120">
-                    <g class="ear ear-left">
-                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                        <ellipse class="ear-inner" cx="38" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
-                    </g>
-                    <g class="ear ear-right">
-                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                        <ellipse class="ear-inner" cx="62" cy="28" rx="4" ry="18" fill="#FFB7B2"/>
-                    </g>
-                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                    <circle cx="32" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
-                    <circle cx="68" cy="72" r="5" fill="#FFD1DC" opacity="0.8"/>
-                    <circle id="eye-left" cx="38" cy="64" r="3.5" fill="#1E293B"/>
-                    <circle id="eye-right" cx="62" cy="64" r="3.5" fill="#1E293B"/>
-                    <polygon points="48,70 52,70 50,73" fill="#FF9AA2"/>
-                    <path id="rabbit-mouth" d="M 47 75 Q 50 78 53 75" stroke="#1E293B" stroke-width="1.8" fill="none"/>
-                </svg>
-
-                <div class="character-speech" id="quiz-character-speech">¡Lee con atención cada opción! 🧐</div>
+            <div class="splash-credits-box">
+                <b>🎓 Proyecto Presentado por:</b><br>
+                <b>Valeska Romero</b><br>
+                Estudiante de la especialidad de Contabilidad
             </div>
 
-            <button class="main-btn" id="next-btn" onclick="nextQuestion()" disabled>Siguiente ➔</button>
+            <div class="info-card">
+                <strong>🎯 Temas del desafío:</strong><br>
+                • Fondo de emergencia<br>
+                • Presupuesto y ahorro<br>
+                • Inversiones y riesgo<br>
+                • Crédito y deudas<br>
+                • Conceptos contables básicos
+            </div>
+
+            <div class="mode-grid">
+                <div class="mode-card selected" id="mode-normal" onclick="selectMode('normal')">
+                    <div class="mode-icon">🐢</div>
+                    <div class="mode-title">Modo Normal</div>
+                    <div class="mode-desc">Sin presión de tiempo</div>
+                </div>
+                <div class="mode-card" id="mode-timed" onclick="selectMode('timed')">
+                    <div class="mode-icon">⚡</div>
+                    <div class="mode-title">Contrarreloj</div>
+                    <div class="mode-desc">30 segundos por pregunta</div>
+                </div>
+            </div>
+
+            <button class="main-btn pulse-ready" id="btn-start" onclick="startGame()">
+                ¡Comenzar Desafío! 🚀
+            </button>
+            <button class="main-btn secondary" onclick="showScreen('screen-badges')">
+                Ver Insignias 🏅
+            </button>
+            <p class="credits">Desarrollado por Romeroweb | v1.0</p>
         </div>
 
-        <!-- 3. PANTALLA DE RESULTADOS -->
+        <!-- Pantalla de Pregunta -->
+        <div class="screen" id="screen-question">
+            <div class="character-box">
+                <svg class="rabbit-svg thinking" id="rabbit-svg" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="60" cy="110" rx="35" ry="12" fill="#E2E8F0" opacity="0.6"/>
+                    <ellipse cx="60" cy="70" rx="30" ry="35" fill="#F5F5F5"/>
+                    <ellipse cx="50" cy="60" rx="4" ry="5" fill="#2D3748"/>
+                    <ellipse cx="70" cy="60" rx="4" ry="5" fill="#2D3748"/>
+                    <circle cx="51" cy="58" r="1.5" fill="white"/>
+                    <circle cx="71" cy="58" r="1.5" fill="white"/>
+                    <ellipse cx="60" cy="72" rx="6" ry="4" fill="#FFB6C1"/>
+                    <path d="M52 78 Q60 85 68 78" stroke="#2D3748" stroke-width="1.5" fill="none"/>
+                    <ellipse cx="48" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-left"/>
+                    <ellipse cx="48" cy="42" rx="5" ry="13" fill="#FFB6C1" class="ear-inner"/>
+                    <ellipse cx="72" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-right"/>
+                    <ellipse cx="72" cy="42" rx="5" ry="13" fill="#FFB6C1" class="ear-inner"/>
+                </svg>
+                <div class="character-speech" id="question-speech">¡Piensa bien tu respuesta! 🤔</div>
+            </div>
+            <div class="question-text" id="question-text"></div>
+            <img class="question-image" id="question-image" alt="Imagen de la pregunta" style="display:none;">
+            <div class="options-grid" id="options-grid"></div>
+            <div class="matching-container" id="matching-container" style="display:none;"></div>
+            <div class="drag-container" id="drag-container" style="display:none;"></div>
+            <div class="slider-container" id="slider-container" style="display:none;"></div>
+            <div class="feedback-box" id="feedback-box"></div>
+            <button class="main-btn" id="btn-next" style="display:none;" onclick="nextQuestion()">
+                Siguiente Pregunta ➡️
+            </button>
+        </div>
+
+        <!-- Pantalla de Resultados -->
         <div class="screen" id="screen-results">
             <div class="character-box">
-                <svg class="rabbit-svg correct" viewBox="0 0 100 120">
-                    <g class="ear ear-left">
-                        <ellipse cx="38" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                        <ellipse class="ear-inner" cx="38" cy="28" rx="4" ry="18" fill="#FFE066"/>
-                    </g>
-                    <g class="ear ear-right">
-                        <ellipse cx="62" cy="28" rx="8" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                        <ellipse class="ear-inner" cx="62" cy="28" rx="4" ry="18" fill="#FFE066"/>
-                    </g>
-                    <ellipse cx="50" cy="68" rx="30" ry="26" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-                    <circle cx="32" cy="72" r="5" fill="#FFD1DC"/>
-                    <circle cx="68" cy="72" r="5" fill="#FFD1DC"/>
-                    <circle cx="38" cy="64" r="3.5" fill="#1E293B"/>
-                    <circle cx="62" cy="64" r="3.5" fill="#1E293B"/>
-                    <polygon points="48,70 52,70 50,73" fill="#FF9AA2"/>
-                    <path d="M 45 74 Q 50 82 55 74 Z" fill="#1E293B"/>
+                <svg class="rabbit-svg correct" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="60" cy="110" rx="35" ry="12" fill="#E2E8F0" opacity="0.6"/>
+                    <ellipse cx="60" cy="70" rx="30" ry="35" fill="#F5F5F5"/>
+                    <ellipse cx="50" cy="60" rx="4" ry="5" fill="#2D3748"/>
+                    <ellipse cx="70" cy="60" rx="4" ry="5" fill="#2D3748"/>
+                    <circle cx="51" cy="58" r="1.5" fill="white"/>
+                    <circle cx="71" cy="58" r="1.5" fill="white"/>
+                    <ellipse cx="60" cy="72" rx="6" ry="4" fill="#FFB6C1"/>
+                    <path d="M52 78 Q60 90 68 78" stroke="#2D3748" stroke-width="1.5" fill="none"/>
+                    <ellipse cx="48" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-left"/>
+                    <ellipse cx="48" cy="42" rx="5" ry="13" fill="#FFE066" class="ear-inner"/>
+                    <ellipse cx="72" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-right"/>
+                    <ellipse cx="72" cy="42" rx="5" ry="13" fill="#FFE066" class="ear-inner"/>
                 </svg>
                 <div class="character-speech" id="result-character-speech">¡Gran trabajo completando el desafío! 🐰🎉</div>
             </div>
-
-            <h2 class="welcome-title" id="results-score-title">🎯 Obtuviste 0 de 10</h2>
-            <div class="info-card" id="results-feedback-card" style="text-align: center; font-weight: 600;">
-                Cargando retroalimentación...
+            <h2 class="welcome-title">🎉 ¡Desafío Completado!</h2>
+            <div class="share-card" id="share-card">
+                <div class="share-label">Tu puntuación final</div>
+                <div class="share-score" id="final-score">0</div>
+                <div class="share-label">puntos</div>
+                <div class="share-badges" id="share-badges"></div>
             </div>
-
-            <button class="main-btn" onclick="goToFinalScreen()">Ver Mensaje Final 📜</button>
+            <div class="radar-chart-container">
+                <h3>📊 Análisis por Temas</h3>
+                <div id="topic-analysis"></div>
+            </div>
+            <div class="btn-group">
+                <button class="main-btn" onclick="goToFinalScreen()">Ver Mensaje Final 📜</button>
+                <button class="main-btn secondary" onclick="shareResults()">Compartir 📤</button>
+            </div>
+            <button class="main-btn danger" onclick="showScreen('screen-welcome')">Volver al Inicio 🏠</button>
         </div>
 
-        <!-- 4. PANTALLA FINAL INSTITUCIONAL -->
+        <!-- Pantalla Final con Agradecimiento -->
         <div class="screen" id="screen-final">
             <div style="text-align: center; margin-bottom: 10px;">
-                <img class="conejo-uniforme-logo" src="conejo-uniforme.PNG" alt="Conti Conti" style="max-height: 100px;" onerror="this.style.display='none';">
+                <img src="conejo-uniforme.PNG" alt="Conti Conti" style="max-height: 100px;" onerror="this.style.display='none';">
             </div>
 
             <div class="info-card">
@@ -725,437 +237,38 @@
                 "¡Tu futuro comienza con una buena educación financiera!"
             </p>
 
-            <button class="main-btn" onclick="restartQuiz()">🔄 Volver a Jugar</button>
+            <button class="main-btn" onclick="restartGame()">🔄 Volver a Jugar</button>
 
             <div class="credits">
                 ✨ Desarrollado por <b>Valeska Romero</b> – Estudiante de la especialidad de Contabilidad
             </div>
         </div>
 
+        <!-- Pantalla de Insignias -->
+        <div class="screen" id="screen-badges">
+            <h2 class="welcome-title">🏅 Tus Insignias</h2>
+            <div class="badges-grid" id="badges-grid"></div>
+            <button class="main-btn" onclick="showScreen('screen-welcome')">Volver 🏠</button>
+        </div>
+
+        <!-- Pantalla de Leaderboard -->
+        <div class="screen" id="screen-leaderboard">
+            <h2 class="welcome-title">🏆 Tabla de Clasificación</h2>
+            <table class="leaderboard-table" id="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Jugador</th>
+                        <th>Puntos</th>
+                        <th>Insignias</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body"></tbody>
+            </table>
+            <button class="main-btn" onclick="showScreen('screen-welcome')">Volver 🏠</button>
+        </div>
     </div>
 
-    <script>
-        let splashTimer = setTimeout(() => { dismissSplash(); }, 6000);
-        function dismissSplash() {
-            clearTimeout(splashTimer);
-            document.getElementById('splash-screen').classList.add('hidden');
-        }
-
-        /* PREGUNTAS */
-        const questions = [
-            {
-                q: "1. ¿Qué es un fondo de emergencia?",
-                options: [
-                    "A) Dinero para comprar regalos.",
-                    "B) Un ahorro destinado a cubrir gastos inesperados.",
-                    "C) Un préstamo bancario.",
-                    "D) Dinero para vacaciones."
-                ],
-                correct: 1,
-                exp: "¡Exacto! Es un ahorro para imprevistos como urgencias médicas o reparaciones."
-            },
-            {
-                q: "2. ¿Cuál de estas situaciones corresponde a una emergencia?",
-                options: [
-                    "A) Hospitalización inesperada.",
-                    "B) Comprar ropa.",
-                    "C) Ir al cine.",
-                    "D) Comprar un celular nuevo."
-                ],
-                correct: 0,
-                exp: "¡Muy bien! Una emergencia de salud no se planifica y requiere fondos inmediatos."
-            },
-            {
-                q: "3. ¿Para qué sirve un fondo de emergencia?",
-                options: [
-                    "A) Comprar cosas por impulso.",
-                    "B) Ahorrar para vacaciones.",
-                    "C) Cubrir gastos inesperados sin endeudarse.",
-                    "D) Comprar tecnología."
-                ],
-                correct: 2,
-                exp: "¡Excelente! Te protege de pedir préstamos con intereses altos."
-            },
-            {
-                q: "4. ¿Cuándo es recomendable ahorrar?",
-                options: [
-                    "A) Solo cuando sobra dinero.",
-                    "B) Todos los meses.",
-                    "C) Una vez al año.",
-                    "D) Nunca."
-                ],
-                correct: 1,
-                exp: "¡Así se hace! El ahorro es un hábito constante que se planifica cada mes."
-            },
-            {
-                q: "5. Si se rompe el refrigerador de tu casa, ¿qué sería lo más recomendable?",
-                options: [
-                    "A) Pedir un préstamo.",
-                    "B) Esperar varios meses.",
-                    "C) Utilizar el fondo de emergencia.",
-                    "D) No hacer nada."
-                ],
-                correct: 2,
-                exp: "¡Correcto! Es una urgencia doméstica para la cual está diseñado este fondo."
-            },
-            {
-                q: "6. ¿Cuál de estas opciones NO corresponde a una emergencia?",
-                options: [
-                    "A) Una operación médica.",
-                    "B) Una reparación urgente.",
-                    "C) Comprar el último modelo de celular.",
-                    "D) Reparar una fuga de agua."
-                ],
-                correct: 2,
-                exp: "¡Exacto! Cambiar de teléfono por gusto es un deseo, no una emergencia."
-            },
-            {
-                q: "7. ¿Qué documento permite conocer cómo se distribuye el sueldo de un trabajador?",
-                options: [
-                    "A) Factura.",
-                    "B) Boleta.",
-                    "C) Planilla de remuneraciones.",
-                    "D) Balance general."
-                ],
-                correct: 2,
-                exp: "¡Muy bien! Ahí se detallan los haberes, descuentos y líquido a pagar."
-            },
-            {
-                q: "8. ¿Qué representa el sueldo líquido?",
-                options: [
-                    "A) El sueldo antes de descuentos.",
-                    "B) El dinero destinado a la AFP.",
-                    "C) El dinero que finalmente recibe el trabajador.",
-                    "D) Los impuestos."
-                ],
-                correct: 2,
-                exp: "¡Excelente! Es el monto real entregado al trabajador después de los descuentos."
-            },
-            {
-                q: "9. ¿Por qué la planilla de remuneraciones puede ayudar a crear un fondo de emergencia?",
-                options: [
-                    "A) Porque aumenta el sueldo.",
-                    "B) Porque elimina gastos.",
-                    "C) Porque permite saber cuánto dinero recibe una persona y cuánto puede ahorrar.",
-                    "D) Porque evita pagar impuestos."
-                ],
-                correct: 2,
-                exp: "¡Bien pensado! Saber tus ingresos exactos permite calcular tu capacidad de ahorro."
-            },
-            {
-                q: "10. ¿Cuál de las siguientes especialidades enseña sobre remuneraciones, educación financiera, administración y contabilidad?",
-                options: [
-                    "A) 🍳 Gastronomía",
-                    "B) 👶 Atención de Párvulos",
-                    "C) 📊 Contabilidad",
-                    "D) 🥫 Elaboración Industrial de Alimentos",
-                    "E) ⚡ Electrónica"
-                ],
-                correct: 2,
-                exp: "¡Correcto! Contabilidad entrega las herramientas para administrar el dinero y las organizaciones."
-            }
-        ];
-
-        // FUNCIÓN PARA ALEATORIZAR OPCIONES
-        function shuffleArray(array) {
-            const shuffled = [...array];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            return shuffled;
-        }
-
-        // VARIABLES GLOBALES PARA CADA PREGUNTA
-        let currentQuestionData = null;
-        let correctAnswerIndex = null;
-
-        let currentQuestion = 0;
-        let score = 0;
-        let answered = false;
-
-        const statusBar = document.getElementById('status-bar');
-        const progressFill = document.getElementById('progress-fill');
-        const scoreText = document.getElementById('score-text');
-        const scoreBadge = document.getElementById('score-badge');
-        const questionNumber = document.getElementById('question-number');
-        const questionText = document.getElementById('question-text');
-        const optionsContainer = document.getElementById('options-container');
-        const feedbackBox = document.getElementById('feedback-box');
-        const quizSpeech = document.getElementById('quiz-character-speech');
-        const nextBtn = document.getElementById('next-btn');
-        const quizRabbit = document.getElementById('quiz-rabbit');
-        const rabbitMouth = document.getElementById('rabbit-mouth');
-
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-        }
-
-        function startQuiz() {
-            currentQuestion = 0;
-            score = 0;
-            scoreText.innerText = score;
-            statusBar.style.display = 'flex';
-            showScreen('screen-quiz');
-            loadQuestion();
-        }
-
-        function loadQuestion() {
-            answered = false;
-            nextBtn.disabled = true;
-            nextBtn.classList.remove('pulse-ready');
-            feedbackBox.className = 'feedback-box';
-            feedbackBox.style.display = 'none';
-
-            quizRabbit.classList.remove('correct', 'incorrect');
-            rabbitMouth.setAttribute('d', 'M 47 75 Q 50 78 53 75');
-
-            const q = questions[currentQuestion];
-            questionNumber.innerText = `Pregunta ${currentQuestion + 1} de ${questions.length}`;
-            questionText.innerText = q.q;
-            
-            const progressPercent = ((currentQuestion) / questions.length) * 100;
-            progressFill.style.width = `${progressPercent}%`;
-
-            // CREAR ÍNDICES Y MEZCLAR
-            const indices = q.options.map((_, i) => i);
-            const shuffledIndices = shuffleArray(indices);
-            
-            currentQuestionData = {
-                originalOptions: q.options,
-                shuffledIndices: shuffledIndices,
-                originalCorrect: q.correct,
-                exp: q.exp
-            };
-            
-            correctAnswerIndex = shuffledIndices.indexOf(q.correct);
-
-            // Renderizar opciones en orden aleatorio
-            optionsContainer.innerHTML = '';
-            shuffledIndices.forEach((originalIdx, displayIdx) => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                btn.innerHTML = `<span>${q.options[originalIdx]}</span><span class="icon"></span>`;
-                btn.onclick = () => selectOption(displayIdx);
-                optionsContainer.appendChild(btn);
-            });
-
-            quizSpeech.innerText = "¡Analiza las respuestas cuidadosamente! 🧐";
-        }
-
-        function selectOption(index) {
-            if (answered) return;
-            answered = true;
-
-            const buttons = optionsContainer.querySelectorAll('.option-btn');
-            nextBtn.disabled = false;
-            nextBtn.classList.add('pulse-ready');
-
-            if (index === correctAnswerIndex) {
-                score++;
-                scoreText.innerText = score;
-                buttons[index].classList.add('correct');
-                buttons[index].querySelector('.icon').innerText = '✔️';
-                
-                quizRabbit.classList.add('correct');
-                rabbitMouth.setAttribute('d', 'M 45 74 Q 50 82 55 74 Z');
-                
-                quizSpeech.innerText = getPositivePhrase();
-                feedbackBox.className = 'feedback-box correct';
-                feedbackBox.innerHTML = `<b>¡Muy bien!</b> ${currentQuestionData.exp}`;
-                
-                scoreBadge.style.transform = 'scale(1.25)';
-                setTimeout(() => scoreBadge.style.transform = 'scale(1)', 250);
-
-                triggerCoinEffect();
-            } else {
-                buttons[index].classList.add('incorrect');
-                buttons[index].querySelector('.icon').innerText = '❌';
-                buttons[correctAnswerIndex].classList.add('correct');
-                buttons[correctAnswerIndex].querySelector('.icon').innerText = '✔️';
-
-                quizRabbit.classList.add('incorrect');
-                rabbitMouth.setAttribute('d', 'M 47 77 Q 50 73 53 77');
-
-                quizSpeech.innerText = "¡Oh no! Las orejitas de Conti Conti cayeron. ¡Aprendamos juntos! 💪";
-                feedbackBox.className = 'feedback-box incorrect';
-                
-                const correctOptionText = currentQuestionData.originalOptions[currentQuestionData.originalCorrect];
-                feedbackBox.innerHTML = `<b>Respuesta correcta:</b> ${correctOptionText}<br>${currentQuestionData.exp}`;
-            }
-
-            feedbackBox.style.display = 'block';
-        }
-
-        function nextQuestion() {
-            currentQuestion++;
-            if (currentQuestion < questions.length) {
-                loadQuestion();
-            } else {
-                showResults();
-            }
-        }
-
-        function getPositivePhrase() {
-            const phrases = [
-                "¡Genial! Las orejas de Conti Conti brillan de emoción 🌟", 
-                "¡Excelente! 🎉", 
-                "¡Respuesta correcta! 🚀", 
-                "¡Cada vez sabes más! 💡", 
-                "¡Muy bien pensado! 💰"
-            ];
-            return phrases[Math.floor(Math.random() * phrases.length)];
-        }
-
-        function showResults() {
-            progressFill.style.width = '100%';
-            statusBar.style.display = 'none';
-            showScreen('screen-results');
-
-            const title = document.getElementById('results-score-title');
-            const card = document.getElementById('results-feedback-card');
-            const speech = document.getElementById('result-character-speech');
-
-            title.innerText = `🎯 Obtuviste ${score} de 10 respuestas correctas`;
-
-            if (score === 10) {
-                speech.innerText = "¡Puntaje Perfecto! Conti Conti está súper orgulloso. 🏆🐰";
-                card.innerHTML = "🏆 <b>¡Excelente!</b> Dominas los conceptos básicos de educación financiera y gestión del ahorro.";
-                confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
-            } else if (score >= 7) {
-                speech.innerText = "¡Excelente resultado! Tienes bases muy sólidas. 👏🐰";
-                card.innerHTML = "👏 <b>¡Muy bien!</b> Tienes conocimientos muy sólidos sobre finanzas personales.";
-                confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
-            } else if (score >= 4) {
-                speech.innerText = "¡Buen esfuerzo! Sigue practicando con Conti Conti. 📚🐰";
-                card.innerHTML = "📚 <b>Vas por buen camino.</b> Sigue aprendiendo para construir un futuro financiero seguro.";
-            } else {
-                speech.innerText = "¡El aprendizaje es un camino diario! 💡🐰";
-                card.innerHTML = "💡 <b>La educación financiera se aprende poco a poco.</b> ¡Te invitamos a reintentarlo!";
-            }
-        }
-
-        function goToFinalScreen() {
-            showScreen('screen-final');
-            
-            const duration = 2.5 * 1000;
-            const end = Date.now() + duration;
-
-            (function frame() {
-              confetti({
-                particleCount: 4,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0 },
-                colors: ['#FFD700', '#F59E0B', '#3B82F6', '#10B981']
-              });
-              confetti({
-                particleCount: 4,
-                angle: 120,
-                spread: 55,
-                origin: { x: 1 },
-                colors: ['#FFD700', '#F59E0B', '#3B82F6', '#10B981']
-              });
-
-              if (Date.now() < end) {
-                requestAnimationFrame(frame);
-              }
-            }());
-        }
-
-        function restartQuiz() {
-            startQuiz();
-        }
-
-        /* EFECTO DE MONEDAS EN CANVAS */
-        function triggerCoinEffect() {
-            const canvas = document.getElementById('effects-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            const badgeRect = scoreBadge.getBoundingClientRect();
-            const originX = badgeRect.left + badgeRect.width / 2;
-            const originY = badgeRect.top + badgeRect.height / 2;
-
-            let particles = [];
-            const numCoins = 14;
-
-            for (let i = 0; i < numCoins; i++) {
-                const angle = (Math.PI * 2 * i) / numCoins + (Math.random() * 0.4 - 0.2);
-                const speed = Math.random() * 6 + 4;
-                particles.push({
-                    x: originX,
-                    y: originY,
-                    size: Math.random() * 8 + 10,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed - 3,
-                    gravity: 0.35,
-                    alpha: 1,
-                    rotation: Math.random() * Math.PI * 2,
-                    rotSpeed: (Math.random() - 0.5) * 0.2
-                });
-            }
-
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                let activeParticles = false;
-
-                particles.forEach((p) => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.vy += p.gravity;
-                    p.rotation += p.rotSpeed;
-
-                    if (p.y > originY + 50) {
-                        p.alpha -= 0.02;
-                    }
-
-                    if (p.alpha > 0) {
-                        activeParticles = true;
-                        ctx.save();
-                        ctx.globalAlpha = Math.max(0, p.alpha);
-                        ctx.translate(p.x, p.y);
-                        ctx.rotate(p.rotation);
-                        
-                        ctx.shadowColor = 'rgba(0,0,0,0.2)';
-                        ctx.shadowBlur = 4;
-
-                        ctx.fillStyle = '#FFD700';
-                        ctx.beginPath();
-                        ctx.arc(0, 0, p.size, 0, Math.PI * 2);
-                        ctx.fill();
-
-                        ctx.strokeStyle = '#B8860B';
-                        ctx.lineWidth = 2;
-                        ctx.stroke();
-
-                        ctx.fillStyle = '#B8860B';
-                        ctx.font = `bold ${p.size * 0.9}px sans-serif`;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText('$', 0, 1);
-                        
-                        ctx.restore();
-                    }
-                });
-
-                if (activeParticles) {
-                    requestAnimationFrame(animate);
-                }
-            }
-            animate();
-        }
-    </script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(() => console.log('Service Worker cargado con éxito'))
-            .catch(err => console.log('Error en Service Worker:', err));
-        });
-      }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
