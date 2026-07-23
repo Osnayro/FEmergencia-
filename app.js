@@ -1,4 +1,6 @@
 
+
+
 // ===== ESTADO GLOBAL =====
 const state = {
     score: 0,
@@ -445,17 +447,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function setupSplashScreen() {
     const skipBtn = document.getElementById('skip-splash-btn');
-    const loaderFill = document.getElementById('loader-fill');
     const splashScreen = document.getElementById('splash-screen');
     
-    // Auto ocultar después de 6 segundos
     setTimeout(() => {
         if (splashScreen && !splashScreen.classList.contains('hidden')) {
             splashScreen.classList.add('hidden');
         }
     }, 6000);
     
-    // Botón para saltar
     if (skipBtn) {
         skipBtn.addEventListener('click', () => {
             splashScreen.classList.add('hidden');
@@ -513,7 +512,7 @@ function startGame() {
     const fondoQuestions = shuffleArray([...fondoEmergenciaQuestions]).slice(0, 2);
     const otherQuestions = shuffleArray([...generalQuestions]).slice(0, 8);
     
-    // Combinar y mezclar solo las últimas 8
+    // Las 2 primeras son de fondo de emergencia, el resto mezcladas
     state.questions = [...fondoQuestions, ...shuffleArray(otherQuestions)];
     state.totalQuestions = state.questions.length;
     
@@ -633,11 +632,21 @@ function loadMultipleChoice(question) {
     const optionsGrid = document.getElementById('options-grid');
     optionsGrid.style.display = 'flex';
     
-    question.options.forEach((option, index) => {
+    // Crear array de índices y mezclarlos aleatoriamente
+    const indices = question.options.map((_, i) => i);
+    const shuffledIndices = shuffleArray(indices);
+    
+    // Guardar referencia del orden mezclado en la pregunta
+    question._shuffledIndices = shuffledIndices;
+    
+    // Renderizar opciones en orden aleatorio
+    shuffledIndices.forEach((originalIndex, displayIndex) => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
-        btn.textContent = `${option}`;
-        btn.addEventListener('click', () => checkMultipleAnswer(index, question));
+        btn.textContent = question.options[originalIndex];
+        btn.dataset.originalIndex = originalIndex;
+        btn.dataset.displayIndex = displayIndex;
+        btn.addEventListener('click', () => checkMultipleAnswer(originalIndex, question));
         optionsGrid.appendChild(btn);
     });
 }
@@ -649,7 +658,6 @@ function loadMatching(question) {
     let selectedLeft = null;
     const matches = {};
     
-    // Mezclar columnas
     const leftItems = shuffleArray(question.pairs.map(p => ({ id: p.id, text: p.left })));
     const rightItems = shuffleArray(question.pairs.map(p => ({ id: p.id, text: p.right })));
     
@@ -844,16 +852,28 @@ function checkDragComplete(question) {
 }
 
 // ===== MANEJO DE RESPUESTAS =====
-function checkMultipleAnswer(index, question) {
+function checkMultipleAnswer(originalIndex, question) {
     const options = document.querySelectorAll('.option-btn');
     options.forEach(btn => btn.disabled = true);
     
-    if (index === question.correct) {
-        options[index].classList.add('correct');
+    // Encontrar el índice visual del botón correcto
+    const shuffledIndices = question._shuffledIndices;
+    const correctDisplayIndex = shuffledIndices.indexOf(question.correct);
+    
+    // Encontrar el índice visual del botón clickeado
+    let clickedDisplayIndex = -1;
+    options.forEach((btn, i) => {
+        if (parseInt(btn.dataset.originalIndex) === originalIndex) {
+            clickedDisplayIndex = i;
+        }
+    });
+    
+    if (originalIndex === question.correct) {
+        options[clickedDisplayIndex].classList.add('correct');
         handleCorrectAnswer(question.points);
     } else {
-        options[index].classList.add('incorrect');
-        options[question.correct].classList.add('correct');
+        options[clickedDisplayIndex].classList.add('incorrect');
+        options[correctDisplayIndex].classList.add('correct');
         handleIncorrectAnswer(question);
     }
     
@@ -865,7 +885,6 @@ function handleCorrectAnswer(points) {
     state.streak++;
     if (state.streak > state.maxStreak) state.maxStreak = state.streak;
     
-    // Registrar tema respondido correctamente
     const question = state.questions[state.currentQuestion];
     if (!state.topicScores[question.topic]) state.topicScores[question.topic] = { correct: 0, total: 0 };
     state.topicScores[question.topic].correct++;
@@ -889,7 +908,6 @@ function handleIncorrectAnswer(question) {
     state.lives--;
     state.streak = 0;
     
-    // Registrar tema respondido
     if (!state.topicScores[question.topic]) state.topicScores[question.topic] = { correct: 0, total: 0 };
     state.topicScores[question.topic].total++;
     
@@ -954,16 +972,18 @@ function applyFiftyFifty() {
     if (question.type !== 'multiple') return;
     
     const options = document.querySelectorAll('.option-btn');
-    const incorrectIndexes = [];
+    const shuffledIndices = question._shuffledIndices;
+    const correctDisplayIndex = shuffledIndices.indexOf(question.correct);
     
-    options.forEach((btn, index) => {
-        if (index !== question.correct) {
-            incorrectIndexes.push(index);
+    const incorrectDisplayIndexes = [];
+    options.forEach((btn, i) => {
+        if (i !== correctDisplayIndex) {
+            incorrectDisplayIndexes.push(i);
         }
     });
     
     // Eliminar 2 opciones incorrectas aleatorias
-    shuffleArray(incorrectIndexes).slice(0, 2).forEach(index => {
+    shuffleArray(incorrectDisplayIndexes).slice(0, 2).forEach(index => {
         options[index].style.display = 'none';
     });
 }
@@ -1037,7 +1057,6 @@ function endGame() {
     
     document.getElementById('final-score').textContent = state.score;
     
-    // Mostrar análisis por temas
     const topicAnalysis = document.getElementById('topic-analysis');
     topicAnalysis.innerHTML = '';
     
@@ -1069,7 +1088,6 @@ function endGame() {
         colorIndex = (colorIndex + 1) % topicColors.length;
     }
     
-    // Mostrar insignias ganadas
     const shareBadges = document.getElementById('share-badges');
     shareBadges.innerHTML = '';
     for (const [badge, unlocked] of Object.entries(state.badges)) {
@@ -1081,7 +1099,6 @@ function endGame() {
         }
     }
     
-    // Actualizar mensaje de felicitación
     const resultCharacterSpeech = document.getElementById('result-character-speech');
     if (state.score >= 900) {
         resultCharacterSpeech.textContent = '¡Puntaje Perfecto! Conti Conti está súper orgulloso. 🏆🐰';
