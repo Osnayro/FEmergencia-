@@ -31,7 +31,7 @@
             </h1>
             <div class="splash-credits-box">
                 <strong>🏆 Desafío de Contabilidad y Finanzas</strong><br>
-                <small>Demuestra tus conocimientos en 2 niveles</small>
+                <small>Demuestra tus conocimientos en 4 niveles progresivos</small>
             </div>
             <div class="loader-bar">
                 <div class="loader-fill" id="loader-fill"></div>
@@ -73,7 +73,6 @@
             </button>
         </div>
 
-        <!-- Pantallas -->
         <!-- Pantalla de Bienvenida -->
         <div class="screen active" id="screen-welcome">
             <div class="character-box">
@@ -95,8 +94,8 @@
                     ¡Hola! Soy Conti Conti, tu guía financiero 🐰
                 </div>
             </div>
-            <h2 class="welcome-title">¿Qué tanto sabes sobre el Fondo de Emergencia?</h2>
-            <p class="welcome-sub">Completa 2 niveles demostrando tus conocimientos financieros</p>
+            <h2 class="welcome-title">¿Qué tanto sabes sobre finanzas?</h2>
+            <p class="welcome-sub">Completa los 4 niveles demostrando tus conocimientos</p>
 
             <div class="splash-credits-box">
                 <b>🎓 Proyecto Presentado por:</b><br>
@@ -106,8 +105,10 @@
 
             <div class="info-card">
                 <strong>🎯 Niveles del desafío:</strong><br>
-                🟢 <b>Nivel 1:</b> Fondo de Emergencia (10 preguntas)<br>
-                🔵 <b>Nivel 2:</b> Contabilidad y Finanzas (10 preguntas)
+                🟢 <b>Nivel 1:</b> Fondo de Emergencia<br>
+                🔵 <b>Nivel 2:</b> Contabilidad y Nómina<br>
+                🟣 <b>Nivel 3:</b> Estados Financieros<br>
+                🔴 <b>Nivel 4:</b> Cálculos Técnicos Avanzados
             </div>
 
             <div class="mode-grid">
@@ -119,7 +120,7 @@
                 <div class="mode-card" id="mode-timed" onclick="selectMode('timed')">
                     <div class="mode-icon">⚡</div>
                     <div class="mode-title">Contrarreloj</div>
-                    <div class="mode-desc">30 segundos por pregunta</div>
+                    <div class="mode-desc">30s - 20s por pregunta</div>
                 </div>
             </div>
 
@@ -129,7 +130,7 @@
             <button class="main-btn secondary" onclick="showScreen('screen-badges')">
                 Ver Insignias 🏅
             </button>
-            <p class="credits">Desarrollado por Romeroweb | v2.0</p>
+            <p class="credits">Desarrollado por Romeroweb | v3.0</p>
         </div>
 
         <!-- Pantalla de Pregunta -->
@@ -163,7 +164,7 @@
             </button>
         </div>
 
-        <!-- Pantalla de Transición Nivel 1 -->
+        <!-- Pantalla de Transición entre Niveles -->
         <div class="screen" id="screen-level-transition">
             <div class="character-box">
                 <svg class="rabbit-svg correct" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
@@ -180,14 +181,14 @@
                     <ellipse cx="72" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-right"/>
                     <ellipse cx="72" cy="42" rx="5" ry="13" fill="#FFE066" class="ear-inner"/>
                 </svg>
-                <div class="character-speech">¡Excelente! Has completado el Nivel 1 🎉</div>
+                <div class="character-speech" id="transition-speech">¡Excelente! Has completado el nivel 🎉</div>
             </div>
 
-            <h2 class="welcome-title">🟢 Nivel 1 Completado</h2>
+            <h2 class="welcome-title" id="transition-title">🟢 Nivel Completado</h2>
             
-            <div class="share-card" id="level1-share-card">
-                <div class="share-label">Puntuación Nivel 1</div>
-                <div class="share-score" id="level1-score">0</div>
+            <div class="share-card">
+                <div class="share-label">Puntuación del nivel</div>
+                <div class="share-score" id="level-score-display">0</div>
                 <div class="share-label">puntos</div>
             </div>
 
@@ -197,8 +198,8 @@
                 </div>
             </div>
 
-            <button class="main-btn pulse-ready" onclick="startLevel2()">
-                Siguiente Nivel 🔵
+            <button class="main-btn pulse-ready" id="btn-next-level" onclick="goToNextLevel()">
+                Siguiente Nivel ➡️
             </button>
         </div>
 
