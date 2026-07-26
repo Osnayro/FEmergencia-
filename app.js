@@ -1,11 +1,18 @@
+
 /**
  * ============================================================
- * ContiGame Engine v3.1 — Producción
+ * ContiGame Engine v3.2 — Producción
  * Lógica del juego, control de estado y flujos financieros
  * Para "Conti Conti - Desafío Financiero"
  * ============================================================
  *
- * Cambios v3.1 sobre v3.0:
+ * Cambios v3.2 sobre v3.1:
+ *   - MEJORA SENSORIAL: Flash blanco en aciertos rápidos (< 3s)
+ *   - MEJORA SENSORIAL: Destello en score-badge al sumar puntos
+ *   - MEJORA SENSORIAL: Sonido "coin" + explosión al soltar/encajar
+ *     en preguntas drag (táctil), que antes eran silenciosas.
+ *   - MEJORA SENSORIAL: Doble ráfaga de confeti en pantalla de
+ *     transición entre niveles.
  *   - FIX: clonado profundo del banco de preguntas al armar cada nivel,
  *     así los bonus (puntos x2, isBonus) ya no mutan las constantes
  *     originales (nivel2Questions, nivel3Questions, etc.) entre partidas.
@@ -286,7 +293,7 @@ function safeLocalSet(key, value) {
 
 // ===== SISTEMA DE SONIDO (Delega en ContiEffectsManager) =====
 function playSound(type) {
-    const alwaysPlay = ['correct', 'incorrect', 'levelup', 'achievement', 'tick', 'powerup'];
+    const alwaysPlay = ['correct', 'incorrect', 'levelup', 'levelstart', 'achievement', 'tick', 'powerup'];
     if (!alwaysPlay.includes(type) && state.mode === 'normal') return;
     if (window.effectsManager) {
         window.effectsManager.playSound(type);
@@ -405,6 +412,7 @@ function startLevel(levelNum) {
     updateLevelDisplay(); updateScore(); updateLives(); updateStreak(); updateProgress();
     showScreen('screen-question');
     updateRabbitReaction('thinking');
+    playSound('levelstart');
     loadQuestion();
 }
 
@@ -426,6 +434,8 @@ function shuffleArray(array) { const arr = [...array]; for (let i = arr.length -
 // ===== REACCIONES DEL CONEJO =====
 function updateRabbitReaction(reaction) {
     document.querySelectorAll('.rabbit-svg').forEach(rabbit => {
+        rabbit.className = 'rabbit-svg';
+        void rabbit.offsetWidth;
         rabbit.className = 'rabbit-svg ' + reaction;
     });
     
@@ -644,7 +654,8 @@ function loadDrag(question) {
 }
 
 /** Soporte táctil manual para las preguntas de tipo 'drag', ya que la API
- *  HTML5 de drag & drop nativa no dispara eventos táctiles en móvil/tablet. */
+ *  HTML5 de drag & drop nativa no dispara eventos táctiles en móvil/tablet.
+ *  MEJORA v3.2: añade sonido "coin" al soltar y explosión al encajar en zona. */
 function enableTouchDragForItem(draggable, question) {
     draggable.addEventListener('touchstart', () => {
         if (window.effectsManager) window.effectsManager.ensureAudio();
@@ -666,12 +677,29 @@ function enableTouchDragForItem(draggable, question) {
         const el = document.elementFromPoint(touch.clientX, touch.clientY);
         const zone = el && el.closest ? el.closest('.drop-zone') : null;
         document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+        
+        // Sonido de "clic" al soltar (siempre)
+        if (window.effectsManager) {
+            window.effectsManager.playSound('coin');
+        }
+        
         if (zone && !zone.dataset.filled) {
             const index = parseInt(zone.dataset.index, 10);
             zone.textContent = `${index + 1}. ${question.items[draggable.dataset.originalIndex]}`;
             zone.dataset.filled = draggable.dataset.originalIndex;
             draggable.style.opacity = '0.3';
             draggable.style.pointerEvents = 'none';
+            
+            // Sonido de "encaje" y pequeña explosión al acertar la zona
+            if (window.effectsManager) {
+                const rect = zone.getBoundingClientRect();
+                window.effectsManager.triggerExplosion(
+                    rect.left + rect.width / 2,
+                    rect.top + rect.height / 2,
+                    0.5, '#93C5FD'
+                );
+            }
+            
             checkDragComplete(question);
         }
     });
@@ -760,13 +788,23 @@ function handleCorrectAnswer(points) {
     playSound('correct');
     if (window.effectsManager) window.effectsManager.triggerConfetti();
     
+    // MEJORA v3.2: Flash blanco sutil en aciertos rápidos (< 3 segundos)
+    const responseTime = (Date.now() - state.questionStartTime) / 1000;
+    if (responseTime < 3 && window.effectsManager) {
+        window.effectsManager.triggerScreenFlash(180);
+    }
+    
+    // FIX: el conejo reacciona a CADA acierto individual (orejas arriba +
+    // brillo dorado), no solo cuando hay racha. Si además hay racha activa,
+    // un instante después pasa a 'impressed'.
+    updateRabbitReaction('correct');
     if (state.streak >= 5) {
-        updateRabbitReaction('impressed');
         document.getElementById('streak-display')?.classList.add('on-fire');
         if (window.effectsManager) window.effectsManager.triggerCoinRain();
+        setTimeout(() => updateRabbitReaction('impressed'), 350);
     } else if (state.streak >= 3) {
-        updateRabbitReaction('impressed');
         if (window.effectsManager) window.effectsManager.triggerCoinRain();
+        setTimeout(() => updateRabbitReaction('impressed'), 350);
     }
     
     const btnNext = document.getElementById('btn-next');
@@ -788,11 +826,14 @@ function handleIncorrectAnswer(question) {
     // === DESPACHO CENTRALIZADO DE EFECTOS DE ERROR ===
     playSound('incorrect');
     
+    // FIX: reacción inmediata 'incorrect' (orejas caídas), igual que ahora
+    // ocurre con los aciertos, antes de pasar a 'sad' o 'determined'.
+    updateRabbitReaction('incorrect');
     if (state.lives <= 0) {
-        updateRabbitReaction('sad');
+        setTimeout(() => updateRabbitReaction('sad'), 350);
         setTimeout(() => endLevel(), 1500);
     } else {
-        updateRabbitReaction('determined');
+        setTimeout(() => updateRabbitReaction('determined'), 350);
     }
     
     const btnNext = document.getElementById('btn-next');
@@ -883,6 +924,14 @@ function endLevel() {
         showScreen('screen-level-transition');
         playSound('levelup');
         if (window.effectsManager) window.effectsManager.triggerFireworks();
+        
+        // MEJORA v3.2: Doble ráfaga de confeti en pantalla de transición
+        if (window.effectsManager) {
+            window.effectsManager.triggerConfetti(2000, 2);
+            setTimeout(() => {
+                if (window.effectsManager) window.effectsManager.triggerConfetti(1500, 1.5);
+            }, 800);
+        }
     } else {
         updateRabbitReaction('graduate');
         showFinalResults();
@@ -1066,6 +1115,11 @@ function updateScore() {
     badge.textContent = `⭐ ${state.score} pts`;
     badge.classList.add('pop');
     setTimeout(() => badge.classList.remove('pop'), 300);
+    
+    // MEJORA v3.2: Destello en el score-badge al recibir puntos
+    if (window.effectsManager && typeof window.effectsManager.triggerScoreBadgeFlash === 'function') {
+        window.effectsManager.triggerScoreBadgeFlash();
+    }
 }
 
 function updateLives() {
