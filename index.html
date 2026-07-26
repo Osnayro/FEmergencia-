@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -17,15 +16,6 @@
 <body>
     <!-- Canvas para efectos visuales (Partículas de monedas, confeti, alertas) -->
     <canvas id="effects-canvas"></canvas>
-
-    <!-- Banco de Efectos de Sonido (SFX) Precargados para evitar latencia -->
-    <div id="sfx-bank" style="display: none;">
-        <audio id="sfx-coin-drop" src="audio/coin-drop.mp3" preload="auto"></audio>
-        <audio id="sfx-cash-register" src="audio/cash-register.mp3" preload="auto"></audio>
-        <audio id="sfx-success-balance" src="audio/success-balance.mp3" preload="auto"></audio>
-        <audio id="sfx-woosh-loss" src="audio/woosh-loss.mp3" preload="auto"></audio>
-        <audio id="sfx-danger-heart" src="audio/danger-heart.mp3" preload="auto"></audio>
-    </div>
 
     <!-- Splash Screen -->
     <div id="splash-screen">
@@ -126,9 +116,14 @@
             <button class="main-btn pulse-ready" id="btn-start" onclick="startGame()">
                 ¡Comenzar Desafío! 🚀
             </button>
-            <button class="main-btn secondary" onclick="showScreen('screen-badges')">
-                Ver Insignias 🏅
-            </button>
+            <div class="btn-group">
+                <button class="main-btn secondary" onclick="showScreen('screen-badges')">
+                    Ver Insignias 🏅
+                </button>
+                <button class="main-btn secondary" onclick="showScreen('screen-leaderboard')">
+                    Clasificación 🏆
+                </button>
+            </div>
             <p class="credits">Desarrollado por Romeroweb | v5.0</p>
         </div>
 
@@ -198,6 +193,7 @@
                 <button class="main-btn" onclick="goToFinalScreen()">Ver Mensaje Final 📜</button>
                 <button class="main-btn secondary" onclick="shareResults()">Compartir 📤</button>
             </div>
+            <button class="main-btn secondary" onclick="showScreen('screen-leaderboard')">Ver Clasificación 🏆</button>
             <button class="main-btn danger" onclick="showScreen('screen-welcome')">Volver al Inicio 🏠</button>
         </div>
 
