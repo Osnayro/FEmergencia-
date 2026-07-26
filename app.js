@@ -13,6 +13,8 @@
  *     en preguntas drag (táctil), que antes eran silenciosas.
  *   - MEJORA SENSORIAL: Doble ráfaga de confeti en pantalla de
  *     transición entre niveles.
+ *   - MEJORA: Catálogo de frases ampliado (8-12 frases por estado)
+ *     con nuevos estados 'correct' e 'incorrect'.
  *   - FIX: clonado profundo del banco de preguntas al armar cada nivel,
  *     así los bonus (puntos x2, isBonus) ya no mutan las constantes
  *     originales (nivel2Questions, nivel3Questions, etc.) entre partidas.
@@ -441,17 +443,111 @@ function updateRabbitReaction(reaction) {
     
     const speech = document.getElementById('question-speech');
     const messages = {
-        'thinking': ['¡Piensa bien tu respuesta! 🤔', 'Tú puedes hacerlo 💪', 'Analiza con cuidado 📊'],
-        'nervous': ['¡El tiempo se acaba! ⏰', '¡Rápido! 😰', '¡No te congeles! ❄️'],
-        'bored': ['¡Despierta! ☕', '¡Vamos, tú puedes! 😴', '¡No te duermas! 💤'],
-        'impressed': ['¡Impresionante racha! 🤩', '¡Eres increíble! 🌟', '¡Qué genio! 🧠'],
-        'sad': ['¡No te rindas! 💪', '¡Aprende del error! 📚', '¡La próxima será! 🎯'],
-        'celebrating': ['¡Perfecto! 🥳', '¡Nivel impecable! 🎉', '¡Eres el mejor! 🏆'],
-        'deep-think': ['¡Nivel experto! 🔬', '¡Piensa profundamente! 🧐', '¡Confía en tus cálculos! 📐'],
-        'confident': ['¡Eliminamos dos! 😎', '¡Ahora es más fácil! ✨', '¡Tú tienes el control! 🕶️'],
-        'frozen': ['¡Tiempo congelado! 🥶', '¡Relájate y piensa! ❄️', '¡Sin prisa! ⛄'],
-        'determined': ['¡Ahora sí! 😤', '¡Con más ganas! 💪', '¡Esta no falla! 🔥'],
-        'graduate': ['¡Lo lograste! 🎓', '¡Graduado financiero! 🏅', '¡Eres un maestro! 👨‍🎓']
+        'thinking': [
+            '¡Piensa bien tu respuesta! 🤔',
+            'Tú puedes hacerlo 💪',
+            'Analiza con cuidado 📊',
+            'Confío en tu razonamiento 🧠',
+            'Lee cada opción con atención 👀',
+            '¿Cuál será la correcta? 🤓',
+            'Tómate tu tiempo ⏳',
+            'Confía en lo que sabes 📚'
+        ],
+        'nervous': [
+            '¡El tiempo se acaba! ⏰',
+            '¡Rápido, confía en ti! 😰',
+            '¡No te congeles! ❄️',
+            '¡Elige ya, tú sabes! ⚡',
+            '¡Últimos segundos! 🚨',
+            '¡Vamos, no te detengas! 🏃'
+        ],
+        'bored': [
+            '¡Despierta, campeón! ☕',
+            '¡Vamos, tú puedes! 😴',
+            '¡No te duermas en clase! 💤',
+            '¡Espabila esa mente! 🧃',
+            '¡Que no decaiga el ánimo! 🎈',
+            '¿Necesitas un café virtual? ☕✨'
+        ],
+        'impressed': [
+            '¡Impresionante racha! 🤩',
+            '¡Eres increíble! 🌟',
+            '¡Qué genio financiero! 🧠',
+            '¡Nadie te para hoy! 🔥',
+            '¡Estás arrasando! 💥',
+            '¡Eres una máquina! ⚙️💨',
+            '¡Conti Conti está orgulloso! 🐰✨'
+        ],
+        'sad': [
+            '¡No te rindas! 💪',
+            '¡Aprende del error! 📚',
+            '¡La próxima será! 🎯',
+            'Cada error te hace más fuerte 🌱',
+            '¡Levántate y sigue! 🦾',
+            'Los genios también se equivocan 🧠💡'
+        ],
+        'celebrating': [
+            '¡Perfecto, nivel impecable! 🥳',
+            '¡Eres el orgullo de Contabilidad! 🎉',
+            '¡Nivel superado con honores! 🏆',
+            '¡Así se hace, crack! 🌟',
+            '¡Cada vez más cerca de la cima! ⛰️',
+            '¡Qué satisfacción da aprender! 🎓✨'
+        ],
+        'deep-think': [
+            '¡Nivel experto activado! 🔬',
+            '¡Piensa profundamente! 🧐',
+            '¡Confía en tus cálculos! 📐',
+            'Esto es para mentes brillantes 💡',
+            '¡Activa tu modo calculadora! 🧮',
+            'Los números no mienten 🔢'
+        ],
+        'confident': [
+            '¡Eliminamos dos, ahora es fácil! 😎',
+            '¡El 50/50 te respalda! ✨',
+            '¡Tú tienes el control! 🕶️',
+            '¡Camino despejado hacia el éxito! 🛤️',
+            '¡Ahora solo quedan las buenas! ✅',
+            '¡Con esta ayuda es pan comido! 🍞'
+        ],
+        'frozen': [
+            '¡Tiempo congelado! 🥶',
+            '¡Relájate y piensa tranquilo! ❄️',
+            '¡Sin prisa, el reloj se detuvo! ⛄',
+            '¡Respira hondo, tienes tiempo! 🌬️',
+            '¡Aprovecha estos segundos extra! ⏸️',
+            '¡El frío te da claridad mental! 🧊'
+        ],
+        'determined': [
+            '¡Ahora sí, con todo! 😤',
+            '¡Esta no la fallo! 💪🔥',
+            '¡Con más ganas que nunca! 🦾',
+            '¡A corregir el rumbo! 🧭',
+            '¡El error me hizo más fuerte! ⚡',
+            '¡Voy con todo en esta! 🎯'
+        ],
+        'graduate': [
+            '¡Lo lograste, eres un crack! 🎓',
+            '¡Graduado con honores financieros! 🏅',
+            '¡Conti Conti te admira! 👨‍🎓🐰',
+            '¡Tu futuro financiero es brillante! 💰✨',
+            '¡De estudiante a MAESTRO! 🧠👑',
+            '¡Hoy celebras tu conocimiento! 🎉📚'
+        ],
+        'correct': [
+            '¡Respuesta correcta! ✨',
+            '¡Bien hecho! 🌟',
+            '¡Así se hace! 💪',
+            '¡Esa es la actitud! 🎯',
+            '¡Vas por buen camino! 🛤️'
+        ],
+        'incorrect': [
+            '¡No era esa, pero no pasa nada! 💪',
+            '¡Aprender es equivocarse! 📚',
+            '¡Revisa la explicación! 👀',
+            '¡La próxima la tienes! 🎯',
+            '¡Error detectado, conocimiento ganado! 🧠'
+        ]
     };
     
     const list = messages[reaction] || messages['thinking'];
