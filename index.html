@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Conti Conti | Desafío Financiero Avanzado</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A2D2FF">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,8 +15,17 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Canvas para efectos visuales -->
+    <!-- Canvas para efectos visuales (Partículas de monedas, confeti, alertas) -->
     <canvas id="effects-canvas"></canvas>
+
+    <!-- Banco de Efectos de Sonido (SFX) Precargados para evitar latencia -->
+    <div id="sfx-bank" style="display: none;">
+        <audio id="sfx-coin-drop" src="audio/coin-drop.mp3" preload="auto"></audio>
+        <audio id="sfx-cash-register" src="audio/cash-register.mp3" preload="auto"></audio>
+        <audio id="sfx-success-balance" src="audio/success-balance.mp3" preload="auto"></audio>
+        <audio id="sfx-woosh-loss" src="audio/woosh-loss.mp3" preload="auto"></audio>
+        <audio id="sfx-danger-heart" src="audio/danger-heart.mp3" preload="auto"></audio>
+    </div>
 
     <!-- Splash Screen -->
     <div id="splash-screen">
@@ -53,11 +61,12 @@
             <div class="progress-container">
                 <div class="progress-fill" id="progress-fill"></div>
             </div>
+            <!-- El score-badge servirá como punto de destino para las animaciones de monedas -->
             <div class="score-badge" id="score-badge">⭐ 0 pts</div>
             <div class="lives-display" id="lives-display">❤️❤️❤️</div>
             <div class="streak-display" id="streak-display">🔥 0</div>
             <div class="timer-display" id="timer-display">⏱️ 30s</div>
-            <div class="level-display" id="level-display" style="background: #10B981; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 0.8rem;">🟢 Nivel 1</div>
+            <div class="level-display" id="level-display" style="background: #10B981; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 0.75rem;">Nivel 1</div>
         </div>
 
         <!-- Power-ups Bar -->
@@ -71,25 +80,15 @@
             <button class="powerup-btn" id="powerup-freeze" title="Congelar tiempo: Detiene el reloj 10s">
                 ❄️ Congelar <small>(1)</small>
             </button>
+            <button class="powerup-btn" id="powerup-hint" title="Pista: Muestra una ayuda sin revelar la respuesta">
+                💡 Pista <small>(2)</small>
+            </button>
         </div>
 
         <!-- Pantalla de Bienvenida -->
         <div class="screen active" id="screen-welcome">
             <div class="character-box">
-                <svg class="rabbit-svg thinking" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
-                    <ellipse cx="60" cy="110" rx="35" ry="12" fill="#E2E8F0" opacity="0.6"/>
-                    <ellipse cx="60" cy="70" rx="30" ry="35" fill="#F5F5F5"/>
-                    <ellipse cx="50" cy="60" rx="4" ry="5" fill="#2D3748"/>
-                    <ellipse cx="70" cy="60" rx="4" ry="5" fill="#2D3748"/>
-                    <circle cx="51" cy="58" r="1.5" fill="white"/>
-                    <circle cx="71" cy="58" r="1.5" fill="white"/>
-                    <ellipse cx="60" cy="72" rx="6" ry="4" fill="#FFB6C1"/>
-                    <path d="M52 78 Q60 85 68 78" stroke="#2D3748" stroke-width="1.5" fill="none"/>
-                    <ellipse cx="48" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-left"/>
-                    <ellipse cx="48" cy="42" rx="5" ry="13" fill="#FFB6C1" class="ear-inner"/>
-                    <ellipse cx="72" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-right"/>
-                    <ellipse cx="72" cy="42" rx="5" ry="13" fill="#FFB6C1" class="ear-inner"/>
-                </svg>
+                <div class="rabbit-svg-container"></div>
                 <div class="character-speech" id="character-speech">
                     ¡Hola! Soy Conti Conti, tu guía financiero 🐰
                 </div>
@@ -105,10 +104,10 @@
 
             <div class="info-card">
                 <strong>🎯 Niveles del desafío:</strong><br>
-                🟢 <b>Nivel 1:</b> Fondo de Emergencia<br>
-                🔵 <b>Nivel 2:</b> Contabilidad y Nómina<br>
-                🟣 <b>Nivel 3:</b> Estados Financieros<br>
-                🔴 <b>Nivel 4:</b> Cálculos Técnicos Avanzados
+                🟢 <b>Nivel 1:</b> Fondo de Emergencia (30s)<br>
+                🔵 <b>Nivel 2:</b> Contabilidad y Nómina (25s)<br>
+                🟣 <b>Nivel 3:</b> Estados Financieros (20s)<br>
+                🔴 <b>Nivel 4:</b> Cálculos Técnicos Avanzados (20s)
             </div>
 
             <div class="mode-grid">
@@ -120,7 +119,7 @@
                 <div class="mode-card" id="mode-timed" onclick="selectMode('timed')">
                     <div class="mode-icon">⚡</div>
                     <div class="mode-title">Contrarreloj</div>
-                    <div class="mode-desc">30s - 20s por pregunta</div>
+                    <div class="mode-desc">20s - 30s por pregunta</div>
                 </div>
             </div>
 
@@ -130,26 +129,13 @@
             <button class="main-btn secondary" onclick="showScreen('screen-badges')">
                 Ver Insignias 🏅
             </button>
-            <p class="credits">Desarrollado por Romeroweb | v3.0</p>
+            <p class="credits">Desarrollado por Romeroweb | v5.0</p>
         </div>
 
         <!-- Pantalla de Pregunta -->
         <div class="screen" id="screen-question">
             <div class="character-box">
-                <svg class="rabbit-svg thinking" id="rabbit-svg" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
-                    <ellipse cx="60" cy="110" rx="35" ry="12" fill="#E2E8F0" opacity="0.6"/>
-                    <ellipse cx="60" cy="70" rx="30" ry="35" fill="#F5F5F5"/>
-                    <ellipse cx="50" cy="60" rx="4" ry="5" fill="#2D3748"/>
-                    <ellipse cx="70" cy="60" rx="4" ry="5" fill="#2D3748"/>
-                    <circle cx="51" cy="58" r="1.5" fill="white"/>
-                    <circle cx="71" cy="58" r="1.5" fill="white"/>
-                    <ellipse cx="60" cy="72" rx="6" ry="4" fill="#FFB6C1"/>
-                    <path d="M52 78 Q60 85 68 78" stroke="#2D3748" stroke-width="1.5" fill="none"/>
-                    <ellipse cx="48" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-left"/>
-                    <ellipse cx="48" cy="42" rx="5" ry="13" fill="#FFB6C1" class="ear-inner"/>
-                    <ellipse cx="72" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-right"/>
-                    <ellipse cx="72" cy="42" rx="5" ry="13" fill="#FFB6C1" class="ear-inner"/>
-                </svg>
+                <div class="rabbit-svg-container" id="rabbit-svg"></div>
                 <div class="character-speech" id="question-speech">¡Piensa bien tu respuesta! 🤔</div>
             </div>
             <div class="question-text" id="question-text"></div>
@@ -167,20 +153,7 @@
         <!-- Pantalla de Transición entre Niveles -->
         <div class="screen" id="screen-level-transition">
             <div class="character-box">
-                <svg class="rabbit-svg correct" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
-                    <ellipse cx="60" cy="110" rx="35" ry="12" fill="#E2E8F0" opacity="0.6"/>
-                    <ellipse cx="60" cy="70" rx="30" ry="35" fill="#F5F5F5"/>
-                    <ellipse cx="50" cy="60" rx="4" ry="5" fill="#2D3748"/>
-                    <ellipse cx="70" cy="60" rx="4" ry="5" fill="#2D3748"/>
-                    <circle cx="51" cy="58" r="1.5" fill="white"/>
-                    <circle cx="71" cy="58" r="1.5" fill="white"/>
-                    <ellipse cx="60" cy="72" rx="6" ry="4" fill="#FFB6C1"/>
-                    <path d="M52 78 Q60 90 68 78" stroke="#2D3748" stroke-width="1.5" fill="none"/>
-                    <ellipse cx="48" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-left"/>
-                    <ellipse cx="48" cy="42" rx="5" ry="13" fill="#FFE066" class="ear-inner"/>
-                    <ellipse cx="72" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-right"/>
-                    <ellipse cx="72" cy="42" rx="5" ry="13" fill="#FFE066" class="ear-inner"/>
-                </svg>
+                <div class="rabbit-svg-container"></div>
                 <div class="character-speech" id="transition-speech">¡Excelente! Has completado el nivel 🎉</div>
             </div>
 
@@ -190,6 +163,7 @@
                 <div class="share-label">Puntuación del nivel</div>
                 <div class="share-score" id="level-score-display">0</div>
                 <div class="share-label">puntos</div>
+                <div id="level-stars"></div>
             </div>
 
             <div class="teacher-tribute-card">
@@ -206,20 +180,7 @@
         <!-- Pantalla de Resultados Final -->
         <div class="screen" id="screen-results">
             <div class="character-box">
-                <svg class="rabbit-svg correct" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg">
-                    <ellipse cx="60" cy="110" rx="35" ry="12" fill="#E2E8F0" opacity="0.6"/>
-                    <ellipse cx="60" cy="70" rx="30" ry="35" fill="#F5F5F5"/>
-                    <ellipse cx="50" cy="60" rx="4" ry="5" fill="#2D3748"/>
-                    <ellipse cx="70" cy="60" rx="4" ry="5" fill="#2D3748"/>
-                    <circle cx="51" cy="58" r="1.5" fill="white"/>
-                    <circle cx="71" cy="58" r="1.5" fill="white"/>
-                    <ellipse cx="60" cy="72" rx="6" ry="4" fill="#FFB6C1"/>
-                    <path d="M52 78 Q60 90 68 78" stroke="#2D3748" stroke-width="1.5" fill="none"/>
-                    <ellipse cx="48" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-left"/>
-                    <ellipse cx="48" cy="42" rx="5" ry="13" fill="#FFE066" class="ear-inner"/>
-                    <ellipse cx="72" cy="42" rx="8" ry="18" fill="#F5F5F5" class="ear ear-right"/>
-                    <ellipse cx="72" cy="42" rx="5" ry="13" fill="#FFE066" class="ear-inner"/>
-                </svg>
+                <div class="rabbit-svg-container"></div>
                 <div class="character-speech" id="result-character-speech">¡Gran trabajo completando el desafío! 🐰🎉</div>
             </div>
             <h2 class="welcome-title">🎉 ¡Desafío Completado!</h2>
@@ -307,6 +268,20 @@
         </div>
     </div>
 
+    <!-- Scripts en orden correcto de carga -->
+    <script src="rabbit-svg.js"></script>
+    <script src="effects.js"></script>
     <script src="app.js"></script>
+
+    <!-- Registro del Service Worker (PWA) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+                    .catch(err => console.error('Error al registrar el Service Worker:', err));
+            });
+        }
+    </script>
 </body>
 </html>
