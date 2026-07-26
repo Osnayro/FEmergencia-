@@ -26,6 +26,7 @@
     --bg-nivel-2: #EFF6FF;
     --bg-nivel-3: #F5F3FF;
     --bg-nivel-4: #FEF2F2;
+    --foco-anillo: #2563EB;
 }
 
 * {
@@ -34,6 +35,13 @@
     padding: 0;
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== ACCESIBILIDAD DE TECLADO ===== */
+:focus-visible {
+    outline: 3px solid var(--foco-anillo);
+    outline-offset: 2px;
+    border-radius: 8px;
 }
 
 body {
@@ -197,6 +205,10 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     color: var(--blanco);
 }
 
+.skip-splash-btn:active {
+    transform: scale(0.95);
+}
+
 /* ===== APP CARD ===== */
 .app-card {
     background: var(--blanco);
@@ -345,21 +357,13 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     justify-content: center;
     align-items: center;
     text-align: center;
-    transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.screen:not(.active) {
-    opacity: 0;
-    transform: translateX(-12px);
-    pointer-events: none;
+    animation: slideIn 0.4s ease-out;
 }
 
 .screen.active {
     display: flex;
-    animation: slideIn 0.35s ease-out forwards;
 }
 
-/* ===== ONDA EXPANSIVA ===== */
 .screen-expand {
     animation: screenExpand 0.5s ease-out;
 }
@@ -375,103 +379,272 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
 }
 
 .rabbit-svg-container {
-    width: 105px;
-    height: 105px;
+    width: 130px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .rabbit-svg {
-    width: 105px;
-    height: 105px;
-    filter: drop-shadow(0px 8px 12px rgba(0,0,0,0.1));
+    width: 130px;
+    height: 140px;
+    filter: drop-shadow(0px 8px 16px rgba(0,0,0,0.12));
     overflow: visible;
     transition: filter 0.3s ease;
 }
 
-/* Orejas base */
-.ear {
-    transform-origin: bottom center;
-    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), fill 0.4s ease;
+/* --- Base de orejas (anclada, se mueve poco) --- */
+.ear-base {
+    transform-origin: center center;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.ear-left { transform: rotate(-5deg); }
-.ear-right { transform: rotate(5deg); }
+.ear-base-inner {
+    transition: fill 0.4s ease;
+}
 
-/* Conejo correcto */
-.rabbit-svg.correct .ear-left { transform: translateY(-8px) rotate(-18deg); }
-.rabbit-svg.correct .ear-right { transform: translateY(-8px) rotate(18deg); }
-.rabbit-svg.correct .ear-inner { fill: #FFE066 !important; filter: drop-shadow(0px 0px 6px #FFD700); }
-.rabbit-svg.correct { animation: rabbitBounce 0.5s ease-out; }
+/* --- Punta de oreja (móvil, se dobla) --- */
+.ear-tip-group {
+    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 
-/* Conejo incorrecto */
-.rabbit-svg.incorrect .ear-left { transform: translateY(12px) rotate(-55deg); }
-.rabbit-svg.incorrect .ear-right { transform: translateY(12px) rotate(55deg); }
-.rabbit-svg.incorrect .ear-inner { fill: #CBD5E1 !important; filter: none; }
+.ear-tip-inner {
+    transition: fill 0.4s ease;
+}
 
-/* Conejo pensando */
-.rabbit-svg.thinking .ear-left { animation: earWiggle 1s infinite ease-in-out; }
-.rabbit-svg.thinking .ear-right { animation: earWiggle 1s infinite ease-in-out 0.5s; }
+/* --- Boca (transición suave entre expresiones) --- */
+.mouth {
+    transition: d 0.35s ease;
+}
 
-/* 😰 Nervioso */
-.rabbit-svg.nervous .ear-left { animation: earShake 0.15s infinite ease-in-out; }
-.rabbit-svg.nervous .ear-right { animation: earShake 0.15s infinite ease-in-out 0.075s; }
-.rabbit-svg.nervous .eye-pupil { animation: eyeDilate 0.3s infinite ease-in-out; }
-.rabbit-svg.nervous { filter: drop-shadow(0px 8px 12px rgba(255,0,0,0.2)); }
+/* --- Mejillas (transición de opacidad) --- */
+.cheek {
+    transition: opacity 0.35s ease, fill 0.35s ease;
+}
 
-/* 😴 Aburrido */
-.rabbit-svg.bored .ear-left { transform: rotate(-25deg) translateY(5px); }
-.rabbit-svg.bored .ear-right { transform: rotate(25deg) translateY(5px); }
-.rabbit-svg.bored .ear-inner { fill: #E2E8F0 !important; }
+/* ================================================================
+   ESTADOS DEL CONEJO
+   ================================================================ */
 
-/* 🤩 Impresionado */
-.rabbit-svg.impressed .ear-left { animation: earHelicopter 0.3s infinite linear; }
-.rabbit-svg.impressed .ear-right { animation: earHelicopter 0.3s infinite linear 0.15s; }
-.rabbit-svg.impressed .eye-star { opacity: 1; }
-.rabbit-svg.impressed { filter: drop-shadow(0px 0px 15px rgba(255,215,0,0.6)); }
+/* --- PENSANDO (default) --- */
+.rabbit-svg.thinking .ear-tip-group-left {
+    animation: earTipThink 1.2s infinite ease-in-out;
+}
+.rabbit-svg.thinking .ear-tip-group-right {
+    animation: earTipThink 1.2s infinite ease-in-out 0.6s;
+}
 
-/* 😢 Triste */
-.rabbit-svg.sad .ear-left { transform: translateY(15px) rotate(-65deg); }
-.rabbit-svg.sad .ear-right { transform: translateY(15px) rotate(65deg); }
-.rabbit-svg.sad .ear-inner { fill: #CBD5E1 !important; }
-.rabbit-svg.sad { animation: sadShake 0.8s infinite ease-in-out; }
-.rabbit-svg.sad .tear { opacity: 1; animation: tearFall 1.5s infinite ease-in; }
+/* --- CORRECTO (orejas se levantan, puntas brillan) --- */
+.rabbit-svg.correct .ear-tip-group-left {
+    transform: rotate(-25deg) translateY(-4px);
+}
+.rabbit-svg.correct .ear-tip-group-right {
+    transform: rotate(25deg) translateY(-4px);
+}
+.rabbit-svg.correct .ear-tip-inner {
+    fill: #FFE066 !important;
+    filter: drop-shadow(0px 0px 8px #FFD700);
+}
+.rabbit-svg.correct .ear-base-inner {
+    fill: #FFE066 !important;
+    filter: drop-shadow(0px 0px 6px #FFD700);
+}
+.rabbit-svg.correct {
+    animation: rabbitBounce 0.5s ease-out;
+    filter: drop-shadow(0px 0px 18px rgba(255, 215, 0, 0.7));
+}
+.rabbit-svg.correct .mouth {
+    d: path("M63 73 Q70 82 77 73");
+}
+.rabbit-svg.correct .cheek {
+    opacity: 0.9;
+    fill: #FFAB91;
+}
 
-/* 🥳 Celebración */
-.rabbit-svg.celebrating .ear-left { animation: earWave 0.4s infinite ease-in-out; }
-.rabbit-svg.celebrating .ear-right { animation: earWave 0.4s infinite ease-in-out 0.2s; }
-.rabbit-svg.celebrating { animation: celebrationJump 0.4s ease-in-out 6; }
-.rabbit-svg.celebrating .ear-inner { fill: #FFD700 !important; }
+/* --- INCORRECTO (puntas caen, orejas se aplanan, triste) --- */
+.rabbit-svg.incorrect .ear-tip-group-left {
+    transform: rotate(55deg) translateY(8px);
+}
+.rabbit-svg.incorrect .ear-tip-group-right {
+    transform: rotate(-55deg) translateY(8px);
+}
+.rabbit-svg.incorrect .ear-base-left {
+    transform: rotate(15deg);
+}
+.rabbit-svg.incorrect .ear-base-right {
+    transform: rotate(-15deg);
+}
+.rabbit-svg.incorrect .ear-tip-inner {
+    fill: #CBD5E1 !important;
+    filter: none;
+}
+.rabbit-svg.incorrect .ear-base-inner {
+    fill: #CBD5E1 !important;
+    filter: none;
+}
+.rabbit-svg.incorrect {
+    filter: drop-shadow(0px 8px 12px rgba(0,0,0,0.08)) saturate(0.6);
+}
+.rabbit-svg.incorrect .mouth {
+    d: path("M65 77 Q70 72 75 77");
+}
 
-/* 🤔 Pensando profundamente */
-.rabbit-svg.deep-think .ear-left { transform: rotate(-20deg) translateX(-5px); }
-.rabbit-svg.deep-think .ear-right { transform: rotate(-15deg) translateX(3px); }
-.rabbit-svg.deep-think .question-mark { opacity: 1; animation: questionFloat 1.5s infinite ease-in-out; }
+/* --- NERVIOSO --- */
+.rabbit-svg.nervous .ear-tip-group-left {
+    animation: earTipShake 0.12s infinite ease-in-out;
+}
+.rabbit-svg.nervous .ear-tip-group-right {
+    animation: earTipShake 0.12s infinite ease-in-out 0.06s;
+}
+.rabbit-svg.nervous .eye-pupil {
+    animation: eyeDilate 0.3s infinite ease-in-out;
+}
+.rabbit-svg.nervous {
+    filter: drop-shadow(0px 8px 14px rgba(255,0,0,0.2));
+}
 
-/* 😎 Confiado */
-.rabbit-svg.confident .ear-left { transform: rotate(-25deg) translateY(-5px); }
-.rabbit-svg.confident .ear-right { transform: rotate(-10deg) translateY(-3px); }
-.rabbit-svg.confident .sunglasses { opacity: 1; }
+/* --- ABURRIDO --- */
+.rabbit-svg.bored .ear-tip-group-left {
+    transform: rotate(40deg) translateY(6px);
+}
+.rabbit-svg.bored .ear-tip-group-right {
+    transform: rotate(-40deg) translateY(6px);
+}
+.rabbit-svg.bored .ear-tip-inner {
+    fill: #E2E8F0 !important;
+}
 
-/* 🥶 Congelado */
-.rabbit-svg.frozen .ear-left { transform: rotate(-10deg); }
-.rabbit-svg.frozen .ear-right { transform: rotate(10deg); }
-.rabbit-svg.frozen .ear-inner { fill: #BFDBFE !important; }
-.rabbit-svg.frozen { filter: drop-shadow(0px 0px 10px rgba(100,200,255,0.8)) hue-rotate(180deg); animation: frozenShake 0.3s infinite ease-in-out; }
-.rabbit-svg.frozen .ice-crystal { opacity: 1; animation: iceSparkle 1s infinite ease-in-out; }
+/* --- IMPRESIONADO (estrellas en ojos) --- */
+.rabbit-svg.impressed .ear-tip-group-left {
+    animation: earTipHelicopter 0.25s infinite linear;
+}
+.rabbit-svg.impressed .ear-tip-group-right {
+    animation: earTipHelicopter 0.25s infinite linear 0.125s;
+}
+.rabbit-svg.impressed .eye-star-group {
+    opacity: 1;
+}
+.rabbit-svg.impressed {
+    filter: drop-shadow(0px 0px 20px rgba(255,215,0,0.65));
+}
+.rabbit-svg.impressed .mouth {
+    d: path("M62 73 Q70 83 78 73");
+}
 
-/* 😤 Determinado */
-.rabbit-svg.determined .ear-left { transform: rotate(-35deg) translateX(-8px); }
-.rabbit-svg.determined .ear-right { transform: rotate(35deg) translateX(8px); }
-.rabbit-svg.determined .eye-fire { opacity: 1; animation: fireGlow 0.5s infinite ease-in-out; }
+/* --- TRISTE (lágrimas) --- */
+.rabbit-svg.sad .ear-tip-group-left {
+    transform: rotate(60deg) translateY(10px);
+}
+.rabbit-svg.sad .ear-tip-group-right {
+    transform: rotate(-60deg) translateY(10px);
+}
+.rabbit-svg.sad .ear-base-left {
+    transform: rotate(20deg);
+}
+.rabbit-svg.sad .ear-base-right {
+    transform: rotate(-20deg);
+}
+.rabbit-svg.sad .ear-tip-inner,
+.rabbit-svg.sad .ear-base-inner {
+    fill: #CBD5E1 !important;
+}
+.rabbit-svg.sad {
+    filter: drop-shadow(0px 8px 10px rgba(0,0,0,0.05)) saturate(0.5);
+    animation: sadShake 0.8s infinite ease-in-out;
+}
+.rabbit-svg.sad .tear-group {
+    opacity: 1;
+}
+.rabbit-svg.sad .mouth {
+    d: path("M66 78 Q70 71 74 78");
+}
 
-/* 🎓 Graduación */
-.rabbit-svg.graduate .ear-left { transform: rotate(-15deg) translateY(-10px); }
-.rabbit-svg.graduate .ear-right { transform: rotate(15deg) translateY(-10px); }
-.rabbit-svg.graduate .graduation-cap { opacity: 1; transform: translateY(0); }
-.rabbit-svg.graduate .ear-inner { fill: #FFD700 !important; }
+/* --- CELEBRANDO --- */
+.rabbit-svg.celebrating .ear-tip-group-left {
+    animation: earTipWave 0.35s ease-in-out 4;
+}
+.rabbit-svg.celebrating .ear-tip-group-right {
+    animation: earTipWave 0.35s ease-in-out 4 0.175s;
+}
+.rabbit-svg.celebrating {
+    animation: celebrationJump 0.3s ease-in-out 4;
+}
+.rabbit-svg.celebrating .ear-tip-inner,
+.rabbit-svg.celebrating .ear-base-inner {
+    fill: #FFD700 !important;
+}
 
-.eye-star, .tear, .question-mark, .sunglasses, .ice-crystal, .eye-fire, .graduation-cap {
-    opacity: 0;
-    transition: opacity 0.3s ease;
+/* --- PENSANDO PROFUNDO --- */
+.rabbit-svg.deep-think .ear-tip-group-left {
+    transform: rotate(-30deg) translateX(-4px);
+}
+.rabbit-svg.deep-think .ear-tip-group-right {
+    transform: rotate(-25deg) translateX(3px);
+}
+.rabbit-svg.deep-think .question-mark {
+    opacity: 1;
+    animation: questionFloat 1.5s infinite ease-in-out;
+}
+
+/* --- CONFIADO (gafas) --- */
+.rabbit-svg.confident .ear-tip-group-left {
+    transform: rotate(-30deg) translateY(-6px);
+}
+.rabbit-svg.confident .ear-tip-group-right {
+    transform: rotate(-15deg) translateY(-4px);
+}
+.rabbit-svg.confident .sunglasses-group {
+    opacity: 1;
+}
+
+/* --- CONGELADO --- */
+.rabbit-svg.frozen .ear-tip-group-left {
+    transform: rotate(-12deg);
+}
+.rabbit-svg.frozen .ear-tip-group-right {
+    transform: rotate(12deg);
+}
+.rabbit-svg.frozen .ear-tip-inner,
+.rabbit-svg.frozen .ear-base-inner {
+    fill: #BFDBFE !important;
+}
+.rabbit-svg.frozen {
+    filter: drop-shadow(0px 0px 14px rgba(100,200,255,0.8)) hue-rotate(180deg);
+    animation: frozenShake 0.3s infinite ease-in-out;
+}
+.rabbit-svg.frozen .ice-crystal-group {
+    opacity: 1;
+}
+
+/* --- DETERMINADO (fuego en ojos) --- */
+.rabbit-svg.determined .ear-tip-group-left {
+    transform: rotate(-40deg) translateX(-6px);
+}
+.rabbit-svg.determined .ear-tip-group-right {
+    transform: rotate(40deg) translateX(6px);
+}
+.rabbit-svg.determined .eye-fire-group {
+    opacity: 1;
+    animation: fireGlow 0.4s infinite ease-in-out;
+}
+.rabbit-svg.determined .mouth {
+    d: path("M64 74 Q70 78 76 74");
+}
+
+/* --- GRADUACIÓN --- */
+.rabbit-svg.graduate .ear-tip-group-left {
+    transform: rotate(-18deg) translateY(-8px);
+}
+.rabbit-svg.graduate .ear-tip-group-right {
+    transform: rotate(18deg) translateY(-8px);
+}
+.rabbit-svg.graduate .graduation-cap-group {
+    opacity: 1;
+}
+.rabbit-svg.graduate .ear-tip-inner,
+.rabbit-svg.graduate .ear-base-inner {
+    fill: #FFD700 !important;
 }
 
 .character-speech {
@@ -530,6 +703,7 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     justify-content: space-between;
     position: relative;
     overflow: hidden;
+    min-height: 44px;
 }
 
 .option-btn::before {
@@ -552,6 +726,11 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     border-color: #93C5FD;
     transform: translateX(4px);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.option-btn:active:not(:disabled) {
+    transform: scale(0.97);
+    background: #E2E8F0;
 }
 
 .option-btn.correct {
@@ -606,11 +785,19 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .matching-item:hover {
     border-color: var(--azul-pastel);
     transform: scale(1.02);
+}
+
+.matching-item:active {
+    transform: scale(0.96);
 }
 
 .matching-item.selected {
@@ -665,6 +852,8 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     display: inline-block;
     margin: 3px;
     transition: all 0.2s ease;
+    min-height: 40px;
+    touch-action: none;
 }
 
 .draggable-item:active {
@@ -781,11 +970,16 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     display: flex;
     align-items: center;
     gap: 4px;
+    min-height: 40px;
 }
 
 .powerup-btn:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.powerup-btn:active:not(:disabled) {
+    transform: scale(0.94);
 }
 
 .powerup-btn:disabled {
@@ -812,6 +1006,11 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     transition: all 0.3s ease;
     width: 100%;
     margin-top: 10px;
+    min-height: 44px;
+}
+
+.main-btn:active:not(:disabled) {
+    transform: scale(0.97);
 }
 
 .main-btn:disabled {
@@ -871,6 +1070,10 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     border-color: var(--azul-pastel);
     transform: translateY(-4px);
     box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.mode-card:active {
+    transform: scale(0.97);
 }
 
 .mode-card.selected {
@@ -1194,88 +1397,72 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     pointer-events: none;
 }
 
-@keyframes toastSlideIn {
-    0% {
-        opacity: 0;
-        transform: translateY(-40px) scale(0.85);
-    }
-    60% {
-        transform: translateY(4px) scale(1.02);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-@keyframes toastSlideOut {
-    0% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-    100% {
-        opacity: 0;
-        transform: translateY(-30px) scale(0.9);
-    }
-}
-
 /* ================================================================
-   📱 FEEDBACK TÁCTIL (:active)
-   En móvil no hay hover, así que :active da respuesta al toque
+   KEYFRAMES
    ================================================================ */
 
-.option-btn:active:not(:disabled) {
-    transform: scale(0.97);
-    background: #DBEAFE;
-    transition: transform 0.08s ease, background 0.08s ease;
+/* --- Orejas articuladas (nuevos) --- */
+@keyframes earTipThink {
+    0%, 100% { transform: rotate(-8deg); }
+    50% { transform: rotate(-20deg); }
 }
 
-.mode-card:active {
-    transform: scale(0.96);
-    transition: transform 0.08s ease;
+@keyframes earTipShake {
+    0%, 100% { transform: rotate(-8deg); }
+    25% { transform: rotate(-20deg); }
+    75% { transform: rotate(5deg); }
 }
 
-.powerup-btn:active:not(:disabled) {
-    transform: scale(0.93);
-    transition: transform 0.08s ease;
+@keyframes earTipHelicopter {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
-.main-btn:active:not(:disabled) {
-    transform: scale(0.96);
-    transition: transform 0.08s ease;
+@keyframes earTipWave {
+    0%, 100% { transform: rotate(-25deg) translateY(-6px); }
+    50% { transform: rotate(20deg) translateY(-6px); }
 }
 
-.skip-splash-btn:active {
-    transform: scale(0.94);
-    transition: transform 0.08s ease;
+@keyframes rabbitBounce {
+    0% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-14px) scale(1.06); }
+    100% { transform: translateY(0) scale(1); }
 }
 
-.draggable-item:active {
-    transform: scale(0.94);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-    transition: transform 0.08s ease, box-shadow 0.08s ease;
+@keyframes celebrationJump {
+    0%, 100% { transform: translateY(0) scale(1); }
+    30% { transform: translateY(-24px) scale(1.12); }
+    60% { transform: translateY(-6px) scale(0.94); }
 }
 
-.matching-item:active:not(.matched) {
-    transform: scale(0.96);
-    transition: transform 0.08s ease;
+@keyframes sadShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
 }
 
-/* ================================================================
-   ⌨️  ACCESIBILIDAD: :focus-visible para navegación por teclado
-   ================================================================ */
-
-.option-btn:focus-visible,
-.mode-card:focus-visible,
-.powerup-btn:focus-visible,
-.main-btn:focus-visible,
-.skip-splash-btn:focus-visible {
-    outline: 3px solid #3B82F6;
-    outline-offset: 3px;
-    border-radius: 14px;
+@keyframes questionFloat {
+    0%, 100% { transform: translateY(0); opacity: 1; }
+    50% { transform: translateY(-18px); opacity: 0.6; }
 }
 
-/* ===== ANIMATIONS ===== */
+@keyframes frozenShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
+}
+
+@keyframes fireGlow {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+@keyframes eyeDilate {
+    0%, 100% { r: 2.2; }
+    50% { r: 3.8; }
+}
+
+/* --- Generales (conservados) --- */
 @keyframes loadProgress {
     0% { width: 0%; }
     100% { width: 100%; }
@@ -1301,12 +1488,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     to { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes rabbitBounce {
-    0% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-10px) scale(1.05); }
-    100% { transform: translateY(0) scale(1); }
-}
-
 @keyframes btnPulse {
     0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5); }
     70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
@@ -1330,93 +1511,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     40% { transform: translateX(8px); }
     60% { transform: translateX(-4px); }
     80% { transform: translateX(4px); }
-}
-
-@keyframes earWiggle {
-    0%, 100% { transform: rotate(-5deg); }
-    50% { transform: rotate(-15deg); }
-}
-
-@keyframes earShake {
-    0%, 100% { transform: rotate(-5deg); }
-    25% { transform: rotate(-12deg); }
-    75% { transform: rotate(2deg); }
-}
-
-@keyframes earHelicopter {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@keyframes earWave {
-    0%, 100% { transform: rotate(-15deg) translateY(-5px); }
-    50% { transform: rotate(15deg) translateY(-5px); }
-}
-
-@keyframes celebrationJump {
-    0%, 100% { transform: translateY(0) scale(1); }
-    30% { transform: translateY(-20px) scale(1.1); }
-    60% { transform: translateY(-5px) scale(0.95); }
-}
-
-@keyframes sadShake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-3px); }
-    75% { transform: translateX(3px); }
-}
-
-@keyframes tearFall {
-    0% { transform: translateY(0); opacity: 1; }
-    100% { transform: translateY(20px); opacity: 0; }
-}
-
-@keyframes questionFloat {
-    0%, 100% { transform: translateY(0); opacity: 1; }
-    50% { transform: translateY(-15px); opacity: 0.7; }
-}
-
-@keyframes frozenShake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-2px); }
-    75% { transform: translateX(2px); }
-}
-
-@keyframes iceSparkle {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
-}
-
-@keyframes fireGlow {
-    0%, 100% { filter: brightness(1); }
-    50% { filter: brightness(1.5) drop-shadow(0 0 5px #FF4500); }
-}
-
-@keyframes streakFire {
-    0%, 100% { opacity: 0.8; }
-    50% { opacity: 1; }
-}
-
-@keyframes timerPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-
-@keyframes badgeUnlock {
-    0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
-    50% { transform: scale(1.2) rotate(5deg); }
-    100% { transform: scale(1) rotate(0); opacity: 1; }
-}
-
-@keyframes shareGlow {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(180deg); }
-}
-
-@keyframes ultraPop {
-    0% { transform: scale(1); }
-    30% { transform: scale(1.5); }
-    60% { transform: scale(0.9); }
-    100% { transform: scale(1); }
 }
 
 @keyframes sparkle {
@@ -1452,14 +1546,43 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     100% { transform: scale(1); opacity: 1; }
 }
 
-@keyframes coinRain {
-    0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+@keyframes streakFire {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
 }
 
-@keyframes eyeDilate {
-    0%, 100% { r: 3.5; }
-    50% { r: 5; }
+@keyframes timerPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes badgeUnlock {
+    0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+    50% { transform: scale(1.2) rotate(5deg); }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+@keyframes shareGlow {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+}
+
+@keyframes ultraPop {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.5); }
+    60% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+
+@keyframes toastSlideIn {
+    0% { opacity: 0; transform: translateY(-40px) scale(0.85); }
+    60% { transform: translateY(4px) scale(1.02); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes toastSlideOut {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-30px) scale(0.9); }
 }
 
 /* ===== ACCESSIBILITY ===== */
@@ -1492,9 +1615,8 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     }
     
     .option-btn {
-        padding: 12px 14px;
-        font-size: 0.85rem;
-        min-height: 48px;
+        padding: 8px 12px;
+        font-size: 0.8rem;
     }
     
     .mode-grid {
@@ -1515,27 +1637,12 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     }
     
     .rabbit-svg {
-        width: 85px;
-        height: 85px;
+        width: 110px;
+        height: 120px;
     }
 
     .rabbit-svg-container {
-        width: 85px;
-        height: 85px;
-    }
-
-    .matching-item {
-        min-height: 44px;
-        padding: 10px 8px;
-    }
-
-    .powerup-btn {
-        min-height: 38px;
-        padding: 7px 12px;
-    }
-
-    .main-btn {
-        min-height: 48px;
-        padding: 13px 24px;
+        width: 110px;
+        height: 120px;
     }
 }
