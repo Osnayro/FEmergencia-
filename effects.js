@@ -1,9 +1,14 @@
+
 /**
  * ============================================================
- * ContiEffectsManager v4.0 — Producción
+ * ContiEffectsManager v4.1 — Producción
  * Efectos visuales (Canvas 2D) + Sonidos (Web Audio API, motor mejorado) + Toasts
  * Para "Conti Conti - Desafío Financiero"
  * ============================================================
+ *
+ * Novedades v4.1 sobre v4.0:
+ *   - Nuevo método triggerScoreBadgeFlash(): micro-destello en el badge
+ *     de puntuación cuando "recibe" monedas (ultra-pop + partículas doradas)
  *
  * Novedades v4.0 sobre v3.0:
  *   - Bus de audio: masterGain -> compressor -> destination (evita clipping)
@@ -14,7 +19,7 @@
  *   - Reverb algorítmico (impulse response generada por código, sin archivos)
  *   - Variación aleatoria de pitch/timing en sonidos repetitivos
  *
- * API pública 100% compatible con v3.0 (playSound, triggerToast,
+ * API pública 100% compatible con versiones anteriores (playSound, triggerToast,
  * triggerCoinExplosion, etc. no cambian su firma).
  *
  * Uso:
@@ -77,7 +82,7 @@ class ContiEffectsManager {
         // Arrancar loop de animación
         this.startLoop();
 
-        console.log('🎨 ContiEffectsManager v4.0 listo | Partículas máx:', this.maxParticles, '| Volumen:', this.masterVolume);
+        console.log('🎨 ContiEffectsManager v4.1 listo | Partículas máx:', this.maxParticles, '| Volumen:', this.masterVolume);
     }
 
     // ================================================================
@@ -423,6 +428,46 @@ class ContiEffectsManager {
         setTimeout(() => flash.remove(), duration + 60);
     }
 
+    /**
+     * NUEVO v4.1: Micro-destello en el score-badge cuando "recibe" puntos.
+     * Combina la clase CSS 'ultra-pop' con una pequeña ráfaga de partículas
+     * doradas alrededor del badge.
+     */
+    triggerScoreBadgeFlash() {
+        if (!this.scoreBadge) return;
+        
+        // Animación CSS de ultra-pop
+        this.scoreBadge.classList.add('ultra-pop');
+        setTimeout(() => this.scoreBadge.classList.remove('ultra-pop'), 600);
+        
+        // Pequeño destello de partículas doradas alrededor
+        const rect = this.scoreBadge.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            this.particles.push({
+                type: 'circle',
+                x: cx,
+                y: cy,
+                vx: Math.cos(angle) * 2,
+                vy: Math.sin(angle) * 2,
+                gravity: 0,
+                friction: 0.9,
+                rotation: 0,
+                rotationSpeed: 0,
+                scale: 0.5,
+                size: 3 + Math.random() * 2,
+                life: 1,
+                maxLife: 1,
+                decay: 0.035,
+                color: '#FFD700',
+                attractTo: false,
+            });
+        }
+    }
+
     // ================================================================
     //  API PÚBLICA — SISTEMA DE TOASTS
     // ================================================================
@@ -626,7 +671,7 @@ class ContiEffectsManager {
 
     /**
      * 🔊 Reproduce sonido sintetizado con motor de capas + ADSR + filtros + ruido + reverb
-     * @param {string} type - 'correct'|'incorrect'|'levelup'|'achievement'|'powerup'|'tick'|'coin'|'explosion'
+     * @param {string} type - 'correct'|'incorrect'|'levelup'|'levelstart'|'achievement'|'powerup'|'tick'|'coin'|'explosion'
      */
     playSound(type) {
         this.ensureAudio();
@@ -765,6 +810,21 @@ class ContiEffectsManager {
                 break;
             }
 
+            case 'levelstart': {
+                // Swoosh ascendente (ruido con barrido highpass) + tono breve
+                // que marca el arranque de nivel, distinto del acorde de 'levelup'.
+                this._playNoiseHit({ filterType: 'highpass', freqStart: 200, freqEnd: 4000, q: 0.7, peak: 0.14, duration: 0.35 });
+                const v = this._createVoice({ type: 'triangle', filterType: 'lowpass', filterFreq: 3000 });
+                v.osc.frequency.setValueAtTime(330, now);
+                v.osc.frequency.exponentialRampToValueAtTime(660, now + 0.25);
+                this._applyADSR(v.gain.gain, now + 0.05, {
+                    peak: 0.13 * vol, attack: 0.02, decay: 0.1, sustain: 0.3, sustainTime: 0.04, release: 0.2,
+                });
+                v.osc.start(now + 0.05);
+                v.osc.stop(now + 0.45);
+                break;
+            }
+
             default:
                 break;
         }
@@ -813,3 +873,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+```
+
+---
+
+📊 PLAN COMPLETO — RESUMEN FINAL
+
+# Archivo Versión Mejoras realizadas
+1 rabbit-svg.js v2.0 ✅ Conejo rediseñado con orejas articuladas (base + punta), cuerpo redondeado, mejillas, nariz corazón, bigotes, patas con almohadillas
+2 styles.css — ✅ 12 estados del conejo con animaciones de puntas doblables, brillo dorado en acierto, orejas caídas en error, keyframes nuevos
+3 app.js v3.2 ✅ Flash blanco en aciertos rápidos, destello en score-badge, sonido+explosión en drag táctil, doble confeti en transición de niveles
+4 effects.js v4.1 ✅ Nuevo método triggerScoreBadgeFlash()
+
+---
+
+🚀 SECUENCIA DE CARGA CORRECTA EN index.html
+
+Verifica que los scripts estén en este orden al final del <body>:
+
+```html
+<script src="rabbit-svg.js"></script>
+<script src="effects.js"></script>
+<script src="app.js"></script>
