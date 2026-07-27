@@ -1,50 +1,38 @@
 
 /**
  * ============================================================
- * ContiGame Engine v3.4 — Producción
+ * ContiGame Engine v3.4.1 — Producción
  * Lógica del juego, control de estado y flujos financieros
  * Para "Conti Conti - Desafío Financiero"
  * ============================================================
+ *
+ * Cambios v3.4.1 sobre v3.4:
+ *   - ROBUSTEZ: Limpieza de _boredTimeout en handleCorrectAnswer()
+ *     e handleIncorrectAnswer() para evitar que el conejo muestre
+ *     animación 'bored' mientras el usuario lee la explicación.
+ *   - ROBUSTEZ: El modal de nombre (showNamePromptModal) ahora
+ *     se cierra al presionar la tecla Escape, igual que "Omitir".
  *
  * Cambios v3.4 sobre v3.3:
  *   - FIX CRÍTICO: El temporizador ahora se reinicia correctamente
  *     en cada pregunta. Se fuerza clearInterval() y se restablece
  *     state.timer al valor del nivel actual dentro de startTimer().
  *   - FIX CRÍTICO: nextQuestion() ahora limpia el intervalo antes
- *     de cargar la siguiente pregunta, evitando intervalos múltiples
- *     que hacían que el timer llegara a 0 inmediatamente.
+ *     de cargar la siguiente pregunta, evitando intervalos múltiples.
  *   - FIX: loadQuestion() asegura state.timerInterval = null después
  *     de cada clearInterval().
  *
  * Cambios v3.3 sobre v3.2:
- *   - MEJORA PEDAGÓGICA: Propiedad 'hint' independiente en las 46
- *     preguntas. Pistas que hacen pensar sin revelar la respuesta.
- *     applyHint() ahora usa question.hint en lugar de explanation.
- *   - MEJORA PEDAGÓGICA: Nueva pregunta ID 411 (Nivel 4) con
- *     haber no imponible (asignación de movilización) para reforzar
- *     el concepto aprendido en el Nivel 1.
- *   - MEJORA PEDAGÓGICA: Eliminado el estado 'sad' (triste) del
- *     conejo. Al fallar, el conejo muestra 'determined' (determinado)
- *     con frases de mentalidad de crecimiento (Growth Mindset).
- *   - MEJORA PEDAGÓGICA: Aclaración de montos netos en preguntas
- *     de IVA (ID 203, 204, 402).
- *   - MEJORA SENSORIAL: Flash blanco en aciertos rápidos (< 3s).
- *   - MEJORA SENSORIAL: Destello en score-badge al sumar puntos.
- *   - MEJORA SENSORIAL: Sonido "coin" + explosión al soltar/encajar
- *     en preguntas drag (táctil).
- *   - MEJORA SENSORIAL: Doble ráfaga de confeti en pantalla de
- *     transición entre niveles.
- *   - MEJORA: Catálogo de frases ampliado (8-12 frases por estado).
- *   - CORRECCIÓN: Eliminadas muletillas festivas en explicaciones
- *     del Nivel 1.
- *   - CORRECCIÓN: Error ortográfico "classifies" → "clasifica"
- *     en pregunta ID 207 del Nivel 2.
- *   - FIX: clonado profundo del banco de preguntas.
- *   - FIX: cálculo de estrellas de fin de nivel.
- *   - FIX: applyHint() no revienta si falta 'explanation'.
- *   - FIX: localStorage envuelto en try/catch.
- *   - FIX: Reemplazo de prompt()/alert() por modal propio.
- *   - FIX: Soporte táctil para preguntas 'drag'.
+ *   - MEJORA PEDAGÓGICA: Propiedad 'hint' independiente en las 46 preguntas.
+ *   - MEJORA PEDAGÓGICA: Nueva pregunta ID 411 con haber no imponible.
+ *   - MEJORA PEDAGÓGICA: Estado 'sad' eliminado. Growth Mindset.
+ *   - MEJORA PEDAGÓGICA: Aclaración de montos netos en preguntas de IVA.
+ *   - MEJORA SENSORIAL: Flash blanco en aciertos rápidos, destello score-badge,
+ *     sonido+explosión drag táctil, doble confeti en transición.
+ *   - CORRECCIÓN: Muletillas festivas eliminadas del Nivel 1.
+ *   - CORRECCIÓN: Error ortográfico "classifies" → "clasifica" (ID 207).
+ *   - FIX: clonado profundo, cálculo de estrellas, applyHint, localStorage,
+ *     prompt/alert reemplazado, soporte táctil drag.
  */
 
 // ===== ESTADO GLOBAL =====
@@ -871,6 +859,10 @@ function checkMultipleAnswer(originalIndex, question) {
 }
 
 function handleCorrectAnswer(points) {
+    // Limpiar timeout de aburrimiento para evitar que el conejo
+    // muestre animación 'bored' mientras el usuario lee la explicación
+    if (state._boredTimeout) clearTimeout(state._boredTimeout);
+    
     state.score += points;
     state.levelScore += points;
     state.streak++;
@@ -910,6 +902,10 @@ function handleCorrectAnswer(points) {
 }
 
 function handleIncorrectAnswer(question) {
+    // Limpiar timeout de aburrimiento para evitar que el conejo
+    // muestre animación 'bored' mientras el usuario lee la explicación
+    if (state._boredTimeout) clearTimeout(state._boredTimeout);
+    
     state.lives--; state.streak = 0; state.levelPerfect = false;
     document.getElementById('streak-display')?.classList.remove('on-fire');
     
@@ -1372,6 +1368,14 @@ function showNamePromptModal(onSubmit) {
     box.querySelector('#conti-name-skip').addEventListener('click', () => close(null));
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') close(input.value.trim() || 'Jugador');
+    });
+    
+    // Cerrar modal con tecla Escape (mismo comportamiento que "Omitir")
+    document.addEventListener('keydown', function escapeHandler(e) {
+        if (e.key === 'Escape') {
+            close(null);
+            document.removeEventListener('keydown', escapeHandler);
+        }
     });
 }
 
