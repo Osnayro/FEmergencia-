@@ -1,39 +1,41 @@
 
 /**
  * ============================================================
- * ContiGame Engine v3.2 — Producción
+ * ContiGame Engine v3.3 — Producción
  * Lógica del juego, control de estado y flujos financieros
  * Para "Conti Conti - Desafío Financiero"
  * ============================================================
  *
- * Cambios v3.2 sobre v3.1:
- *   - MEJORA SENSORIAL: Flash blanco en aciertos rápidos (< 3s)
- *   - MEJORA SENSORIAL: Destello en score-badge al sumar puntos
+ * Cambios v3.3 sobre v3.2:
+ *   - MEJORA PEDAGÓGICA: Propiedad 'hint' independiente en las 46
+ *     preguntas. Pistas que hacen pensar sin revelar la respuesta.
+ *     applyHint() ahora usa question.hint en lugar de explanation.
+ *   - MEJORA PEDAGÓGICA: Nueva pregunta ID 411 (Nivel 4) con
+ *     haber no imponible (asignación de movilización) para reforzar
+ *     el concepto aprendido en el Nivel 1.
+ *   - MEJORA PEDAGÓGICA: Eliminado el estado 'sad' (triste) del
+ *     conejo. Al fallar, el conejo muestra 'determined' (determinado)
+ *     con frases de mentalidad de crecimiento (Growth Mindset).
+ *     El error no se penaliza con tristeza, sino con motivación.
+ *   - MEJORA PEDAGÓGICA: Aclaración de montos netos en preguntas
+ *     de IVA (ID 203, 204, 402) para evitar confusión.
+ *   - MEJORA SENSORIAL: Flash blanco en aciertos rápidos (< 3s).
+ *   - MEJORA SENSORIAL: Destello en score-badge al sumar puntos.
  *   - MEJORA SENSORIAL: Sonido "coin" + explosión al soltar/encajar
  *     en preguntas drag (táctil), que antes eran silenciosas.
  *   - MEJORA SENSORIAL: Doble ráfaga de confeti en pantalla de
  *     transición entre niveles.
- *   - MEJORA: Catálogo de frases ampliado (8-12 frases por estado)
- *     con nuevos estados 'correct' e 'incorrect'.
+ *   - MEJORA: Catálogo de frases ampliado (8-12 frases por estado).
  *   - CORRECCIÓN: Eliminadas muletillas festivas en explicaciones
  *     del Nivel 1 (¡Excelente!, ¡Correcto!, ¡Exacto!, etc.)
  *   - CORRECCIÓN: Error ortográfico "classifies" → "clasifica"
  *     en pregunta ID 207 del Nivel 2.
- *   - FIX: clonado profundo del banco de preguntas al armar cada nivel,
- *     así los bonus (puntos x2, isBonus) ya no mutan las constantes
- *     originales (nivel2Questions, nivel3Questions, etc.) entre partidas.
- *   - FIX: cálculo de estrellas de fin de nivel usa un contador real de
- *     aciertos (state.correctInLevel) en vez de inferirlo dividiendo
- *     levelScore / basePoints, que se descuadraba con bonus de velocidad
- *     y preguntas de puntaje doble.
- *   - FIX: applyHint() ya no revienta si la pregunta actual no tiene
- *     'explanation' (ej. la pregunta de tipo 'matching').
- *   - localStorage envuelto en try/catch (falla silenciosamente en modo
- *     privado de Safari/iOS en vez de romper el flujo).
- *   - Reemplazo de prompt()/alert() por un modal propio en línea con el
- *     resto de la experiencia visual (toasts, confeti, etc.).
- *   - Soporte táctil básico para las preguntas de tipo 'drag' (además del
- *     HTML5 drag & drop nativo, que no funciona bien en móvil/tablet).
+ *   - FIX: clonado profundo del banco de preguntas.
+ *   - FIX: cálculo de estrellas de fin de nivel.
+ *   - FIX: applyHint() no revienta si falta 'explanation'.
+ *   - FIX: localStorage envuelto en try/catch (modo privado Safari/iOS).
+ *   - FIX: Reemplazo de prompt()/alert() por modal propio.
+ *   - FIX: Soporte táctil para preguntas 'drag'.
  */
 
 // ===== ESTADO GLOBAL =====
@@ -84,6 +86,7 @@ const generalQuestions = [
         options: ['Un plan de gastos e ingresos', 'Un tipo de impuesto', 'Una cuenta bancaria', 'Un préstamo'],
         correct: 0,
         explanation: 'Un presupuesto es un plan financiero que estima ingresos y gastos en un período determinado.',
+        hint: 'Piensa en una herramienta que te ayuda a planificar en qué gastarás tu dinero antes de recibirlo.',
         points: 100
     },
     {
@@ -92,6 +95,7 @@ const generalQuestions = [
         options: ['50% necesidades, 30% deseos, 20% ahorro', '50% ahorro, 30% inversión, 20% gastos', '50% gastos, 30% ahorro, 20% inversión', '50% deseos, 30% necesidades, 20% deudas'],
         correct: 0,
         explanation: 'La regla 50/30/20 sugiere destinar 50% a necesidades básicas, 30% a gastos personales y 20% al ahorro.',
+        hint: 'La mitad de tus ingresos debe cubrir lo esencial, y una quinta parte debería reservarse.',
         points: 100
     },
     {
@@ -100,6 +104,7 @@ const generalQuestions = [
         options: ['Invertir en diferentes activos para reducir riesgo', 'Poner todo el dinero en una sola acción', 'Retirar todo el dinero del banco', 'Solo invertir en bienes raíces'],
         correct: 0,
         explanation: 'Diversificar es distribuir las inversiones en distintos activos para minimizar el riesgo de pérdida.',
+        hint: 'Es lo opuesto a "poner todos los huevos en la misma canasta".',
         points: 100
     },
     {
@@ -108,6 +113,7 @@ const generalQuestions = [
         options: ['Un registro de cómo has manejado tus deudas', 'El saldo de tu cuenta bancaria', 'Una lista de tus inversiones', 'Tu declaración de impuestos'],
         correct: 0,
         explanation: 'El historial crediticio muestra tu comportamiento de pago de deudas y determina tu puntaje crediticio.',
+        hint: 'Es como tu "hoja de vida financiera" que los bancos revisan antes de prestarte dinero.',
         points: 100
     },
     {
@@ -116,6 +122,7 @@ const generalQuestions = [
         options: ['Bienes y derechos de una empresa', 'Las deudas de la empresa', 'Las ganancias del año', 'Los gastos mensuales'],
         correct: 0,
         explanation: 'El activo son todos los bienes y derechos que posee una empresa o persona.',
+        hint: 'Es todo lo que tiene valor y pertenece a la empresa: dinero, edificios, vehículos, cuentas por cobrar.',
         points: 100
     },
     {
@@ -127,6 +134,7 @@ const generalQuestions = [
             { left: 'Ahorro', right: 'Dinero reservado', id: 3 },
             { left: 'Inversión', right: 'Dinero que genera más dinero', id: 4 }
         ],
+        hint: 'Relaciona cada término con lo que representa: entrada, salida, reserva o crecimiento del dinero.',
         points: 200
     },
     {
@@ -134,6 +142,7 @@ const generalQuestions = [
         question: '¿Qué porcentaje de tus ingresos recomiendan los expertos ahorrar mensualmente?',
         min: 0, max: 50, correctAnswer: 20, tolerance: 5,
         explanation: 'Los expertos recomiendan ahorrar al menos el 20% de los ingresos mensuales.',
+        hint: 'Según la regla 50/30/20, ¿qué porcentaje se destina al ahorro?',
         points: 150
     },
     {
@@ -142,6 +151,7 @@ const generalQuestions = [
         options: ['Pagar el total de la tarjeta de crédito cada mes', 'Pagar solo el mínimo requerido', 'Tener muchas tarjetas de crédito', 'Usar el crédito para gastos diarios'],
         correct: 0,
         explanation: 'Pagar el total cada mes evita intereses y mantiene un buen historial crediticio.',
+        hint: 'Los intereses de las tarjetas de crédito son muy altos. ¿Qué opción evita pagarlos?',
         points: 100
     },
     {
@@ -150,12 +160,14 @@ const generalQuestions = [
         options: ['Activo = Pasivo + Patrimonio', 'Activo = Ingresos - Gastos', 'Pasivo = Activo + Patrimonio', 'Patrimonio = Activo - Ingresos'],
         correct: 0,
         explanation: 'Activo = Pasivo + Patrimonio es la base de la contabilidad por partida doble.',
+        hint: 'Recuerda qué elementos financian los bienes que tiene la empresa: deudas con terceros y aportes de los dueños.',
         points: 100
     },
     {
         id: 10, topic: 'finanzas', type: 'drag',
         question: 'Ordena los pasos para crear un plan financiero saludable:',
         items: ['Analizar ingresos y gastos', 'Establecer metas financieras', 'Crear un presupuesto', 'Ahorrar e invertir regularmente', 'Revisar y ajustar periódicamente'],
+        hint: 'Primero debes saber cuánto ganas y gastas, luego fijar objetivos, y finalmente hacer seguimiento.',
         points: 200
     },
     {
@@ -164,6 +176,7 @@ const generalQuestions = [
         options: ['Pequeños gastos diarios que suman grandes cantidades', 'Gastos en insecticidas', 'Grandes compras planificadas', 'Inversiones pequeñas'],
         correct: 0,
         explanation: 'Los gastos hormiga son pequeñas compras frecuentes que parecen insignificantes pero suman mucho al mes.',
+        hint: 'Son esos pequeños gustos diarios que parecen inofensivos pero que al final del mes suman una cantidad sorprendente.',
         points: 100
     },
     {
@@ -172,69 +185,71 @@ const generalQuestions = [
         options: ['Intereses que generan más intereses con el tiempo', 'Un tipo de impuesto financiero', 'El interés que cobra el banco', 'Una comisión por inversión'],
         correct: 0,
         explanation: 'El interés compuesto hace que tu dinero crezca exponencialmente al reinvertir las ganancias.',
+        hint: 'Es como una bola de nieve: los intereses ganados se suman al capital y generan nuevos intereses.',
         points: 100
     }
 ];
 
 // Nivel 1: Fondo de Emergencia
 const fondoEmergenciaQuestions = [
-    { id: 101, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué es un fondo de emergencia?', options: ['Dinero para comprar regalos', 'Un ahorro destinado a cubrir gastos inesperados', 'Un préstamo bancario', 'Dinero para vacaciones'], correct: 1, explanation: 'Es un ahorro destinado a cubrir gastos inesperados como urgencias médicas o reparaciones.', points: 100 },
-    { id: 102, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál de estas situaciones corresponde a una emergencia?', options: ['Hospitalización inesperada', 'Comprar ropa', 'Ir al cine', 'Comprar un celular nuevo'], correct: 0, explanation: 'Una emergencia de salud no se planifica y requiere fondos inmediatos.', points: 100 },
-    { id: 103, topic: 'fondo-emergencia', type: 'multiple', question: '¿Para qué sirve un fondo de emergencia?', options: ['Comprar cosas por impulso', 'Ahorrar para vacaciones', 'Cubrir gastos inesperados sin endeudarse', 'Comprar tecnología'], correct: 2, explanation: 'Te protege de pedir préstamos con intereses altos cuando surgen imprevistos.', points: 100 },
-    { id: 104, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuándo es recomendable ahorrar?', options: ['Solo cuando sobra dinero', 'Todos los meses', 'Una vez al año', 'Nunca'], correct: 1, explanation: 'El ahorro es un hábito constante que se planifica cada mes, sin importar el monto.', points: 100 },
-    { id: 105, topic: 'fondo-emergencia', type: 'multiple', question: 'Si se rompe el refrigerador de tu casa, ¿qué sería lo más recomendable?', options: ['Pedir un préstamo', 'Esperar varios meses', 'Utilizar el fondo de emergencia', 'No hacer nada'], correct: 2, explanation: 'Es una urgencia doméstica para la cual está diseñado este fondo.', points: 100 },
-    { id: 106, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál de estas opciones NO corresponde a una emergencia?', options: ['Una operación médica', 'Una reparación urgente', 'Comprar el último modelo de celular', 'Reparar una fuga de agua'], correct: 2, explanation: 'Cambiar de teléfono por gusto es un deseo, no una emergencia.', points: 100 },
-    { id: 107, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué documento permite conocer cómo se distribuye el sueldo de un trabajador?', options: ['Factura', 'Boleta', 'Planilla de remuneraciones', 'Balance general'], correct: 2, explanation: 'En la planilla de remuneraciones se detallan los haberes, descuentos y líquido a pagar.', points: 100 },
-    { id: 108, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué representa el sueldo líquido?', options: ['El sueldo antes de descuentos', 'El dinero destinado a la AFP', 'El dinero que finalmente recibe el trabajador', 'Los impuestos'], correct: 2, explanation: 'Es el monto real entregado al trabajador después de aplicar todos los descuentos legales.', points: 100 },
-    { id: 109, topic: 'fondo-emergencia', type: 'multiple', question: '¿Por qué la planilla de remuneraciones puede ayudar a crear un fondo de emergencia?', options: ['Porque aumenta el sueldo', 'Porque elimina gastos', 'Porque permite saber cuánto dinero recibe una persona y cuánto puede ahorrar', 'Porque evita pagar impuestos'], correct: 2, explanation: 'Saber tus ingresos exactos permite calcular tu capacidad de ahorro mensual.', points: 100 },
-    { id: 110, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál de las siguientes especialidades enseña sobre remuneraciones, educación financiera, administración y contabilidad?', options: ['🍳 Gastronomía', '👶 Atención de Párvulos', '📊 Contabilidad', '🥫 Elaboración Industrial de Alimentos', '⚡ Electrónica'], correct: 2, explanation: 'Contabilidad entrega las herramientas para administrar el dinero y las organizaciones.', points: 100 },
-    { id: 111, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuántos meses de gastos debe cubrir idealmente un fondo de emergencia?', options: ['1 mes', '2 meses', 'De 3 a 6 meses', '12 meses o más'], correct: 2, explanation: 'Los expertos recomiendan cubrir entre 3 y 6 meses de gastos básicos.', points: 100 },
-    { id: 112, topic: 'fondo-emergencia', type: 'multiple', question: '¿Dónde es mejor guardar el dinero del fondo de emergencia?', options: ['En una alcancía en casa', 'Invertido en acciones', 'En una cuenta de ahorro de fácil acceso', 'Prestado a un familiar'], correct: 2, explanation: 'Debe estar disponible rápidamente y sin riesgo de pérdida.', points: 100 },
-    { id: 113, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué característica debe tener un fondo de emergencia?', options: ['Alta rentabilidad', 'Liquidez inmediata', 'Plazo fijo a 5 años', 'Inversión en criptomonedas'], correct: 1, explanation: 'La liquidez permite disponer del dinero en el momento exacto de la emergencia.', points: 100 },
-    { id: 114, topic: 'fondo-emergencia', type: 'multiple', question: 'Si ganas $500.000 mensuales, ¿cuánto deberías tener idealmente en tu fondo de emergencia?', options: ['$100.000', '$500.000', 'Entre $1.500.000 y $3.000.000', '$10.000.000'], correct: 2, explanation: 'Equivale a 3-6 meses de gastos. Si tus gastos son $500.000, necesitas entre $1.5 y $3 millones.', points: 100 },
-    { id: 115, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál es el primer paso para crear un fondo de emergencia?', options: ['Calcular los gastos mensuales básicos', 'Pedir un préstamo', 'Invertir en la bolsa', 'Gastar menos en entretención'], correct: 0, explanation: 'Primero debes saber cuánto necesitas para cubrir tus gastos esenciales.', points: 100 }
+    { id: 101, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué es un fondo de emergencia?', options: ['Dinero para comprar regalos', 'Un ahorro destinado a cubrir gastos inesperados', 'Un préstamo bancario', 'Dinero para vacaciones'], correct: 1, explanation: 'Es un ahorro destinado a cubrir gastos inesperados como urgencias médicas o reparaciones.', hint: 'Piensa en un dinero guardado exclusivamente para momentos difíciles e inesperados, no para gustos.', points: 100 },
+    { id: 102, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál de estas situaciones corresponde a una emergencia?', options: ['Hospitalización inesperada', 'Comprar ropa', 'Ir al cine', 'Comprar un celular nuevo'], correct: 0, explanation: 'Una emergencia de salud no se planifica y requiere fondos inmediatos.', hint: 'Una emergencia es algo urgente que no puedes posponer y que afecta tu salud o seguridad.', points: 100 },
+    { id: 103, topic: 'fondo-emergencia', type: 'multiple', question: '¿Para qué sirve un fondo de emergencia?', options: ['Comprar cosas por impulso', 'Ahorrar para vacaciones', 'Cubrir gastos inesperados sin endeudarse', 'Comprar tecnología'], correct: 2, explanation: 'Te protege de pedir préstamos con intereses altos cuando surgen imprevistos.', hint: 'Su propósito es evitar que un imprevisto te obligue a adquirir deudas costosas.', points: 100 },
+    { id: 104, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuándo es recomendable ahorrar?', options: ['Solo cuando sobra dinero', 'Todos los meses', 'Una vez al año', 'Nunca'], correct: 1, explanation: 'El ahorro es un hábito constante que se planifica cada mes, sin importar el monto.', hint: 'La constancia es más importante que la cantidad. No esperes a que "sobre" dinero para empezar.', points: 100 },
+    { id: 105, topic: 'fondo-emergencia', type: 'multiple', question: 'Si se rompe el refrigerador de tu casa, ¿qué sería lo más recomendable?', options: ['Pedir un préstamo', 'Esperar varios meses', 'Utilizar el fondo de emergencia', 'No hacer nada'], correct: 2, explanation: 'Es una urgencia doméstica para la cual está diseñado este fondo.', hint: 'Para eso creaste el fondo de emergencia: para resolver problemas sin endeudarte.', points: 100 },
+    { id: 106, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál de estas opciones NO corresponde a una emergencia?', options: ['Una operación médica', 'Una reparación urgente', 'Comprar el último modelo de celular', 'Reparar una fuga de agua'], correct: 2, explanation: 'Cambiar de teléfono por gusto es un deseo, no una emergencia.', hint: 'Diferencia entre lo que es urgente y necesario versus lo que es un simple deseo de consumo.', points: 100 },
+    { id: 107, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué documento permite conocer cómo se distribuye el sueldo de un trabajador?', options: ['Factura', 'Boleta', 'Planilla de remuneraciones', 'Balance general'], correct: 2, explanation: 'En la planilla de remuneraciones se detallan los haberes, descuentos y líquido a pagar.', hint: 'Es el documento que detalla todos los ingresos y descuentos que aplican al sueldo de un trabajador.', points: 100 },
+    { id: 108, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué representa el sueldo líquido?', options: ['El sueldo antes de descuentos', 'El dinero destinado a la AFP', 'El dinero que finalmente recibe el trabajador', 'Los impuestos'], correct: 2, explanation: 'Es el monto real entregado al trabajador después de aplicar todos los descuentos legales.', hint: 'Es el dinero que efectivamente llega a tu bolsillo después de todas las retenciones.', points: 100 },
+    { id: 109, topic: 'fondo-emergencia', type: 'multiple', question: '¿Por qué la planilla de remuneraciones puede ayudar a crear un fondo de emergencia?', options: ['Porque aumenta el sueldo', 'Porque elimina gastos', 'Porque permite saber cuánto dinero recibe una persona y cuánto puede ahorrar', 'Porque evita pagar impuestos'], correct: 2, explanation: 'Saber tus ingresos exactos permite calcular tu capacidad de ahorro mensual.', hint: 'Conocer con precisión cuánto dinero recibes es el primer paso para planificar cuánto puedes ahorrar.', points: 100 },
+    { id: 110, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál de las siguientes especialidades enseña sobre remuneraciones, educación financiera, administración y contabilidad?', options: ['🍳 Gastronomía', '👶 Atención de Párvulos', '📊 Contabilidad', '🥫 Elaboración Industrial de Alimentos', '⚡ Electrónica'], correct: 2, explanation: 'Contabilidad entrega las herramientas para administrar el dinero y las organizaciones.', hint: 'Es la especialidad que se enfoca en registrar, analizar y gestionar la información financiera.', points: 100 },
+    { id: 111, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuántos meses de gastos debe cubrir idealmente un fondo de emergencia?', options: ['1 mes', '2 meses', 'De 3 a 6 meses', '12 meses o más'], correct: 2, explanation: 'Los expertos recomiendan cubrir entre 3 y 6 meses de gastos básicos.', hint: 'No es solo un mes, pero tampoco necesitas un año completo. Busca el rango intermedio recomendado.', points: 100 },
+    { id: 112, topic: 'fondo-emergencia', type: 'multiple', question: '¿Dónde es mejor guardar el dinero del fondo de emergencia?', options: ['En una alcancía en casa', 'Invertido en acciones', 'En una cuenta de ahorro de fácil acceso', 'Prestado a un familiar'], correct: 2, explanation: 'Debe estar disponible rápidamente y sin riesgo de pérdida.', hint: 'Necesitas que el dinero esté seguro pero accesible de inmediato cuando surja la emergencia.', points: 100 },
+    { id: 113, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué característica debe tener un fondo de emergencia?', options: ['Alta rentabilidad', 'Liquidez inmediata', 'Plazo fijo a 5 años', 'Inversión en criptomonedas'], correct: 1, explanation: 'La liquidez permite disponer del dinero en el momento exacto de la emergencia.', hint: 'En una emergencia no puedes esperar días para retirar tu dinero. Necesitas que esté disponible al instante.', points: 100 },
+    { id: 114, topic: 'fondo-emergencia', type: 'multiple', question: 'Si ganas $500.000 mensuales, ¿cuánto deberías tener idealmente en tu fondo de emergencia?', options: ['$100.000', '$500.000', 'Entre $1.500.000 y $3.000.000', '$10.000.000'], correct: 2, explanation: 'Equivale a 3-6 meses de gastos. Si tus gastos son $500.000, necesitas entre $1.5 y $3 millones.', hint: 'Multiplica tus gastos mensuales por el número de meses recomendado (entre 3 y 6).', points: 100 },
+    { id: 115, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál es el primer paso para crear un fondo de emergencia?', options: ['Calcular los gastos mensuales básicos', 'Pedir un préstamo', 'Invertir en la bolsa', 'Gastar menos en entretención'], correct: 0, explanation: 'Primero debes saber cuánto necesitas para cubrir tus gastos esenciales.', hint: 'Antes de ahorrar, necesitas saber exactamente cuánto gastas en lo esencial cada mes.', points: 100 }
 ];
 
 // Nivel 2: Contabilidad y Nómina
 const nivel2Questions = [
-    { id: 201, topic: 'contabilidad', type: 'multiple', question: 'Si una empresa cobra $500 en efectivo por un servicio realizado, ¿cuál es el registro contable correcto?', options: ['Cargar (Débito) a Caja y Abonar (Crédito) a Ingresos por Servicios', 'Cargar a Ingresos por Servicios y Abonar a Caja', 'Cargar a Banco y Abonar a Cuentas por Cobrar', 'Cargar a Gastos Generales y Abonar a Caja'], correct: 0, explanation: 'El dinero entra a la empresa (Activo aumenta por el Debe en Caja) y se reconoce la venta (Ingreso aumenta por el Haber).', points: 150 },
-    { id: 202, topic: 'contabilidad', type: 'multiple', question: '¿Qué ocurre en la ecuación contable cuando una empresa compra mercancía al contado?', options: ['Aumenta un Activo (Inventario) y disminuye otro Activo (Caja)', 'Aumenta un Activo y aumenta un Pasivo', 'Disminuye el Patrimonio y aumenta el Pasivo', 'Aumenta el Pasivo y disminuye el Activo'], correct: 0, explanation: 'Es un intercambio de activos: ingresa Inventario y sale Efectivo/Caja por el mismo valor.', points: 150 },
-    { id: 203, topic: 'tributacion', type: 'multiple', question: 'En el cálculo del IVA, ¿qué representa el Débito Fiscal?', options: ['El IVA cobrado a los clientes en las ventas de la empresa', 'El IVA pagado a los proveedores al comprar insumos', 'El impuesto sobre la renta que se paga a fin de año', 'Un dinero que la administración tributaria le debe a la empresa'], correct: 0, explanation: 'El Débito Fiscal es el IVA recaudado de las ventas. Representa un pasivo con el fisco.', points: 150 },
-    { id: 204, topic: 'tributacion', type: 'multiple', question: 'Si en un mes generas $200 de Débito Fiscal y pagaste $120 de Crédito Fiscal, ¿cuánto debes pagar al fisco?', options: ['$80', '$320', '$120', '$0 (Queda saldo a favor)'], correct: 0, explanation: 'Impuesto a pagar = Débito Fiscal ($200) menos Crédito Fiscal ($120) = $80.', points: 150 },
-    { id: 205, topic: 'nomina', type: 'multiple', question: '¿Cuál es la diferencia entre el Sueldo Bruto y el Sueldo Líquido?', options: ['El Sueldo Bruto es el total pactado; el Líquido es lo que recibe el trabajador tras descuentos de ley', 'El Sueldo Líquido es antes de impuestos y el Bruto es después', 'El Sueldo Bruto se paga en efectivo y el Líquido mediante cheque', 'Son exactamente el mismo monto'], correct: 0, explanation: 'El Sueldo Bruto incluye todos los haberes. Al restarle las retenciones legales se obtiene el Sueldo Líquido.', points: 150 },
-    { id: 206, topic: 'contabilidad', type: 'multiple', question: '¿Cuál de las siguientes cuentas es de naturaleza ACREEDORA (aumenta por el Haber)?', options: ['Cuentas por Pagar (Pasivo)', 'Caja Chica (Activo)', 'Gastos de Arriendo (Gasto)', 'Banco (Activo)'], correct: 0, explanation: 'Las cuentas de Pasivo, Patrimonio e Ingresos nacen y aumentan por el Haber.', points: 150 },
-    { id: 207, topic: 'contabilidad', type: 'multiple', question: '¿Para qué sirve el Libro Mayor en la contabilidad diaria?', options: ['Para agrupar los saldos individuales y movimientos de cada cuenta contable', 'Para anotar las facturas del día en orden cronológico', 'Para calcular el sueldo de los trabajadores', 'Para pagar los impuestos directamente'], correct: 0, explanation: 'El Libro Mayor clasifica las operaciones por cada cuenta específica para conocer su saldo.', points: 150 },
-    { id: 208, topic: 'contabilidad', type: 'multiple', question: 'Se compra un equipo de oficina por $1.000 a crédito firmando una letra. ¿Qué cuenta de pasivo aumenta?', options: ['Documentos por Pagar', 'Cuentas por Cobrar', 'Capital Social', 'Gastos Operativos'], correct: 0, explanation: 'Al existir un compromiso formal respaldado por un documento, la deuda se registra en Documentos por Pagar.', points: 150 },
-    { id: 209, topic: 'nomina', type: 'multiple', question: '¿Qué representan los "Haberes No Imponibles" en una planilla de remuneraciones?', options: ['Asignaciones que no sufren descuentos legales, como la movilización o colación', 'El sueldo base antes de calcular las horas extras', 'Los préstamos que la empresa le otorga al trabajador', 'Los impuestos cobrados directamente por el gobierno'], correct: 0, explanation: 'Son compensaciones por gastos de trabajo sobre los cuales no se aplican retenciones.', points: 150 },
-    { id: 210, topic: 'contabilidad', type: 'multiple', question: '¿Cuál es el principio contable de la "Partida Doble"?', options: ['No hay deudor sin acreedor: la suma del Debe debe ser igual a la suma del Haber', 'Todas las compras se deben hacer por duplicado', 'Los impuestos se pagan dos veces al año', 'Las ganancias siempre deben duplicar a las pérdidas'], correct: 0, explanation: 'La partida doble garantiza el equilibrio patrimonial en todo asiento contable.', points: 150 }
+    { id: 201, topic: 'contabilidad', type: 'multiple', question: 'Si una empresa cobra $500 en efectivo por un servicio realizado, ¿cuál es el registro contable correcto?', options: ['Cargar (Débito) a Caja y Abonar (Crédito) a Ingresos por Servicios', 'Cargar a Ingresos por Servicios y Abonar a Caja', 'Cargar a Banco y Abonar a Cuentas por Cobrar', 'Cargar a Gastos Generales y Abonar a Caja'], correct: 0, explanation: 'El dinero entra a la empresa (Activo aumenta por el Debe en Caja) y se reconoce la venta (Ingreso aumenta por el Haber).', hint: 'Cuando recibes efectivo por un servicio, ¿qué cuenta de Activo aumenta y qué cuenta de Ingreso se reconoce?', points: 150 },
+    { id: 202, topic: 'contabilidad', type: 'multiple', question: '¿Qué ocurre en la ecuación contable cuando una empresa compra mercancía al contado?', options: ['Aumenta un Activo (Inventario) y disminuye otro Activo (Caja)', 'Aumenta un Activo y aumenta un Pasivo', 'Disminuye el Patrimonio y aumenta el Pasivo', 'Aumenta el Pasivo y disminuye el Activo'], correct: 0, explanation: 'Es un intercambio de activos: ingresa Inventario y sale Efectivo/Caja por el mismo valor.', hint: 'Al pagar al contado, no generas deuda. Solo intercambias un tipo de activo por otro.', points: 150 },
+    { id: 203, topic: 'tributacion', type: 'multiple', question: 'En el cálculo del IVA sobre ventas netas, ¿qué representa el Débito Fiscal?', options: ['El IVA cobrado a los clientes en las ventas de la empresa', 'El IVA pagado a los proveedores al comprar insumos', 'El impuesto sobre la renta que se paga a fin de año', 'Un dinero que la administración tributaria le debe a la empresa'], correct: 0, explanation: 'El Débito Fiscal es el IVA recaudado de las ventas. Representa un pasivo con el fisco.', hint: 'Es el IVA que tus clientes te pagan a ti y que luego debes entregar al fisco.', points: 150 },
+    { id: 204, topic: 'tributacion', type: 'multiple', question: 'Si en un mes generas $200 de Débito Fiscal (sobre ventas netas) y pagaste $120 de Crédito Fiscal, ¿cuánto debes pagar al fisco?', options: ['$80', '$320', '$120', '$0 (Queda saldo a favor)'], correct: 0, explanation: 'Impuesto a pagar = Débito Fiscal ($200) menos Crédito Fiscal ($120) = $80.', hint: 'Al IVA que cobraste en tus ventas réstale el IVA que pagaste en tus compras.', points: 150 },
+    { id: 205, topic: 'nomina', type: 'multiple', question: '¿Cuál es la diferencia entre el Sueldo Bruto y el Sueldo Líquido?', options: ['El Sueldo Bruto es el total pactado; el Líquido es lo que recibe el trabajador tras descuentos de ley', 'El Sueldo Líquido es antes de impuestos y el Bruto es después', 'El Sueldo Bruto se paga en efectivo y el Líquido mediante cheque', 'Son exactamente el mismo monto'], correct: 0, explanation: 'El Sueldo Bruto incluye todos los haberes. Al restarle las retenciones legales se obtiene el Sueldo Líquido.', hint: 'Uno es el monto antes de descuentos y el otro es lo que efectivamente recibes en tu cuenta bancaria.', points: 150 },
+    { id: 206, topic: 'contabilidad', type: 'multiple', question: '¿Cuál de las siguientes cuentas es de naturaleza ACREEDORA (aumenta por el Haber)?', options: ['Cuentas por Pagar (Pasivo)', 'Caja Chica (Activo)', 'Gastos de Arriendo (Gasto)', 'Banco (Activo)'], correct: 0, explanation: 'Las cuentas de Pasivo, Patrimonio e Ingresos nacen y aumentan por el Haber.', hint: 'Las deudas y obligaciones aumentan por el Haber. ¿Cuál de estas opciones es una deuda?', points: 150 },
+    { id: 207, topic: 'contabilidad', type: 'multiple', question: '¿Para qué sirve el Libro Mayor en la contabilidad diaria?', options: ['Para agrupar los saldos individuales y movimientos de cada cuenta contable', 'Para anotar las facturas del día en orden cronológico', 'Para calcular el sueldo de los trabajadores', 'Para pagar los impuestos directamente'], correct: 0, explanation: 'El Libro Mayor clasifica las operaciones por cada cuenta específica para conocer su saldo.', hint: 'Mientras el Libro Diario registra cronológicamente, este libro agrupa por cuentas individuales.', points: 150 },
+    { id: 208, topic: 'contabilidad', type: 'multiple', question: 'Se compra un equipo de oficina por $1.000 a crédito firmando una letra. ¿Qué cuenta de pasivo aumenta?', options: ['Documentos por Pagar', 'Cuentas por Cobrar', 'Capital Social', 'Gastos Operativos'], correct: 0, explanation: 'Al existir un compromiso formal respaldado por un documento, la deuda se registra en Documentos por Pagar.', hint: 'Al firmar un documento que respalda la deuda, usas una cuenta específica de pasivo diferente a "Cuentas por Pagar".', points: 150 },
+    { id: 209, topic: 'nomina', type: 'multiple', question: '¿Qué representan los "Haberes No Imponibles" en una planilla de remuneraciones?', options: ['Asignaciones que no sufren descuentos legales, como la movilización o colación', 'El sueldo base antes de calcular las horas extras', 'Los préstamos que la empresa le otorga al trabajador', 'Los impuestos cobrados directamente por el gobierno'], correct: 0, explanation: 'Son compensaciones por gastos de trabajo sobre los cuales no se aplican retenciones.', hint: 'Son montos que se pagan al trabajador pero sobre los cuales no se calculan impuestos ni cotizaciones.', points: 150 },
+    { id: 210, topic: 'contabilidad', type: 'multiple', question: '¿Cuál es el principio contable de la "Partida Doble"?', options: ['No hay deudor sin acreedor: la suma del Debe debe ser igual a la suma del Haber', 'Todas las compras se deben hacer por duplicado', 'Los impuestos se pagan dos veces al año', 'Las ganancias siempre deben duplicar a las pérdidas'], correct: 0, explanation: 'La partida doble garantiza el equilibrio patrimonial en todo asiento contable.', hint: 'Cada transacción afecta al menos dos cuentas y los totales del Debe y Haber siempre deben coincidir.', points: 150 }
 ];
 
 // Nivel 3: Estados Financieros
 const nivel3Questions = [
-    { id: 301, topic: 'estados-financieros', type: 'multiple', question: '¿Qué fórmula se utiliza para determinar la Utilidad Bruta en el Estado de Resultados?', options: ['Ventas Netas - Costo de Ventas', 'Ingresos Totales - Gastos Administrativos', 'Activo Total - Pasivo Total', 'Utilidad Neta + Impuestos'], correct: 0, explanation: 'La Utilidad Bruta mide la ganancia directa generada por la venta de productos antes de restar los gastos operativos.', points: 200 },
-    { id: 302, topic: 'analisis-financiero', type: 'slider', question: 'Si una empresa tiene $15.000 de Activo Corriente y $5.000 de Pasivo Corriente, ¿cuál es su Razón de Liquidez Corriente?', min: 0, max: 5, correctAnswer: 3, tolerance: 0, explanation: 'Razón Corriente = $15.000 / $5.000 = 3. La empresa posee $3 en activos líquidos por cada $1 de deuda.', points: 200 },
-    { id: 303, topic: 'inventario', type: 'multiple', question: 'En un período con precios al alza, ¿qué ocurre al aplicar el método PEPS (FIFO)?', options: ['El Costo de Ventas es menor y la Utilidad Bruta se presenta más alta', 'El Costo de Ventas es mayor y la Utilidad Bruta disminuye', 'No hay ningún impacto en los estados financieros', 'El valor del inventario final resulta infravalorado'], correct: 0, explanation: 'Al vender primero los artículos antiguos (más baratos), el Costo de Ventas baja y la Utilidad sube.', points: 200 },
-    { id: 304, topic: 'estados-financieros', type: 'multiple', question: '¿Cómo se clasifican las deudas que la empresa debe pagar en un plazo menor a 12 meses?', options: ['Pasivo Corriente (o a Corto Plazo)', 'Pasivo No Corriente (o a Largo Plazo)', 'Patrimonio Neto', 'Activo Intangible'], correct: 0, explanation: 'Todas las obligaciones exigibles en un plazo máximo de un año forman parte del Pasivo Corriente.', points: 200 },
-    { id: 305, topic: 'analisis-financiero', type: 'multiple', question: '¿Qué representa el Capital de Trabajo de una organización?', options: ['Los recursos disponibles para operar (Activo Corriente - Pasivo Corriente)', 'El total de las aportaciones de los socios', 'El valor de los edificios y maquinaria', 'El total de créditos solicitados a los bancos'], correct: 0, explanation: 'El Capital de Trabajo Neto indica la liquidez excedente para continuar operando.', points: 200 },
-    { id: 306, topic: 'estados-financieros', type: 'multiple', question: '¿Qué es la Depreciación Acumulada dentro del Balance General?', options: ['Una cuenta reguladora del activo que refleja la pérdida de valor de los bienes de uso', 'Un gasto que requiere salida directa de dinero', 'Una deuda a largo plazo con proveedores', 'Una reserva de dinero en efectivo'], correct: 0, explanation: 'Reduce el valor en libros de los activos fijos debido al desgaste, uso o tiempo.', points: 200 },
-    { id: 307, topic: 'inventario', type: 'multiple', question: '¿En qué consiste el método del Promedio Ponderado para el control de inventarios?', options: ['Calcula un costo unitario medio dividiendo el costo total entre las unidades en existencia', 'Asigna el costo de las últimas unidades compradas a las primeras salidas', 'Aplica un valor estimado al azar', 'Utiliza únicamente el precio de venta al público'], correct: 0, explanation: 'El promedio ponderado suaviza las variaciones de precios recalculando el costo medio tras cada compra.', points: 200 },
-    { id: 308, topic: 'estados-financieros', type: 'multiple', question: 'Si una empresa reporta Ventas de $50.000 y Utilidad Neta de $10.000, ¿cuál es su Margen Neto?', options: ['20%', '50%', '5%', '10%'], correct: 0, explanation: 'Margen Neto = ($10.000 / $50.000) × 100 = 20%.', points: 200 },
-    { id: 309, topic: 'analisis-financiero', type: 'multiple', question: '¿Cuál es la diferencia entre el Estado de Resultados y el Balance General?', options: ['El Estado de Resultados mide el desempeño durante un período; el Balance muestra la situación a una fecha', 'El Balance mide el rendimiento anual y el Estado de Resultados solo la liquidez', 'Ambos reportes muestran exactamente la misma información', 'El Estado de Resultados es interno y el Balance solo para entidades tributarias'], correct: 0, explanation: 'El Estado de Resultados es dinámico (flujos) y el Balance General es estático (foto a una fecha).', points: 200 },
-    { id: 310, topic: 'estados-financieros', type: 'multiple', question: '¿A qué grupo pertenecen el arriendo del local y los sueldos administrativos en el Estado de Resultados?', options: ['Gastos Operativos (Administración y Ventas)', 'Costo Directo de Ventas', 'Ingresos Extraordinarios', 'Pasivos a Largo Plazo'], correct: 0, explanation: 'Son desembolsos necesarios para la gestión operativa, clasificados como Gastos Operativos.', points: 200 }
+    { id: 301, topic: 'estados-financieros', type: 'multiple', question: '¿Qué fórmula se utiliza para determinar la Utilidad Bruta en el Estado de Resultados?', options: ['Ventas Netas - Costo de Ventas', 'Ingresos Totales - Gastos Administrativos', 'Activo Total - Pasivo Total', 'Utilidad Neta + Impuestos'], correct: 0, explanation: 'La Utilidad Bruta mide la ganancia directa generada por la venta de productos antes de restar los gastos operativos.', hint: 'Solo considera el ingreso por ventas y el costo directo de lo vendido, sin incluir gastos administrativos.', points: 200 },
+    { id: 302, topic: 'analisis-financiero', type: 'slider', question: 'Si una empresa tiene $15.000 de Activo Corriente y $5.000 de Pasivo Corriente, ¿cuál es su Razón de Liquidez Corriente?', min: 0, max: 5, correctAnswer: 3, tolerance: 0, explanation: 'Razón Corriente = $15.000 / $5.000 = 3. La empresa posee $3 en activos líquidos por cada $1 de deuda.', hint: 'Divide el Activo Corriente entre el Pasivo Corriente. El resultado indica cuántos pesos tienes por cada peso que debes.', points: 200 },
+    { id: 303, topic: 'inventario', type: 'multiple', question: 'En un período con precios al alza, ¿qué ocurre al aplicar el método PEPS (FIFO)?', options: ['El Costo de Ventas es menor y la Utilidad Bruta se presenta más alta', 'El Costo de Ventas es mayor y la Utilidad Bruta disminuye', 'No hay ningún impacto en los estados financieros', 'El valor del inventario final resulta infravalorado'], correct: 0, explanation: 'Al vender primero los artículos antiguos (más baratos), el Costo de Ventas baja y la Utilidad sube.', hint: 'PEPS significa "Primero en Entrar, Primero en Salir". Si los precios suben, ¿qué pasa con los productos más antiguos?', points: 200 },
+    { id: 304, topic: 'estados-financieros', type: 'multiple', question: '¿Cómo se clasifican las deudas que la empresa debe pagar en un plazo menor a 12 meses?', options: ['Pasivo Corriente (o a Corto Plazo)', 'Pasivo No Corriente (o a Largo Plazo)', 'Patrimonio Neto', 'Activo Intangible'], correct: 0, explanation: 'Todas las obligaciones exigibles en un plazo máximo de un año forman parte del Pasivo Corriente.', hint: 'Si vence dentro del año, se clasifica como corriente o de corto plazo.', points: 200 },
+    { id: 305, topic: 'analisis-financiero', type: 'multiple', question: '¿Qué representa el Capital de Trabajo de una organización?', options: ['Los recursos disponibles para operar (Activo Corriente - Pasivo Corriente)', 'El total de las aportaciones de los socios', 'El valor de los edificios y maquinaria', 'El total de créditos solicitados a los bancos'], correct: 0, explanation: 'El Capital de Trabajo Neto indica la liquidez excedente para continuar operando.', hint: 'Es la diferencia entre lo que tienes disponible a corto plazo y lo que debes pagar a corto plazo.', points: 200 },
+    { id: 306, topic: 'estados-financieros', type: 'multiple', question: '¿Qué es la Depreciación Acumulada dentro del Balance General?', options: ['Una cuenta reguladora del activo que refleja la pérdida de valor de los bienes de uso', 'Un gasto que requiere salida directa de dinero', 'Una deuda a largo plazo con proveedores', 'Una reserva de dinero en efectivo'], correct: 0, explanation: 'Reduce el valor en libros de los activos fijos debido al desgaste, uso o tiempo.', hint: 'No es un gasto en efectivo, sino el reconocimiento contable del desgaste de equipos y maquinaria.', points: 200 },
+    { id: 307, topic: 'inventario', type: 'multiple', question: '¿En qué consiste el método del Promedio Ponderado para el control de inventarios?', options: ['Calcula un costo unitario medio dividiendo el costo total entre las unidades en existencia', 'Asigna el costo de las últimas unidades compradas a las primeras salidas', 'Aplica un valor estimado al azar', 'Utiliza únicamente el precio de venta al público'], correct: 0, explanation: 'El promedio ponderado suaviza las variaciones de precios recalculando el costo medio tras cada compra.', hint: 'Mezcla todos los costos y los divide entre el total de unidades para obtener un costo uniforme.', points: 200 },
+    { id: 308, topic: 'estados-financieros', type: 'multiple', question: 'Si una empresa reporta Ventas de $50.000 y Utilidad Neta de $10.000, ¿cuál es su Margen Neto?', options: ['20%', '50%', '5%', '10%'], correct: 0, explanation: 'Margen Neto = ($10.000 / $50.000) × 100 = 20%.', hint: 'Divide la Utilidad Neta entre las Ventas y multiplica por 100 para obtener el porcentaje.', points: 200 },
+    { id: 309, topic: 'analisis-financiero', type: 'multiple', question: '¿Cuál es la diferencia entre el Estado de Resultados y el Balance General?', options: ['El Estado de Resultados mide el desempeño durante un período; el Balance muestra la situación a una fecha', 'El Balance mide el rendimiento anual y el Estado de Resultados solo la liquidez', 'Ambos reportes muestran exactamente la misma información', 'El Estado de Resultados es interno y el Balance solo para entidades tributarias'], correct: 0, explanation: 'El Estado de Resultados es dinámico (flujos) y el Balance General es estático (foto a una fecha).', hint: 'Uno es como una película (muestra lo que pasó durante un tiempo) y el otro es como una fotografía (muestra un momento).', points: 200 },
+    { id: 310, topic: 'estados-financieros', type: 'multiple', question: '¿A qué grupo pertenecen el arriendo del local y los sueldos administrativos en el Estado de Resultados?', options: ['Gastos Operativos (Administración y Ventas)', 'Costo Directo de Ventas', 'Ingresos Extraordinarios', 'Pasivos a Largo Plazo'], correct: 0, explanation: 'Son desembolsos necesarios para la gestión operativa, clasificados como Gastos Operativos.', hint: 'No son el costo directo de fabricar el producto, sino los gastos necesarios para administrar el negocio.', points: 200 }
 ];
 
 // Nivel 4: Cálculos Avanzados
 const nivelAvanzadoQuestions = [
-    { id: 401, topic: 'contabilidad', type: 'multiple', question: 'Activo Total = $45.000, Pasivo Total = $18.000. Si los socios aportan $5.000 más, ¿nuevo Patrimonio?', options: ['$32.000', '$27.000', '$22.000', '$50.000'], correct: 0, explanation: 'Patrimonio Inicial = $45.000 - $18.000 = $27.000. Con aporte: $27.000 + $5.000 = $32.000.', points: 250 },
-    { id: 402, topic: 'tributacion', type: 'multiple', question: 'Ventas por $1.000 neto (más 16% IVA) y compras por $600 neto (más 16% IVA). ¿IVA a pagar?', options: ['$64', '$160', '$96', '$256'], correct: 0, explanation: 'Débito Fiscal = $1.000 × 0,16 = $160. Crédito Fiscal = $600 × 0,16 = $96. IVA = $160 - $96 = $64.', points: 250 },
-    { id: 403, topic: 'estados-financieros', type: 'multiple', question: 'Maquinaria de $12.000, vida útil 5 años, valor residual $2.000. ¿Valor en libros al año 2?', options: ['$8.000', '$10.000', '$4.000', '$6.000'], correct: 0, explanation: 'Depreciación anual = ($12.000 - $2.000) / 5 = $2.000. Año 2: $12.000 - $4.000 = $8.000.', points: 250 },
-    { id: 404, topic: 'analisis-financiero', type: 'slider', question: 'Activo Corriente = $18.000, Inventario = $6.000, Pasivo Corriente = $8.000. ¿Prueba Ácida?', min: 0, max: 5, correctAnswer: 1.5, tolerance: 0.1, explanation: 'Prueba Ácida = ($18.000 - $6.000) / $8.000 = $12.000 / $8.000 = 1,5.', points: 250 },
-    { id: 405, topic: 'estados-financieros', type: 'multiple', question: 'Ventas $80.000, Costo $50.000, Gastos Operativos $18.000. ¿Margen Operativo?', options: ['15%', '37,5%', '22,5%', '62,5%'], correct: 0, explanation: 'Utilidad Operativa = $80.000 - $50.000 - $18.000 = $12.000. Margen = ($12.000 / $80.000) × 100 = 15%.', points: 250 },
-    { id: 406, topic: 'nomina', type: 'multiple', question: 'Sueldo Base $800, horas extras $150, retenciones 10% del total imponible. ¿Sueldo Líquido?', options: ['$855', '$720', '$800', '$950'], correct: 0, explanation: 'Total Imponible = $800 + $150 = $950. Retenciones = $95. Líquido = $950 - $95 = $855.', points: 250 },
-    { id: 407, topic: 'inventarios', type: 'multiple', question: 'Inventario inicial: 10u a $10. Compra: 20u a $13. Venta: 15u. ¿Costo PEPS?', options: ['$165', '$195', '$150', '$180'], correct: 0, explanation: 'PEPS: 10u × $10 = $100 + 5u × $13 = $65. Total = $165.', points: 250 },
-    { id: 408, topic: 'inventarios', type: 'multiple', question: 'Mismos datos (10u a $10, 20u a $13). ¿Costo Promedio Ponderado unitario?', options: ['$12,00', '$11,50', '$13,00', '$10,00'], correct: 0, explanation: 'Costo Total = $360. Unidades = 30. Promedio = $360 / 30 = $12,00.', points: 250 },
-    { id: 409, topic: 'matematica-financiera', type: 'multiple', question: 'Préstamo de $5.000 al 12% anual simple, a 6 meses. ¿Total a pagar?', options: ['$5.300', '$5.600', '$5.120', '$6.000'], correct: 0, explanation: 'Interés = $5.000 × 0,12 × (6/12) = $300. Total = $5.300.', points: 250 },
-    { id: 410, topic: 'analisis-financiero', type: 'multiple', question: 'Activos Corrientes $25.000, Pasivos Corrientes $15.000. ¿Capital de Trabajo Neto?', options: ['$10.000', '$40.000', '1,66', '$15.000'], correct: 0, explanation: 'Capital de Trabajo = $25.000 - $15.000 = $10.000.', points: 250 }
+    { id: 401, topic: 'contabilidad', type: 'multiple', question: 'Activo Total = $45.000, Pasivo Total = $18.000. Si los socios aportan $5.000 más, ¿nuevo Patrimonio?', options: ['$32.000', '$27.000', '$22.000', '$50.000'], correct: 0, explanation: 'Patrimonio Inicial = $45.000 - $18.000 = $27.000. Con aporte: $27.000 + $5.000 = $32.000.', hint: 'Usa la ecuación contable fundamental: Activo = Pasivo + Patrimonio. Luego suma el nuevo aporte.', points: 250 },
+    { id: 402, topic: 'tributacion', type: 'multiple', question: 'Ventas netas por $1.000 (más 16% IVA) y compras netas por $600 (más 16% IVA). ¿IVA a pagar?', options: ['$64', '$160', '$96', '$256'], correct: 0, explanation: 'Débito Fiscal = $1.000 × 0,16 = $160. Crédito Fiscal = $600 × 0,16 = $96. IVA = $160 - $96 = $64.', hint: 'Calcula el IVA por separado para ventas y compras sobre los montos netos, luego réstalos.', points: 250 },
+    { id: 403, topic: 'estados-financieros', type: 'multiple', question: 'Maquinaria de $12.000, vida útil 5 años, valor residual $2.000. ¿Valor en libros al año 2?', options: ['$8.000', '$10.000', '$4.000', '$6.000'], correct: 0, explanation: 'Depreciación anual = ($12.000 - $2.000) / 5 = $2.000. Año 2: $12.000 - $4.000 = $8.000.', hint: 'Resta el valor residual, divide entre los años de vida útil, y multiplica por los años transcurridos.', points: 250 },
+    { id: 404, topic: 'analisis-financiero', type: 'slider', question: 'Activo Corriente = $18.000, Inventario = $6.000, Pasivo Corriente = $8.000. ¿Prueba Ácida?', min: 0, max: 5, correctAnswer: 1.5, tolerance: 0.1, explanation: 'Prueba Ácida = ($18.000 - $6.000) / $8.000 = $12.000 / $8.000 = 1,5.', hint: 'A los Activos Corrientes réstales el Inventario (no es líquido) y divide entre el Pasivo Corriente.', points: 250 },
+    { id: 405, topic: 'estados-financieros', type: 'multiple', question: 'Ventas $80.000, Costo $50.000, Gastos Operativos $18.000. ¿Margen Operativo?', options: ['15%', '37,5%', '22,5%', '62,5%'], correct: 0, explanation: 'Utilidad Operativa = $80.000 - $50.000 - $18.000 = $12.000. Margen = ($12.000 / $80.000) × 100 = 15%.', hint: 'Resta todos los costos y gastos operativos de las ventas, luego divide el resultado entre las ventas.', points: 250 },
+    { id: 406, topic: 'nomina', type: 'multiple', question: 'Sueldo Base $800, horas extras $150, retenciones 10% del total imponible. ¿Sueldo Líquido?', options: ['$855', '$720', '$800', '$950'], correct: 0, explanation: 'Total Imponible = $800 + $150 = $950. Retenciones = $95. Líquido = $950 - $95 = $855.', hint: 'Suma el sueldo base y las horas extras, calcula el 10% de retención y réstalo del total.', points: 250 },
+    { id: 407, topic: 'inventarios', type: 'multiple', question: 'Inventario inicial: 10u a $10. Compra: 20u a $13. Venta: 15u. ¿Costo PEPS?', options: ['$165', '$195', '$150', '$180'], correct: 0, explanation: 'PEPS: 10u × $10 = $100 + 5u × $13 = $65. Total = $165.', hint: 'Las primeras unidades en entrar son las primeras en salir. Usa primero las de $10 y completa con las de $13.', points: 250 },
+    { id: 408, topic: 'inventarios', type: 'multiple', question: 'Mismos datos (10u a $10, 20u a $13). ¿Costo Promedio Ponderado unitario?', options: ['$12,00', '$11,50', '$13,00', '$10,00'], correct: 0, explanation: 'Costo Total = $360. Unidades = 30. Promedio = $360 / 30 = $12,00.', hint: 'Suma el costo total de todas las unidades disponibles y divídelo entre el número total de unidades.', points: 250 },
+    { id: 409, topic: 'matematica-financiera', type: 'multiple', question: 'Préstamo de $5.000 al 12% anual simple, a 6 meses. ¿Total a pagar?', options: ['$5.300', '$5.600', '$5.120', '$6.000'], correct: 0, explanation: 'Interés = $5.000 × 0,12 × (6/12) = $300. Total = $5.300.', hint: 'Con interés simple, calcula el interés anual y ajústalo al período de 6 meses (la mitad del año).', points: 250 },
+    { id: 410, topic: 'analisis-financiero', type: 'multiple', question: 'Activos Corrientes $25.000, Pasivos Corrientes $15.000. ¿Capital de Trabajo Neto?', options: ['$10.000', '$40.000', '1,66', '$15.000'], correct: 0, explanation: 'Capital de Trabajo = $25.000 - $15.000 = $10.000.', hint: 'Es una resta simple: lo que tienes disponible a corto plazo menos lo que debes a corto plazo.', points: 250 },
+    { id: 411, topic: 'nomina', type: 'multiple', question: 'Sueldo Base $1.000, horas extras $200, asignación de movilización $80 (no imponible). Retenciones 12% del total imponible. ¿Sueldo Líquido?', options: ['$1.056', '$1.136', '$1.200', '$1.280'], correct: 1, explanation: 'Total Imponible = $1.000 + $200 = $1.200 (la movilización es no imponible). Retenciones = $1.200 × 0,12 = $144. Líquido = $1.200 - $144 + $80 = $1.136.', hint: 'Recuerda que las asignaciones de movilización y colación son haberes no imponibles: no se les aplica el porcentaje de retención.', points: 250 }
 ];
 
 // Mapa de niveles
@@ -265,8 +280,6 @@ const levelColors = {
  *  partida (puntos bonus, isBonus, _shuffledIndices) nunca toquen las
  *  constantes originales (fondoEmergenciaQuestions, nivel2Questions, etc.) */
 function deepCloneQuestions(arr) {
-    // FIX iOS: structuredClone no existe en Safari < 15.4.
-    // Usamos JSON.parse(JSON.stringify()) como fallback universal.
     try {
         return JSON.parse(JSON.stringify(arr));
     } catch (e) {
@@ -333,7 +346,6 @@ function showSpeedBonus(points) {
     setTimeout(() => { toast.classList.remove('show', 'hide'); }, 2000);
 }
 
-// Interfaz auxiliar para detonar ráfagas desde botones
 function triggerVisualCoinsFromElement(element, count = 12) {
     if (window.effectsManager) {
         window.effectsManager.triggerCoinExplosionFromElement(element, count);
@@ -402,7 +414,6 @@ function startLevel(levelNum) {
     }
     
     const rawQuestions = levelQuestionsMap[levelNum] || fondoEmergenciaQuestions;
-    // FIX: clonado profundo — nunca mutar el banco original de preguntas
     state.questions = shuffleArray(deepCloneQuestions(rawQuestions)).slice(0, 10);
     
     if (Math.random() < 0.33 && levelNum >= 2) {
@@ -482,14 +493,6 @@ function updateRabbitReaction(reaction) {
             '¡Eres una máquina! ⚙️💨',
             '¡Conti Conti está orgulloso! 🐰✨'
         ],
-        'sad': [
-            '¡No te rindas! 💪',
-            '¡Aprende del error! 📚',
-            '¡La próxima será! 🎯',
-            'Cada error te hace más fuerte 🌱',
-            '¡Levántate y sigue! 🦾',
-            'Los genios también se equivocan 🧠💡'
-        ],
         'celebrating': [
             '¡Perfecto, nivel impecable! 🥳',
             '¡Eres el orgullo de Contabilidad! 🎉',
@@ -528,7 +531,9 @@ function updateRabbitReaction(reaction) {
             '¡Con más ganas que nunca! 🦾',
             '¡A corregir el rumbo! 🧭',
             '¡El error me hizo más fuerte! ⚡',
-            '¡Voy con todo en esta! 🎯'
+            '¡Voy con todo en esta! 🎯',
+            'Cada error es una lección aprendida 📚',
+            '¡Los genios también se equivocan y aprenden! 🧠💡'
         ],
         'graduate': [
             '¡Lo lograste, eres un crack! 🎓',
@@ -745,7 +750,6 @@ function loadDrag(question) {
         draggable.dataset.originalIndex = question.items.indexOf(item);
         draggable.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', draggable.dataset.originalIndex); draggable.style.opacity = '0.5'; });
         draggable.addEventListener('dragend', () => { draggable.style.opacity = '1'; });
-        // Soporte táctil básico (el drag & drop HTML5 nativo no funciona bien en móvil/tablet)
         enableTouchDragForItem(draggable, question);
         itemsContainer.appendChild(draggable);
     });
@@ -753,9 +757,6 @@ function loadDrag(question) {
     dragContainer.appendChild(itemsContainer);
 }
 
-/** Soporte táctil manual para las preguntas de tipo 'drag', ya que la API
- *  HTML5 de drag & drop nativa no dispara eventos táctiles en móvil/tablet.
- *  MEJORA v3.2: añade sonido "coin" al soltar y explosión al encajar en zona. */
 function enableTouchDragForItem(draggable, question) {
     draggable.addEventListener('touchstart', () => {
         if (window.effectsManager) window.effectsManager.ensureAudio();
@@ -778,7 +779,6 @@ function enableTouchDragForItem(draggable, question) {
         const zone = el && el.closest ? el.closest('.drop-zone') : null;
         document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
         
-        // Sonido de "clic" al soltar (siempre)
         if (window.effectsManager) {
             window.effectsManager.playSound('coin');
         }
@@ -790,7 +790,6 @@ function enableTouchDragForItem(draggable, question) {
             draggable.style.opacity = '0.3';
             draggable.style.pointerEvents = 'none';
             
-            // Sonido de "encaje" y pequeña explosión al acertar la zona
             if (window.effectsManager) {
                 const rect = zone.getBoundingClientRect();
                 window.effectsManager.triggerExplosion(
@@ -884,19 +883,14 @@ function handleCorrectAnswer(points) {
     
     updateScore(); updateStreak();
     
-    // === DESPACHO CENTRALIZADO DE EFECTOS DE ACIERTO ===
     playSound('correct');
     if (window.effectsManager) window.effectsManager.triggerConfetti();
     
-    // MEJORA v3.2: Flash blanco sutil en aciertos rápidos (< 3 segundos)
     const responseTime = (Date.now() - state.questionStartTime) / 1000;
     if (responseTime < 3 && window.effectsManager) {
         window.effectsManager.triggerScreenFlash(180);
     }
     
-    // FIX: el conejo reacciona a CADA acierto individual (orejas arriba +
-    // brillo dorado), no solo cuando hay racha. Si además hay racha activa,
-    // un instante después pasa a 'impressed'.
     updateRabbitReaction('correct');
     if (state.streak >= 5) {
         document.getElementById('streak-display')?.classList.add('on-fire');
@@ -923,14 +917,13 @@ function handleIncorrectAnswer(question) {
     
     updateLives(); updateStreak();
     
-    // === DESPACHO CENTRALIZADO DE EFECTOS DE ERROR ===
     playSound('incorrect');
     
-    // FIX: reacción inmediata 'incorrect' (orejas caídas), igual que ahora
-    // ocurre con los aciertos, antes de pasar a 'sad' o 'determined'.
+    // MEJORA v3.3: Mentalidad de crecimiento. El conejo siempre muestra
+    // 'determined' al fallar, nunca 'sad'. El error es una oportunidad.
     updateRabbitReaction('incorrect');
     if (state.lives <= 0) {
-        setTimeout(() => updateRabbitReaction('sad'), 350);
+        setTimeout(() => updateRabbitReaction('determined'), 350);
         setTimeout(() => endLevel(), 1500);
     } else {
         setTimeout(() => updateRabbitReaction('determined'), 350);
@@ -959,9 +952,6 @@ function endLevel() {
     if (state._boredTimeout) clearTimeout(state._boredTimeout);
     
     const totalQ = state.totalQuestions || 10;
-    // FIX: usar el contador real de aciertos en vez de inferirlo dividiendo
-    // levelScore / basePoints (que se descuadraba con bonus de velocidad y
-    // preguntas de puntaje doble)
     const starCount = state.levelPerfect ? 3 : (state.correctInLevel >= totalQ * 0.7 ? 2 : 1);
     state.levelStars[state.currentLevel] = starCount;
     
@@ -1025,7 +1015,6 @@ function endLevel() {
         playSound('levelup');
         if (window.effectsManager) window.effectsManager.triggerFireworks();
         
-        // MEJORA v3.2: Doble ráfaga de confeti en pantalla de transición
         if (window.effectsManager) {
             window.effectsManager.triggerConfetti(2000, 2);
             setTimeout(() => {
@@ -1163,11 +1152,15 @@ function applyHint() {
     if (!question) return;
     const fb = document.getElementById('feedback-box');
     if (!fb) return;
-    // FIX: proteger contra preguntas sin 'explanation' (ej. tipo 'matching'),
-    // que antes rompían con un TypeError al llamar .split() sobre undefined
-    const hintText = question.explanation
-        ? question.explanation.split('.')[0] + '.'
-        : 'Analiza cada opción con calma, ¡tú puedes lograrlo!';
+    
+    // MEJORA v3.3: Usar la propiedad 'hint' independiente de cada pregunta.
+    // Si la pregunta tiene hint, se muestra. Si no, se usa un fallback genérico.
+    const hintText = question.hint
+        ? question.hint
+        : (question.explanation
+            ? question.explanation.split('.')[0] + '.'
+            : 'Analiza cada opción con calma, ¡tú puedes lograrlo!');
+    
     fb.textContent = `💡 Pista: ${hintText}`;
     fb.className = 'feedback-box correct';
 }
@@ -1216,7 +1209,6 @@ function updateScore() {
     badge.classList.add('pop');
     setTimeout(() => badge.classList.remove('pop'), 300);
     
-    // MEJORA v3.2: Destello en el score-badge al recibir puntos
     if (window.effectsManager && typeof window.effectsManager.triggerScoreBadgeFlash === 'function') {
         window.effectsManager.triggerScoreBadgeFlash();
     }
@@ -1318,8 +1310,6 @@ function saveBadges() {
 
 // ===== LEADERBOARD =====
 
-/** Modal propio para pedir el nombre del jugador (reemplaza a prompt(),
- *  que interrumpe la experiencia visual del resto del juego). */
 function showNamePromptModal(onSubmit) {
     const overlay = document.createElement('div');
     overlay.style.cssText = `
