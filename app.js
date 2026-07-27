@@ -1,10 +1,20 @@
 
 /**
  * ============================================================
- * ContiGame Engine v3.3 — Producción
+ * ContiGame Engine v3.4 — Producción
  * Lógica del juego, control de estado y flujos financieros
  * Para "Conti Conti - Desafío Financiero"
  * ============================================================
+ *
+ * Cambios v3.4 sobre v3.3:
+ *   - FIX CRÍTICO: El temporizador ahora se reinicia correctamente
+ *     en cada pregunta. Se fuerza clearInterval() y se restablece
+ *     state.timer al valor del nivel actual dentro de startTimer().
+ *   - FIX CRÍTICO: nextQuestion() ahora limpia el intervalo antes
+ *     de cargar la siguiente pregunta, evitando intervalos múltiples
+ *     que hacían que el timer llegara a 0 inmediatamente.
+ *   - FIX: loadQuestion() asegura state.timerInterval = null después
+ *     de cada clearInterval().
  *
  * Cambios v3.3 sobre v3.2:
  *   - MEJORA PEDAGÓGICA: Propiedad 'hint' independiente en las 46
@@ -16,24 +26,23 @@
  *   - MEJORA PEDAGÓGICA: Eliminado el estado 'sad' (triste) del
  *     conejo. Al fallar, el conejo muestra 'determined' (determinado)
  *     con frases de mentalidad de crecimiento (Growth Mindset).
- *     El error no se penaliza con tristeza, sino con motivación.
  *   - MEJORA PEDAGÓGICA: Aclaración de montos netos en preguntas
- *     de IVA (ID 203, 204, 402) para evitar confusión.
+ *     de IVA (ID 203, 204, 402).
  *   - MEJORA SENSORIAL: Flash blanco en aciertos rápidos (< 3s).
  *   - MEJORA SENSORIAL: Destello en score-badge al sumar puntos.
  *   - MEJORA SENSORIAL: Sonido "coin" + explosión al soltar/encajar
- *     en preguntas drag (táctil), que antes eran silenciosas.
+ *     en preguntas drag (táctil).
  *   - MEJORA SENSORIAL: Doble ráfaga de confeti en pantalla de
  *     transición entre niveles.
  *   - MEJORA: Catálogo de frases ampliado (8-12 frases por estado).
  *   - CORRECCIÓN: Eliminadas muletillas festivas en explicaciones
- *     del Nivel 1 (¡Excelente!, ¡Correcto!, ¡Exacto!, etc.)
+ *     del Nivel 1.
  *   - CORRECCIÓN: Error ortográfico "classifies" → "clasifica"
  *     en pregunta ID 207 del Nivel 2.
  *   - FIX: clonado profundo del banco de preguntas.
  *   - FIX: cálculo de estrellas de fin de nivel.
  *   - FIX: applyHint() no revienta si falta 'explanation'.
- *   - FIX: localStorage envuelto en try/catch (modo privado Safari/iOS).
+ *   - FIX: localStorage envuelto en try/catch.
  *   - FIX: Reemplazo de prompt()/alert() por modal propio.
  *   - FIX: Soporte táctil para preguntas 'drag'.
  */
@@ -276,9 +285,6 @@ const levelColors = {
 
 // ===== UTILIDADES =====
 
-/** Clona profundamente el banco de preguntas para que las mutaciones de una
- *  partida (puntos bonus, isBonus, _shuffledIndices) nunca toquen las
- *  constantes originales (fondoEmergenciaQuestions, nivel2Questions, etc.) */
 function deepCloneQuestions(arr) {
     try {
         return JSON.parse(JSON.stringify(arr));
@@ -288,8 +294,6 @@ function deepCloneQuestions(arr) {
     }
 }
 
-/** Wrappers seguros de localStorage: nunca rompen el flujo del juego
- *  (por ejemplo, en modo privado de Safari/iOS donde localStorage puede lanzar). */
 function safeLocalGet(key, fallback) {
     try {
         const raw = localStorage.getItem(key);
@@ -312,7 +316,7 @@ function safeLocalSet(key, value) {
 
 // ===== SISTEMA DE SONIDO (Delega en ContiEffectsManager) =====
 function playSound(type) {
-    const alwaysPlay = ['correct', 'incorrect', 'levelup', 'levelstart', 'achievement', 'tick', 'powerup'];
+    const alwaysPlay = ['correct', 'incorrect', 'levelup', 'levelstart', 'achievement', 'powerup'];
     if (!alwaysPlay.includes(type) && state.mode === 'normal') return;
     if (window.effectsManager) {
         window.effectsManager.playSound(type);
@@ -406,12 +410,6 @@ function startLevel(levelNum) {
     state.bonusQuestionActive = false; state.correctInLevel = 0;
     
     document.body.className = `level-${levelNum}`;
-    
-    if (state.mode === 'timed') {
-        if (levelNum === 1) state.timer = 30;
-        else if (levelNum === 2) state.timer = 25;
-        else state.timer = 20;
-    }
     
     const rawQuestions = levelQuestionsMap[levelNum] || fondoEmergenciaQuestions;
     state.questions = shuffleArray(deepCloneQuestions(rawQuestions)).slice(0, 10);
@@ -568,6 +566,7 @@ function loadQuestion() {
     if (state.currentQuestion >= state.totalQuestions) { endLevel(); return; }
     
     clearInterval(state.timerInterval);
+    state.timerInterval = null;
     if (state._boredTimeout) clearTimeout(state._boredTimeout);
     
     state.questionStartTime = Date.now();
@@ -664,6 +663,7 @@ function loadMatching(question) {
                     matches[this.dataset.pairId] = true; selectedLeft = null;
                     if (Object.keys(matches).length === question.pairs.length) {
                         clearInterval(state.timerInterval);
+                        state.timerInterval = null;
                         showFeedback(`¡Perfecto! ${question.explanation || 'Emparejaste todos los conceptos correctamente.'}`, 'correct');
                         triggerVisualCoinsFromElement(matchingContainer, 16);
                         handleCorrectAnswer(question.points);
@@ -706,6 +706,7 @@ function loadSlider(question) {
     submitBtn.addEventListener('click', () => {
         if (window.effectsManager) window.effectsManager.ensureAudio();
         clearInterval(state.timerInterval);
+        state.timerInterval = null;
         const userAnswer = parseFloat(input.value);
         if (Math.abs(userAnswer - question.correctAnswer) <= question.tolerance) {
             showFeedback(`¡Correcto! ${question.explanation}`, 'correct');
@@ -814,6 +815,7 @@ function checkDragComplete(question) {
     });
     if (allFilled) { 
         clearInterval(state.timerInterval);
+        state.timerInterval = null;
         if (allCorrect) {
             showFeedback(`¡Excelente orden! ${question.explanation || ''}`, 'correct');
             triggerVisualCoinsFromElement(dragContainer, 16);
@@ -838,6 +840,7 @@ function checkMultipleAnswer(originalIndex, question) {
     
     const responseTime = (Date.now() - state.questionStartTime) / 1000;
     clearInterval(state.timerInterval);
+    state.timerInterval = null;
     
     if (originalIndex === question.correct) {
         if (options[clickedDisplayIndex]) options[clickedDisplayIndex].classList.add('correct');
@@ -919,8 +922,6 @@ function handleIncorrectAnswer(question) {
     
     playSound('incorrect');
     
-    // MEJORA v3.3: Mentalidad de crecimiento. El conejo siempre muestra
-    // 'determined' al fallar, nunca 'sad'. El error es una oportunidad.
     updateRabbitReaction('incorrect');
     if (state.lives <= 0) {
         setTimeout(() => updateRabbitReaction('determined'), 350);
@@ -941,6 +942,10 @@ function showFeedback(message, type) {
 }
 
 function nextQuestion() {
+    // Forzar limpieza del timer antes de cargar la siguiente pregunta
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
+    
     state.currentQuestion++;
     document.getElementById('streak-display')?.classList.remove('on-fire');
     loadQuestion();
@@ -949,6 +954,7 @@ function nextQuestion() {
 // ===== FIN DE NIVEL =====
 function endLevel() {
     clearInterval(state.timerInterval);
+    state.timerInterval = null;
     if (state._boredTimeout) clearTimeout(state._boredTimeout);
     
     const totalQ = state.totalQuestions || 10;
@@ -1084,6 +1090,8 @@ function showFinalResults() {
 }
 
 function restartGame() {
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
     state.currentQuestion = 0; state.score = 0; state.levelScore = 0; state.lives = 3;
     state.streak = 0; state.currentLevel = 1; state.powerupsUsedThisLevel = false; state.levelPerfect = true;
     state.levelStars = {}; state.bonusQuestionActive = false; state.correctInLevel = 0;
@@ -1153,8 +1161,6 @@ function applyHint() {
     const fb = document.getElementById('feedback-box');
     if (!fb) return;
     
-    // MEJORA v3.3: Usar la propiedad 'hint' independiente de cada pregunta.
-    // Si la pregunta tiene hint, se muestra. Si no, se usa un fallback genérico.
     const hintText = question.hint
         ? question.hint
         : (question.explanation
@@ -1167,6 +1173,15 @@ function applyHint() {
 
 // ===== TEMPORIZADOR =====
 function startTimer() {
+    // Forzar limpieza de cualquier intervalo anterior
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
+    
+    // Reiniciar el timer al valor del nivel actual
+    if (state.currentLevel === 1) state.timer = 30;
+    else if (state.currentLevel === 2) state.timer = 25;
+    else state.timer = 20;
+    
     updateTimerDisplay();
     const timerDisplay = document.getElementById('timer-display');
     if (timerDisplay) timerDisplay.classList.remove('warning');
@@ -1176,13 +1191,17 @@ function startTimer() {
         state.timer--;
         updateTimerDisplay();
         
-        if (state.timer <= 5) {
+        if (state.timer <= 5 && state.timer > 0) {
             if (timerDisplay) timerDisplay.classList.add('warning');
             updateRabbitReaction('nervous');
-            playSound('tick');
+            if (window.effectsManager) {
+                window.effectsManager.playTick();
+            }
         }
         if (state.timer <= 0) {
             clearInterval(state.timerInterval);
+            state.timerInterval = null;
+            if (timerDisplay) timerDisplay.classList.remove('warning');
             showFeedback(`¡Tiempo agotado! ${state.questions[state.currentQuestion].explanation}`, 'incorrect');
             handleIncorrectAnswer(state.questions[state.currentQuestion]);
         }
