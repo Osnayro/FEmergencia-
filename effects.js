@@ -1,9 +1,14 @@
+
 /**
  * ============================================================
- * ContiEffectsManager v4.0 — Producción
+ * ContiEffectsManager v4.1 — Producción
  * Efectos visuales (Canvas 2D) + Sonidos (Web Audio API, motor mejorado) + Toasts
  * Para "Conti Conti - Desafío Financiero"
  * ============================================================
+ *
+ * Novedades v4.1 sobre v4.0:
+ *   - Nuevo método triggerScoreBadgeFlash(): micro-destello en el badge
+ *     de puntuación cuando "recibe" monedas (ultra-pop + partículas doradas)
  *
  * Novedades v4.0 sobre v3.0:
  *   - Bus de audio: masterGain -> compressor -> destination (evita clipping)
@@ -14,7 +19,7 @@
  *   - Reverb algorítmico (impulse response generada por código, sin archivos)
  *   - Variación aleatoria de pitch/timing en sonidos repetitivos
  *
- * API pública 100% compatible con v3.0 (playSound, triggerToast,
+ * API pública 100% compatible con versiones anteriores (playSound, triggerToast,
  * triggerCoinExplosion, etc. no cambian su firma).
  *
  * Uso:
@@ -77,7 +82,7 @@ class ContiEffectsManager {
         // Arrancar loop de animación
         this.startLoop();
 
-        console.log('🎨 ContiEffectsManager v4.0 listo | Partículas máx:', this.maxParticles, '| Volumen:', this.masterVolume);
+        console.log('🎨 ContiEffectsManager v4.1 listo | Partículas máx:', this.maxParticles, '| Volumen:', this.masterVolume);
     }
 
     // ================================================================
@@ -421,6 +426,46 @@ class ContiEffectsManager {
         document.body.appendChild(flash);
         requestAnimationFrame(() => { flash.style.opacity = '0'; });
         setTimeout(() => flash.remove(), duration + 60);
+    }
+
+    /**
+     * NUEVO v4.1: Micro-destello en el score-badge cuando "recibe" puntos.
+     * Combina la clase CSS 'ultra-pop' con una pequeña ráfaga de partículas
+     * doradas alrededor del badge.
+     */
+    triggerScoreBadgeFlash() {
+        if (!this.scoreBadge) return;
+        
+        // Animación CSS de ultra-pop
+        this.scoreBadge.classList.add('ultra-pop');
+        setTimeout(() => this.scoreBadge.classList.remove('ultra-pop'), 600);
+        
+        // Pequeño destello de partículas doradas alrededor
+        const rect = this.scoreBadge.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            this.particles.push({
+                type: 'circle',
+                x: cx,
+                y: cy,
+                vx: Math.cos(angle) * 2,
+                vy: Math.sin(angle) * 2,
+                gravity: 0,
+                friction: 0.9,
+                rotation: 0,
+                rotationSpeed: 0,
+                scale: 0.5,
+                size: 3 + Math.random() * 2,
+                life: 1,
+                maxLife: 1,
+                decay: 0.035,
+                color: '#FFD700',
+                attractTo: false,
+            });
+        }
     }
 
     // ================================================================
