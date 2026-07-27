@@ -1,41 +1,44 @@
 
 /**
  * ============================================================
- * ContiEffectsManager v5.1 — Producción
- * Efectos visuales (Canvas 2D) + Sonidos (pistas MP3/OGG + síntesis) + Toasts
+ * ContiEffectsManager v5.2 — Producción
+ * Efectos visuales (Canvas 2D) + Sonidos (pistas MP3 + síntesis) + Toasts
  * Para "Conti Conti - Desafío Financiero"
  * ============================================================
  *
+ * Novedades v5.2 sobre v5.1:
+ *   - MEJORA: playTick() rediseñado con 5 capas de síntesis:
+ *      1. Escapement click: clic metálico ~4.5kHz
+ *      2. Ring metálico: vibración AM ~800Hz modulada a 45Hz
+ *      3. Cuerpo resonante: ~110Hz con decaimiento largo
+ *      4. Ruido metálico: bandpass estrecho ~6kHz
+ *      5. Armónico agudo: brillo metálico ~9kHz
+ *     Compresor unificador, fade-out maestro, duración total ~350ms.
+ *
  * Novedades v5.1 sobre v5.0:
  *   - NUEVO: Método playTick() con síntesis Web Audio API pura.
- *     Genera un click mecánico de 150ms sin depender de archivos externos.
- *     Especificaciones: ataque 2ms, 3kHz agudo, 200Hz grave, ruido filtrado,
- *     decaimiento natural, sin reverb, mono.
- *   - MEJORA: El sonido tick ya no usa el pool de audio, evitando
- *     solapamientos en la cuenta regresiva.
- *   - MEJORA: Añadida verificación de compatibilidad con webkitAudioContext
- *     para Safari/iOS en el nuevo método playTick().
+ *   - MEJORA: El sonido tick ya no usa el pool de audio.
+ *   - MEJORA: Compatibilidad con webkitAudioContext para Safari/iOS.
  *
  * Novedades v5.0 sobre v4.1:
- *   - Sistema de audio rediseñado con archivos MP3/OGG (carpeta /sounds/).
- *   - Precarga de todos los sonidos al iniciar (evita latencia).
+ *   - Sistema de audio con archivos MP3 (carpeta /sounds/).
+ *   - Precarga de todos los sonidos al iniciar.
  *   - Pool de Audio elements reutilizables (máx. 8 simultáneos).
- *   - Fallback silencioso si la carpeta /sounds/ no existe o faltan archivos.
- *   - NUEVO: sonido 'splash' para la carga inicial de la aplicación.
+ *   - Fallback silencioso si faltan archivos.
  *   - triggerScoreBadgeFlash() heredado de v4.1.
  *
  * Estructura de archivos requerida:
- *   /sounds/splash.mp3       (música/jingle de carga inicial)
- *   /sounds/correct.mp3      (respuesta correcta)
- *   /sounds/incorrect.mp3    (respuesta incorrecta)
- *   /sounds/levelup.mp3      (subir de nivel)
- *   /sounds/levelstart.mp3   (iniciar nivel)
- *   /sounds/achievement.mp3  (nueva insignia)
- *   /sounds/powerup.mp3      (usar power-up)
- *   /sounds/coin.mp3         (moneda)
- *   /sounds/explosion.mp3    (explosión/fuegos artificiales)
+ *   /sounds/splash.mp3
+ *   /sounds/correct.mp3
+ *   /sounds/incorrect.mp3
+ *   /sounds/levelup.mp3
+ *   /sounds/levelstart.mp3
+ *   /sounds/achievement.mp3
+ *   /sounds/powerup.mp3
+ *   /sounds/coin.mp3
+ *   /sounds/explosion.mp3
  *
- * Nota: tick.mp3 ya no es necesario. Se genera por síntesis en playTick().
+ * Nota: tick se genera por síntesis en playTick(). No requiere archivo.
  */
 
 class ContiEffectsManager {
@@ -49,7 +52,7 @@ class ContiEffectsManager {
             window.addEventListener('resize', () => this.resizeCanvas());
         }
 
-        // Score badge (las monedas vuelan hacia él)
+        // Score badge
         this.scoreBadge = config.scoreBadgeId
             ? document.getElementById(config.scoreBadgeId)
             : null;
@@ -64,7 +67,7 @@ class ContiEffectsManager {
         this.animationId = null;
         this.isRunning = false;
 
-        // ===== SISTEMA DE AUDIO CON PISTAS MP3 (v5.0) =====
+        // Sistema de audio con pistas MP3
         this.soundFiles = {
             splash:      'sounds/splash.mp3',
             correct:     'sounds/correct.mp3',
@@ -82,7 +85,7 @@ class ContiEffectsManager {
         this.maxAudioPool = 8;
         this.audioPoolIndex = 0;
 
-        // Buffers precargados (clave -> Audio element)
+        // Buffers precargados
         this.audioBuffers = {};
         this.audioLoaded = false;
         this.audioLoadError = false;
@@ -103,10 +106,10 @@ class ContiEffectsManager {
         // Arrancar loop de animación
         this.startLoop();
 
-        // Precargar sonidos (asíncrono, no bloquea la UI)
+        // Precargar sonidos
         this._preloadSounds();
 
-        console.log('🎨 ContiEffectsManager v5.1 listo | Partículas máx:', this.maxParticles, '| Volumen:', this.masterVolume, '| Audio: MP3 + Síntesis tick');
+        console.log('🎨 ContiEffectsManager v5.2 listo | Partículas máx:', this.maxParticles, '| Volumen:', this.masterVolume, '| Audio: MP3 + Síntesis tick 5-capas');
     }
 
     // ================================================================
@@ -271,7 +274,7 @@ class ContiEffectsManager {
     }
 
     // ================================================================
-    //  SISTEMA DE AUDIO CON PISTAS MP3 (v5.0)
+    //  SISTEMA DE AUDIO CON PISTAS MP3
     // ================================================================
 
     _preloadSounds(onProgress) {
@@ -349,17 +352,17 @@ class ContiEffectsManager {
     }
 
     /**
-     * NUEVO v5.1: Genera un sonido de tick de reloj mecánico sintetizado.
-     * No depende de archivos externos. Crea un AudioContext temporal
-     * para evitar solapamientos entre ticks consecutivos.
+     * MEJORADO v5.2: Genera un sonido de tick de reloj mecánico sintetizado.
+     * Rediseñado con 5 capas de síntesis para mayor realismo.
      *
      * Especificaciones:
-     *   - Duración: 150ms exactos
-     *   - Click agudo (transient) ~3 kHz
-     *   - Cuerpo grave sutil ~200 Hz
-     *   - Ruido blanco filtrado para textura metálica/madera
-     *   - Decaimiento exponencial natural
-     *   - Sin reverb, mono, 44.1 kHz nativo
+     *   - Duración total: ~350ms (resonancia natural del cuerpo)
+     *   - Escapement click: clic metálico ultra-corto ~4.5kHz
+     *   - Ring metálico: vibración AM ~800Hz modulada a 45Hz
+     *   - Cuerpo resonante: ~110Hz con decaimiento largo
+     *   - Ruido metálico: bandpass estrecho ~6kHz
+     *   - Compresor: unifica todos los componentes
+     *   - Sin reverb, mono con stereo width sutil, 44.1 kHz nativo
      */
     playTick() {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -367,44 +370,79 @@ class ContiEffectsManager {
 
         const ctx = new AudioCtx();
         const now = ctx.currentTime;
-        const duration = 0.150;
         const vol = this.masterVolume;
+        const masterGain = ctx.createGain();
+        masterGain.gain.value = 1.0;
 
-        // Componente 1: Click agudo (transient) - ~3 kHz
-        const oscHigh = ctx.createOscillator();
-        const gainHigh = ctx.createGain();
+        // ── COMPRESOR: unifica todos los componentes ──
+        const compressor = ctx.createDynamicsCompressor();
+        compressor.threshold.setValueAtTime(-24, now);
+        compressor.knee.setValueAtTime(6, now);
+        compressor.ratio.setValueAtTime(12, now);
+        compressor.attack.setValueAtTime(0.003, now);
+        compressor.release.setValueAtTime(0.080, now);
+        compressor.connect(masterGain);
+        masterGain.connect(ctx.destination);
 
-        oscHigh.type = 'sine';
-        oscHigh.frequency.setValueAtTime(3000, now);
-        oscHigh.frequency.exponentialRampToValueAtTime(2500, now + 0.02);
+        // ── 1. ESCAPEMENT CLICK (clic metálico principal) ──
+        const oscClick = ctx.createOscillator();
+        const gainClick = ctx.createGain();
 
-        gainHigh.gain.setValueAtTime(0.0001, now);
-        gainHigh.gain.exponentialRampToValueAtTime(0.35 * vol, now + 0.002);
-        gainHigh.gain.exponentialRampToValueAtTime(0.0001, now + 0.080);
+        oscClick.type = 'sine';
+        oscClick.frequency.setValueAtTime(4500, now);
+        oscClick.frequency.exponentialRampToValueAtTime(2200, now + 0.060);
 
-        oscHigh.connect(gainHigh);
-        gainHigh.connect(ctx.destination);
+        gainClick.gain.setValueAtTime(0.00001, now);
+        gainClick.gain.exponentialRampToValueAtTime(0.45 * vol, now + 0.0005);
+        gainClick.gain.exponentialRampToValueAtTime(0.00001, now + 0.080);
 
-        // Componente 2: Cuerpo grave - ~200 Hz
-        const oscLow = ctx.createOscillator();
-        const gainLow = ctx.createGain();
+        oscClick.connect(gainClick);
+        gainClick.connect(compressor);
 
-        oscLow.type = 'sine';
-        oscLow.frequency.setValueAtTime(200, now);
+        // ── 2. RING METÁLICO (resonancia del mecanismo) ──
+        const oscRing = ctx.createOscillator();
+        const gainRing = ctx.createGain();
+        const ringMod = ctx.createOscillator();
+        const gainRingMod = ctx.createGain();
 
-        gainLow.gain.setValueAtTime(0.0001, now);
-        gainLow.gain.exponentialRampToValueAtTime(0.25 * vol, now + 0.003);
-        gainLow.gain.exponentialRampToValueAtTime(0.0001, now + 0.100);
+        oscRing.type = 'triangle';
+        oscRing.frequency.setValueAtTime(820, now);
+        oscRing.frequency.exponentialRampToValueAtTime(650, now + 0.150);
 
-        oscLow.connect(gainLow);
-        gainLow.connect(ctx.destination);
+        ringMod.type = 'sine';
+        ringMod.frequency.setValueAtTime(45, now);
+        gainRingMod.gain.setValueAtTime(0.3, now);
 
-        // Componente 3: Ruido blanco filtrado (textura metálica/madera)
-        const bufferSize = Math.floor(ctx.sampleRate * 0.040);
+        gainRing.gain.setValueAtTime(0.00001, now);
+        gainRing.gain.exponentialRampToValueAtTime(0.18 * vol, now + 0.002);
+        gainRing.gain.exponentialRampToValueAtTime(0.00001, now + 0.200);
+
+        ringMod.connect(gainRingMod);
+        gainRingMod.connect(gainRing.gain);
+        oscRing.connect(gainRing);
+        gainRing.connect(compressor);
+
+        // ── 3. CUERPO RESONANTE (resonancia del cuerpo del reloj) ──
+        const oscBody = ctx.createOscillator();
+        const gainBody = ctx.createGain();
+
+        oscBody.type = 'sine';
+        oscBody.frequency.setValueAtTime(110, now);
+        oscBody.frequency.exponentialRampToValueAtTime(95, now + 0.300);
+
+        gainBody.gain.setValueAtTime(0.00001, now);
+        gainBody.gain.exponentialRampToValueAtTime(0.22 * vol, now + 0.005);
+        gainBody.gain.exponentialRampToValueAtTime(0.00001, now + 0.320);
+
+        oscBody.connect(gainBody);
+        gainBody.connect(compressor);
+
+        // ── 4. RUIDO METÁLICO (textura del impacto) ──
+        const bufferSize = Math.floor(ctx.sampleRate * 0.050);
         const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = noiseBuffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
-            data[i] = (Math.random() * 2 - 1) * 0.4;
+            data[i] = ((Math.random() * 2 - 1) + (Math.random() * 2 - 1)) * 0.25;
         }
 
         const noise = ctx.createBufferSource();
@@ -412,32 +450,60 @@ class ContiEffectsManager {
 
         const noiseFilter = ctx.createBiquadFilter();
         noiseFilter.type = 'bandpass';
-        noiseFilter.frequency.setValueAtTime(4000, now);
-        noiseFilter.Q.value = 0.5;
+        noiseFilter.frequency.setValueAtTime(6200, now);
+        noiseFilter.Q.value = 2.5;
 
         const gainNoise = ctx.createGain();
-        gainNoise.gain.setValueAtTime(0.0001, now);
-        gainNoise.gain.exponentialRampToValueAtTime(0.15 * vol, now + 0.001);
-        gainNoise.gain.exponentialRampToValueAtTime(0.0001, now + 0.030);
+        gainNoise.gain.setValueAtTime(0.00001, now);
+        gainNoise.gain.exponentialRampToValueAtTime(0.12 * vol, now + 0.0005);
+        gainNoise.gain.exponentialRampToValueAtTime(0.00001, now + 0.040);
 
         noise.connect(noiseFilter);
         noiseFilter.connect(gainNoise);
-        gainNoise.connect(ctx.destination);
+        gainNoise.connect(compressor);
 
-        // Iniciar y detener todos los componentes
-        oscHigh.start(now);
-        oscHigh.stop(now + duration);
+        // ── 5. ARMÓNICO AGUDO (brillo metálico) ──
+        const oscHarm = ctx.createOscillator();
+        const gainHarm = ctx.createGain();
 
-        oscLow.start(now);
-        oscLow.stop(now + duration);
+        oscHarm.type = 'sine';
+        oscHarm.frequency.setValueAtTime(9000, now);
+        oscHarm.frequency.exponentialRampToValueAtTime(7000, now + 0.030);
+
+        gainHarm.gain.setValueAtTime(0.00001, now);
+        gainHarm.gain.exponentialRampToValueAtTime(0.08 * vol, now + 0.001);
+        gainHarm.gain.exponentialRampToValueAtTime(0.00001, now + 0.050);
+
+        oscHarm.connect(gainHarm);
+        gainHarm.connect(compressor);
+
+        // ── INICIAR TODOS LOS COMPONENTES ──
+        oscClick.start(now);
+        oscClick.stop(now + 0.100);
+
+        oscRing.start(now);
+        oscRing.stop(now + 0.220);
+        ringMod.start(now);
+        ringMod.stop(now + 0.220);
+
+        oscBody.start(now);
+        oscBody.stop(now + 0.350);
 
         noise.start(now);
-        noise.stop(now + duration);
+        noise.stop(now + 0.050);
 
-        // Limpiar el contexto después de que termine
+        oscHarm.start(now);
+        oscHarm.stop(now + 0.060);
+
+        // Fade-out master para evitar clicks al cerrar
+        masterGain.gain.setValueAtTime(1.0, now);
+        masterGain.gain.setValueAtTime(1.0, now + 0.350);
+        masterGain.gain.linearRampToValueAtTime(0.00001, now + 0.400);
+
+        // ── LIMPIEZA ──
         setTimeout(() => {
             ctx.close();
-        }, duration + 50);
+        }, 450);
     }
 
     ensureAudio() {
