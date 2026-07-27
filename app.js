@@ -1,10 +1,18 @@
 
 /**
  * ============================================================
- * ContiGame Engine v3.4.1 — Producción
+ * ContiGame Engine v3.4.2 — Producción
  * Lógica del juego, control de estado y flujos financieros
  * Para "Conti Conti - Desafío Financiero"
  * ============================================================
+ *
+ * Cambios v3.4.2 sobre v3.4.1:
+ *   - FIX CRÍTICO: El power-up de congelar (❄️) ahora se limpia
+ *     correctamente al cambiar de pregunta. Se añadió _freezeTimeout
+ *     al estado global para rastrear el setTimeout. loadQuestion(),
+ *     nextQuestion(), endLevel() y restartGame() ahora limpian el
+ *     timeout y resetean isFrozen = false, evitando que el timer de
+ *     la nueva pregunta quede bloqueado por una congelación anterior.
  *
  * Cambios v3.4.1 sobre v3.4:
  *   - ROBUSTEZ: Limpieza de _boredTimeout en handleCorrectAnswer()
@@ -49,6 +57,7 @@ const state = {
     timer: 30,
     timerInterval: null,
     _boredTimeout: null,
+    _freezeTimeout: null,
     isFrozen: false,
     questions: [],
     answeredCorrectly: {},
@@ -388,6 +397,8 @@ function startGame() {
     state.currentQuestion = 0; state.currentLevel = 1; state.answeredCorrectly = {}; state.topicScores = {};
     state.isFrozen = false; state.powerupsUsedThisLevel = false; state.levelPerfect = true;
     state.levelStars = {};
+    if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
+    state._freezeTimeout = null;
     document.body.className = 'level-1';
     startLevel(1);
 }
@@ -396,6 +407,8 @@ function startLevel(levelNum) {
     state.currentLevel = levelNum; state.currentQuestion = 0; state.lives = 3; state.streak = 0;
     state.levelScore = 0; state.isFrozen = false; state.powerupsUsedThisLevel = false; state.levelPerfect = true;
     state.bonusQuestionActive = false; state.correctInLevel = 0;
+    if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
+    state._freezeTimeout = null;
     
     document.body.className = `level-${levelNum}`;
     
@@ -556,6 +569,10 @@ function loadQuestion() {
     clearInterval(state.timerInterval);
     state.timerInterval = null;
     if (state._boredTimeout) clearTimeout(state._boredTimeout);
+    // Resetear estado de congelación al cambiar de pregunta
+    if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
+    state._freezeTimeout = null;
+    state.isFrozen = false;
     
     state.questionStartTime = Date.now();
     
@@ -859,8 +876,6 @@ function checkMultipleAnswer(originalIndex, question) {
 }
 
 function handleCorrectAnswer(points) {
-    // Limpiar timeout de aburrimiento para evitar que el conejo
-    // muestre animación 'bored' mientras el usuario lee la explicación
     if (state._boredTimeout) clearTimeout(state._boredTimeout);
     
     state.score += points;
@@ -902,8 +917,6 @@ function handleCorrectAnswer(points) {
 }
 
 function handleIncorrectAnswer(question) {
-    // Limpiar timeout de aburrimiento para evitar que el conejo
-    // muestre animación 'bored' mientras el usuario lee la explicación
     if (state._boredTimeout) clearTimeout(state._boredTimeout);
     
     state.lives--; state.streak = 0; state.levelPerfect = false;
@@ -938,9 +951,12 @@ function showFeedback(message, type) {
 }
 
 function nextQuestion() {
-    // Forzar limpieza del timer antes de cargar la siguiente pregunta
     clearInterval(state.timerInterval);
     state.timerInterval = null;
+    // Resetear estado de congelación al avanzar de pregunta
+    state.isFrozen = false;
+    if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
+    state._freezeTimeout = null;
     
     state.currentQuestion++;
     document.getElementById('streak-display')?.classList.remove('on-fire');
@@ -952,6 +968,10 @@ function endLevel() {
     clearInterval(state.timerInterval);
     state.timerInterval = null;
     if (state._boredTimeout) clearTimeout(state._boredTimeout);
+    // Resetear estado de congelación al terminar nivel
+    if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
+    state._freezeTimeout = null;
+    state.isFrozen = false;
     
     const totalQ = state.totalQuestions || 10;
     const starCount = state.levelPerfect ? 3 : (state.correctInLevel >= totalQ * 0.7 ? 2 : 1);
@@ -1088,6 +1108,9 @@ function showFinalResults() {
 function restartGame() {
     clearInterval(state.timerInterval);
     state.timerInterval = null;
+    if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
+    state._freezeTimeout = null;
+    state.isFrozen = false;
     state.currentQuestion = 0; state.score = 0; state.levelScore = 0; state.lives = 3;
     state.streak = 0; state.currentLevel = 1; state.powerupsUsedThisLevel = false; state.levelPerfect = true;
     state.levelStars = {}; state.bonusQuestionActive = false; state.correctInLevel = 0;
@@ -1121,12 +1144,14 @@ function usePowerup(type) {
         case 'fifty': applyFiftyFifty(); updateRabbitReaction('confident'); break;
         case 'time': if (state.mode === 'timed') { state.timer += 15; updateTimerDisplay(); } break;
         case 'freeze': 
+            if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
             state.isFrozen = true; 
             updateRabbitReaction('frozen');
             const td = document.getElementById('timer-display');
             if (td) td.style.backgroundColor = '#10B981';
-            setTimeout(() => { 
+            state._freezeTimeout = setTimeout(() => { 
                 state.isFrozen = false; 
+                state._freezeTimeout = null;
                 updateRabbitReaction('thinking'); 
                 if (td) td.style.backgroundColor = 'var(--azul-oscuro)'; 
             }, 10000);
@@ -1169,11 +1194,9 @@ function applyHint() {
 
 // ===== TEMPORIZADOR =====
 function startTimer() {
-    // Forzar limpieza de cualquier intervalo anterior
     clearInterval(state.timerInterval);
     state.timerInterval = null;
     
-    // Reiniciar el timer al valor del nivel actual
     if (state.currentLevel === 1) state.timer = 30;
     else if (state.currentLevel === 2) state.timer = 25;
     else state.timer = 20;
@@ -1370,7 +1393,6 @@ function showNamePromptModal(onSubmit) {
         if (e.key === 'Enter') close(input.value.trim() || 'Jugador');
     });
     
-    // Cerrar modal con tecla Escape (mismo comportamiento que "Omitir")
     document.addEventListener('keydown', function escapeHandler(e) {
         if (e.key === 'Escape') {
             close(null);
