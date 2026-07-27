@@ -1,21 +1,27 @@
 
-
-
 /**
  * ============================================================
- * ContiEffectsManager v5.0 — Producción
- * Efectos visuales (Canvas 2D) + Sonidos (pistas MP3/OGG) + Toasts
+ * ContiEffectsManager v5.1 — Producción
+ * Efectos visuales (Canvas 2D) + Sonidos (pistas MP3/OGG + síntesis) + Toasts
  * Para "Conti Conti - Desafío Financiero"
  * ============================================================
+ *
+ * Novedades v5.1 sobre v5.0:
+ *   - NUEVO: Método playTick() con síntesis Web Audio API pura.
+ *     Genera un click mecánico de 150ms sin depender de archivos externos.
+ *     Especificaciones: ataque 2ms, 3kHz agudo, 200Hz grave, ruido filtrado,
+ *     decaimiento natural, sin reverb, mono.
+ *   - MEJORA: El sonido tick ya no usa el pool de audio, evitando
+ *     solapamientos en la cuenta regresiva.
+ *   - MEJORA: Añadida verificación de compatibilidad con webkitAudioContext
+ *     para Safari/iOS en el nuevo método playTick().
  *
  * Novedades v5.0 sobre v4.1:
  *   - Sistema de audio rediseñado con archivos MP3/OGG (carpeta /sounds/).
  *   - Precarga de todos los sonidos al iniciar (evita latencia).
- *   - Pool de Audio elements reutilizables (máx. 6 simultáneos) para
- *     evitar el límite de reproducciones paralelas en iOS Safari.
+ *   - Pool de Audio elements reutilizables (máx. 8 simultáneos).
  *   - Fallback silencioso si la carpeta /sounds/ no existe o faltan archivos.
  *   - NUEVO: sonido 'splash' para la carga inicial de la aplicación.
- *   - Compatible con iOS Safari, Android Chrome y Desktop.
  *   - triggerScoreBadgeFlash() heredado de v4.1.
  *
  * Estructura de archivos requerida:
@@ -26,9 +32,10 @@
  *   /sounds/levelstart.mp3   (iniciar nivel)
  *   /sounds/achievement.mp3  (nueva insignia)
  *   /sounds/powerup.mp3      (usar power-up)
- *   /sounds/tick.mp3         (tic-tac del timer)
  *   /sounds/coin.mp3         (moneda)
  *   /sounds/explosion.mp3    (explosión/fuegos artificiales)
+ *
+ * Nota: tick.mp3 ya no es necesario. Se genera por síntesis en playTick().
  */
 
 class ContiEffectsManager {
@@ -58,7 +65,6 @@ class ContiEffectsManager {
         this.isRunning = false;
 
         // ===== SISTEMA DE AUDIO CON PISTAS MP3 (v5.0) =====
-        // Mapa de sonidos: clave -> ruta del archivo
         this.soundFiles = {
             splash:      'sounds/splash.mp3',
             correct:     'sounds/correct.mp3',
@@ -67,14 +73,13 @@ class ContiEffectsManager {
             levelstart:  'sounds/levelstart.mp3',
             achievement: 'sounds/achievement.mp3',
             powerup:     'sounds/powerup.mp3',
-            tick:        'sounds/tick.mp3',
             coin:        'sounds/coin.mp3',
             explosion:   'sounds/explosion.mp3',
         };
 
-        // Pool de elementos <audio> reutilizables (evita crear/destruir)
+        // Pool de elementos <audio> reutilizables
         this.audioPool = [];
-        this.maxAudioPool = 8; // aumentado a 8 para manejar splash + juego
+        this.maxAudioPool = 8;
         this.audioPoolIndex = 0;
 
         // Buffers precargados (clave -> Audio element)
@@ -101,7 +106,7 @@ class ContiEffectsManager {
         // Precargar sonidos (asíncrono, no bloquea la UI)
         this._preloadSounds();
 
-        console.log('🎨 ContiEffectsManager v5.0 listo | Partículas máx:', this.maxParticles, '| Volumen:', this.masterVolume, '| Audio: MP3/OGG');
+        console.log('🎨 ContiEffectsManager v5.1 listo | Partículas máx:', this.maxParticles, '| Volumen:', this.masterVolume, '| Audio: MP3 + Síntesis tick');
     }
 
     // ================================================================
@@ -135,7 +140,6 @@ class ContiEffectsManager {
     }
 
     _update() {
-        // Partículas
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.x += p.vx;
@@ -146,7 +150,6 @@ class ContiEffectsManager {
             p.rotation += p.rotationSpeed;
             p.life -= p.decay;
 
-            // Atracción al score badge (solo monedas en fase final)
             if (p.attractTo && this.scoreBadge && p.life < p.maxLife * 0.6) {
                 const r = this.scoreBadge.getBoundingClientRect();
                 const tx = r.left + r.width / 2;
@@ -163,12 +166,10 @@ class ContiEffectsManager {
             }
         }
 
-        // Limitar a máximo
         while (this.particles.length > this.maxParticles) {
             this.particles.shift();
         }
 
-        // Textos flotantes
         for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
             const ft = this.floatingTexts[i];
             ft.y += ft.vy;
@@ -185,7 +186,6 @@ class ContiEffectsManager {
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Partículas
         for (const p of this.particles) {
             ctx.save();
             ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
@@ -217,7 +217,6 @@ class ContiEffectsManager {
             ctx.restore();
         }
 
-        // Textos flotantes
         for (const ft of this.floatingTexts) {
             ctx.save();
             ctx.globalAlpha = ft.alpha;
@@ -261,7 +260,11 @@ class ContiEffectsManager {
             const angle = (i * Math.PI) / spikes - Math.PI / 2;
             const sx = Math.cos(angle) * radius;
             const sy = Math.sin(angle) * radius;
-            i === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+            if (i === 0) {
+                ctx.moveTo(sx, sy);
+            } else {
+                ctx.lineTo(sx, sy);
+            }
         }
         ctx.closePath();
         ctx.fill();
@@ -271,16 +274,7 @@ class ContiEffectsManager {
     //  SISTEMA DE AUDIO CON PISTAS MP3 (v5.0)
     // ================================================================
 
-    /**
-     * Precarga todos los sonidos MP3 en elementos <audio>.
-     * No bloquea la UI: los sonidos se cargan en segundo plano.
-     * Si un archivo falla, el juego continúa sin ese sonido.
-     * 
-     * Callback opcional: onProgress(loaded, total) para mostrar
-     * una barra de carga si se desea.
-     */
     _preloadSounds(onProgress) {
-        // Crear pool de audio elements reutilizables
         for (let i = 0; i < this.maxAudioPool; i++) {
             const audio = new Audio();
             audio.preload = 'auto';
@@ -288,7 +282,6 @@ class ContiEffectsManager {
             this.audioPool.push(audio);
         }
 
-        // Precargar cada sonido
         for (const [key, path] of Object.entries(this.soundFiles)) {
             const audio = new Audio();
             audio.preload = 'auto';
@@ -306,8 +299,6 @@ class ContiEffectsManager {
                 if (this.soundsLoadedCount === this.soundsTotalCount) {
                     this.audioLoaded = true;
                     console.log('🔊 Todos los sonidos MP3 precargados correctamente (' + this.soundsTotalCount + ' archivos).');
-                    
-                    // Reproducir sonido de splash cuando todo está listo
                     setTimeout(() => this.playSound('splash'), 200);
                 }
             }, { once: true });
@@ -323,29 +314,17 @@ class ContiEffectsManager {
                 if (this.soundsLoadedCount === this.soundsTotalCount && !this.audioLoaded) {
                     this.audioLoadError = true;
                     console.warn('🔇 Algunos sonidos no se cargaron. La app funcionará sin audio.');
-                    
-                    // Intentar reproducir splash aunque sea (puede que algunos sí cargaran)
                     if (this.audioBuffers['splash']) {
                         setTimeout(() => this.playSound('splash'), 200);
                     }
                 }
             });
 
-            // Forzar inicio de carga
             audio.load();
         }
     }
 
-    /**
-     * Reproduce un sonido desde el pool de audio elements.
-     * Si el sonido no está precargado, falla silenciosamente.
-     * 
-     * @param {string} type - Clave del sonido:
-     *   'splash'|'correct'|'incorrect'|'levelup'|'levelstart'|
-     *   'achievement'|'powerup'|'tick'|'coin'|'explosion'
-     */
     playSound(type) {
-        // Si los sonidos no están listos aún, ignorar (sin error)
         if (!this.audioLoaded && !this.audioLoadError) return;
         if (!this.soundFiles[type]) {
             console.warn('Tipo de sonido no reconocido:', type);
@@ -353,52 +332,122 @@ class ContiEffectsManager {
         }
 
         const sourceAudio = this.audioBuffers[type];
-        if (!sourceAudio) return; // sonido no disponible (archivo faltante)
+        if (!sourceAudio) return;
 
-        // Usar un elemento del pool (round-robin)
         const poolAudio = this.audioPool[this.audioPoolIndex];
         this.audioPoolIndex = (this.audioPoolIndex + 1) % this.maxAudioPool;
 
-        // Asignar la fuente
         poolAudio.src = this.soundFiles[type];
         poolAudio.volume = this.masterVolume;
 
-        // Reproducir con manejo de error para iOS
         const playPromise = poolAudio.play();
         if (playPromise !== undefined) {
             playPromise.catch(err => {
-                // Error común en iOS: AudioContext bloqueado sin interacción del usuario.
-                // No rompe la app, simplemente no se escucha ese sonido.
                 console.debug('🔇 Reproducción de audio bloqueada:', type, '-', err.message);
             });
         }
     }
 
     /**
-     * Mantenido por compatibilidad con app.js.
-     * En v5.0 con MP3 no se requiere inicialización especial de AudioContext.
+     * NUEVO v5.1: Genera un sonido de tick de reloj mecánico sintetizado.
+     * No depende de archivos externos. Crea un AudioContext temporal
+     * para evitar solapamientos entre ticks consecutivos.
+     *
+     * Especificaciones:
+     *   - Duración: 150ms exactos
+     *   - Click agudo (transient) ~3 kHz
+     *   - Cuerpo grave sutil ~200 Hz
+     *   - Ruido blanco filtrado para textura metálica/madera
+     *   - Decaimiento exponencial natural
+     *   - Sin reverb, mono, 44.1 kHz nativo
      */
+    playTick() {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+
+        const ctx = new AudioCtx();
+        const now = ctx.currentTime;
+        const duration = 0.150;
+        const vol = this.masterVolume;
+
+        // Componente 1: Click agudo (transient) - ~3 kHz
+        const oscHigh = ctx.createOscillator();
+        const gainHigh = ctx.createGain();
+
+        oscHigh.type = 'sine';
+        oscHigh.frequency.setValueAtTime(3000, now);
+        oscHigh.frequency.exponentialRampToValueAtTime(2500, now + 0.02);
+
+        gainHigh.gain.setValueAtTime(0.0001, now);
+        gainHigh.gain.exponentialRampToValueAtTime(0.35 * vol, now + 0.002);
+        gainHigh.gain.exponentialRampToValueAtTime(0.0001, now + 0.080);
+
+        oscHigh.connect(gainHigh);
+        gainHigh.connect(ctx.destination);
+
+        // Componente 2: Cuerpo grave - ~200 Hz
+        const oscLow = ctx.createOscillator();
+        const gainLow = ctx.createGain();
+
+        oscLow.type = 'sine';
+        oscLow.frequency.setValueAtTime(200, now);
+
+        gainLow.gain.setValueAtTime(0.0001, now);
+        gainLow.gain.exponentialRampToValueAtTime(0.25 * vol, now + 0.003);
+        gainLow.gain.exponentialRampToValueAtTime(0.0001, now + 0.100);
+
+        oscLow.connect(gainLow);
+        gainLow.connect(ctx.destination);
+
+        // Componente 3: Ruido blanco filtrado (textura metálica/madera)
+        const bufferSize = Math.floor(ctx.sampleRate * 0.040);
+        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * 0.4;
+        }
+
+        const noise = ctx.createBufferSource();
+        noise.buffer = noiseBuffer;
+
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.setValueAtTime(4000, now);
+        noiseFilter.Q.value = 0.5;
+
+        const gainNoise = ctx.createGain();
+        gainNoise.gain.setValueAtTime(0.0001, now);
+        gainNoise.gain.exponentialRampToValueAtTime(0.15 * vol, now + 0.001);
+        gainNoise.gain.exponentialRampToValueAtTime(0.0001, now + 0.030);
+
+        noise.connect(noiseFilter);
+        noiseFilter.connect(gainNoise);
+        gainNoise.connect(ctx.destination);
+
+        // Iniciar y detener todos los componentes
+        oscHigh.start(now);
+        oscHigh.stop(now + duration);
+
+        oscLow.start(now);
+        oscLow.stop(now + duration);
+
+        noise.start(now);
+        noise.stop(now + duration);
+
+        // Limpiar el contexto después de que termine
+        setTimeout(() => {
+            ctx.close();
+        }, duration + 50);
+    }
+
     ensureAudio() {
-        // En v5.0 con MP3 no se requiere inicialización especial.
-        // Los sonidos ya están precargados desde el constructor.
-        // Este método existe solo para compatibilidad con app.js
         return;
     }
 
-    /**
-     * Verifica si un sonido específico está cargado y disponible.
-     * Útil para depuración.
-     * @param {string} type - Clave del sonido
-     * @returns {boolean}
-     */
     isSoundLoaded(type) {
         return !!this.audioBuffers[type];
     }
 
-    /**
-     * Retorna el progreso de carga de sonidos (0 a 1).
-     * @returns {number}
-     */
     getSoundLoadProgress() {
         if (this.soundsTotalCount === 0) return 1;
         return this.soundsLoadedCount / this.soundsTotalCount;
@@ -584,9 +633,6 @@ class ContiEffectsManager {
         setTimeout(() => flash.remove(), duration + 60);
     }
 
-    /**
-     * v4.1: Micro-destello en el score-badge cuando "recibe" puntos.
-     */
     triggerScoreBadgeFlash() {
         if (!this.scoreBadge) return;
         
