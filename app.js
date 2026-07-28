@@ -15,8 +15,7 @@
  *     preguntas de contabilidad a nivel de bachillerato:
  *       ID 2 (nuevo): Objetivo principal de la contabilidad.
  *       ID 7 (nuevo): ¿Qué son las cuentas contables?
- *   - MEJORA: Frase inspiradora en el splash screen durante la carga:
- *     "El fondo de emergencia no es para ganar dinero; es para comprar tranquilidad."
+ *   - MEJORA: Fallback del splash screen aumentado a 60 segundos.
  *
  * Cambios v3.4.2 sobre v3.4.1:
  *   - FIX CRÍTICO: El power-up de congelar (❄️) ahora se limpia
@@ -82,7 +81,6 @@ const state = {
         noPowerups: false
     },
     topicScores: {},
-    // Niveles desbloqueados (guardados en localStorage)
     unlockedLevels: {
         1: true,
         2: false,
@@ -410,10 +408,10 @@ function setupSplashScreen() {
     const splashScreen = document.getElementById('splash-screen');
     setTimeout(() => {
         if (splashScreen && !splashScreen.classList.contains('hidden')) {
-            console.warn('⏰ Fallback: Splash screen ocultado por timeout de seguridad.');
+            console.warn('⏰ Fallback: Splash screen ocultado por timeout de seguridad (60s).');
             splashScreen.classList.add('hidden');
         }
-    }, 15000);
+    }, 60000);
 }
 
 function setupPowerups() {
@@ -461,7 +459,6 @@ function startGame() {
 }
 
 function startLevel(levelNum) {
-    // Verificar si el nivel está desbloqueado
     if (!state.unlockedLevels[levelNum]) {
         console.warn('Nivel ' + levelNum + ' bloqueado. No se puede iniciar.');
         return;
@@ -497,7 +494,6 @@ function startLevel(levelNum) {
 
 function goToNextLevel() {
     const nextLevel = state.currentLevel + 1;
-    // Verificar si el siguiente nivel está desbloqueado
     if (nextLevel <= 4 && state.unlockedLevels[nextLevel]) {
         startLevel(nextLevel);
     } else if (nextLevel > 4) {
@@ -1044,7 +1040,6 @@ function endLevel() {
     const starCount = state.levelPerfect ? 3 : (state.correctInLevel >= totalQ * 0.7 ? 2 : 1);
     state.levelStars[state.currentLevel] = starCount;
     
-    // Desbloquear el siguiente nivel
     unlockNextLevel(state.currentLevel);
     
     if (state.levelPerfect && state.lives === 3 && !state.badges.perfectScore) {
