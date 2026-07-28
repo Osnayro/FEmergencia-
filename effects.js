@@ -1,10 +1,17 @@
 
 /**
  * ============================================================
- * ContiEffectsManager v5.2 — Producción
+ * ContiEffectsManager v5.2.1 — Producción
  * Efectos visuales (Canvas 2D) + Sonidos (pistas MP3 + síntesis) + Toasts
  * Para "ContiLab: Desafío Contable y Financiero"
  * ============================================================
+ *
+ * Novedades v5.2.1 sobre v5.2:
+ *   - FIX: La barra de progreso del splash screen ahora se inicializa
+ *     en 0% explícitamente y se desactiva cualquier animación CSS
+ *     que pudiera interferir con la carga real.
+ *   - FIX: _showSplashButton() ahora completa la barra al 100% antes
+ *     de mostrar el botón "Iniciar Experiencia".
  *
  * Novedades v5.2 sobre v5.1:
  *   - MEJORA: playTick() rediseñado con 5 capas de síntesis:
@@ -112,7 +119,7 @@ class ContiEffectsManager {
         // Precargar sonidos
         this._preloadSounds();
 
-        console.log('🎨 ContiEffectsManager v5.2 listo | Partículas máx:', this.maxParticles, '| Volumen:', this.masterVolume, '| Audio: MP3 + Síntesis tick 5-capas');
+        console.log('🎨 ContiEffectsManager v5.2.1 listo | Partículas máx:', this.maxParticles, '| Volumen:', this.masterVolume, '| Audio: MP3 + Síntesis tick 5-capas');
     }
 
     // ================================================================
@@ -282,6 +289,11 @@ class ContiEffectsManager {
 
     _preloadSounds(onProgress) {
         const loaderFill = document.getElementById('loader-fill');
+        // Inicializar barra en 0% y desactivar animaciones CSS
+        if (loaderFill) {
+            loaderFill.style.width = '0%';
+            loaderFill.style.animation = 'none';
+        }
         
         for (let i = 0; i < this.maxAudioPool; i++) {
             const audio = new Audio();
@@ -300,7 +312,6 @@ class ContiEffectsManager {
                 this.soundsLoadedCount++;
                 this.audioBuffers[key] = audio;
                 
-                // Actualizar barra de progreso real
                 if (loaderFill) {
                     const progress = (this.soundsLoadedCount / this.soundsTotalCount) * 100;
                     loaderFill.style.width = progress + '%';
@@ -321,7 +332,6 @@ class ContiEffectsManager {
                 this.soundsLoadedCount++;
                 console.warn('⚠️ No se pudo cargar el sonido: ' + path + '. El juego continuará sin este sonido.');
                 
-                // Actualizar barra incluso si falla
                 if (loaderFill) {
                     const progress = (this.soundsLoadedCount / this.soundsTotalCount) * 100;
                     loaderFill.style.width = progress + '%';
@@ -348,9 +358,16 @@ class ContiEffectsManager {
      * lo cual desbloquea el audio en iOS/Safari.
      */
     _showSplashButton() {
+        const loaderFill = document.getElementById('loader-fill');
         const skipBtn = document.getElementById('skip-splash-btn');
         const splashScreen = document.getElementById('splash-screen');
         
+        // Completar la barra al 100%
+        if (loaderFill) {
+            loaderFill.style.width = '100%';
+        }
+        
+        // Mostrar el botón con animación
         if (skipBtn) {
             skipBtn.style.display = 'block';
             skipBtn.addEventListener('click', () => {
@@ -411,7 +428,6 @@ class ContiEffectsManager {
         const masterGain = ctx.createGain();
         masterGain.gain.value = 1.0;
 
-        // ── COMPRESOR: unifica todos los componentes ──
         const compressor = ctx.createDynamicsCompressor();
         compressor.threshold.setValueAtTime(-24, now);
         compressor.knee.setValueAtTime(6, now);
@@ -421,123 +437,94 @@ class ContiEffectsManager {
         compressor.connect(masterGain);
         masterGain.connect(ctx.destination);
 
-        // ── 1. ESCAPEMENT CLICK (clic metálico principal) ──
         const oscClick = ctx.createOscillator();
         const gainClick = ctx.createGain();
-
         oscClick.type = 'sine';
         oscClick.frequency.setValueAtTime(4500, now);
         oscClick.frequency.exponentialRampToValueAtTime(2200, now + 0.060);
-
         gainClick.gain.setValueAtTime(0.00001, now);
         gainClick.gain.exponentialRampToValueAtTime(0.45 * vol, now + 0.0005);
         gainClick.gain.exponentialRampToValueAtTime(0.00001, now + 0.080);
-
         oscClick.connect(gainClick);
         gainClick.connect(compressor);
 
-        // ── 2. RING METÁLICO (resonancia del mecanismo) ──
         const oscRing = ctx.createOscillator();
         const gainRing = ctx.createGain();
         const ringMod = ctx.createOscillator();
         const gainRingMod = ctx.createGain();
-
         oscRing.type = 'triangle';
         oscRing.frequency.setValueAtTime(820, now);
         oscRing.frequency.exponentialRampToValueAtTime(650, now + 0.150);
-
         ringMod.type = 'sine';
         ringMod.frequency.setValueAtTime(45, now);
         gainRingMod.gain.setValueAtTime(0.3, now);
-
         gainRing.gain.setValueAtTime(0.00001, now);
         gainRing.gain.exponentialRampToValueAtTime(0.18 * vol, now + 0.002);
         gainRing.gain.exponentialRampToValueAtTime(0.00001, now + 0.200);
-
         ringMod.connect(gainRingMod);
         gainRingMod.connect(gainRing.gain);
         oscRing.connect(gainRing);
         gainRing.connect(compressor);
 
-        // ── 3. CUERPO RESONANTE (resonancia del cuerpo del reloj) ──
         const oscBody = ctx.createOscillator();
         const gainBody = ctx.createGain();
-
         oscBody.type = 'sine';
         oscBody.frequency.setValueAtTime(110, now);
         oscBody.frequency.exponentialRampToValueAtTime(95, now + 0.300);
-
         gainBody.gain.setValueAtTime(0.00001, now);
         gainBody.gain.exponentialRampToValueAtTime(0.22 * vol, now + 0.005);
         gainBody.gain.exponentialRampToValueAtTime(0.00001, now + 0.320);
-
         oscBody.connect(gainBody);
         gainBody.connect(compressor);
 
-        // ── 4. RUIDO METÁLICO (textura del impacto) ──
         const bufferSize = Math.floor(ctx.sampleRate * 0.050);
         const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = noiseBuffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
             data[i] = ((Math.random() * 2 - 1) + (Math.random() * 2 - 1)) * 0.25;
         }
-
         const noise = ctx.createBufferSource();
         noise.buffer = noiseBuffer;
-
         const noiseFilter = ctx.createBiquadFilter();
         noiseFilter.type = 'bandpass';
         noiseFilter.frequency.setValueAtTime(6200, now);
         noiseFilter.Q.value = 2.5;
-
         const gainNoise = ctx.createGain();
         gainNoise.gain.setValueAtTime(0.00001, now);
         gainNoise.gain.exponentialRampToValueAtTime(0.12 * vol, now + 0.0005);
         gainNoise.gain.exponentialRampToValueAtTime(0.00001, now + 0.040);
-
         noise.connect(noiseFilter);
         noiseFilter.connect(gainNoise);
         gainNoise.connect(compressor);
 
-        // ── 5. ARMÓNICO AGUDO (brillo metálico) ──
         const oscHarm = ctx.createOscillator();
         const gainHarm = ctx.createGain();
-
         oscHarm.type = 'sine';
         oscHarm.frequency.setValueAtTime(9000, now);
         oscHarm.frequency.exponentialRampToValueAtTime(7000, now + 0.030);
-
         gainHarm.gain.setValueAtTime(0.00001, now);
         gainHarm.gain.exponentialRampToValueAtTime(0.08 * vol, now + 0.001);
         gainHarm.gain.exponentialRampToValueAtTime(0.00001, now + 0.050);
-
         oscHarm.connect(gainHarm);
         gainHarm.connect(compressor);
 
-        // ── INICIAR TODOS LOS COMPONENTES ──
         oscClick.start(now);
         oscClick.stop(now + 0.100);
-
         oscRing.start(now);
         oscRing.stop(now + 0.220);
         ringMod.start(now);
         ringMod.stop(now + 0.220);
-
         oscBody.start(now);
         oscBody.stop(now + 0.350);
-
         noise.start(now);
         noise.stop(now + 0.050);
-
         oscHarm.start(now);
         oscHarm.stop(now + 0.060);
 
-        // Fade-out master para evitar clicks al cerrar
         masterGain.gain.setValueAtTime(1.0, now);
         masterGain.gain.setValueAtTime(1.0, now + 0.350);
         masterGain.gain.linearRampToValueAtTime(0.00001, now + 0.400);
 
-        // ── LIMPIEZA ──
         setTimeout(() => {
             ctx.close();
         }, 450);
