@@ -3,7 +3,7 @@
  * ============================================================
  * ContiEffectsManager v5.2 — Producción
  * Efectos visuales (Canvas 2D) + Sonidos (pistas MP3 + síntesis) + Toasts
- * Para "Conti Conti - Desafío Financiero"
+ * Para "ContiLab: Desafío Contable y Financiero"
  * ============================================================
  *
  * Novedades v5.2 sobre v5.1:
@@ -14,6 +14,9 @@
  *      4. Ruido metálico: bandpass estrecho ~6kHz
  *      5. Armónico agudo: brillo metálico ~9kHz
  *     Compresor unificador, fade-out maestro, duración total ~350ms.
+ *   - MEJORA: Barra de progreso real durante la precarga de sonidos.
+ *   - MEJORA: Botón "Iniciar Experiencia" aparece al completar la carga.
+ *     Al hacer clic, reproduce splash.mp3 (desbloquea audio en iOS/Safari).
  *
  * Novedades v5.1 sobre v5.0:
  *   - NUEVO: Método playTick() con síntesis Web Audio API pura.
@@ -278,6 +281,8 @@ class ContiEffectsManager {
     // ================================================================
 
     _preloadSounds(onProgress) {
+        const loaderFill = document.getElementById('loader-fill');
+        
         for (let i = 0; i < this.maxAudioPool; i++) {
             const audio = new Audio();
             audio.preload = 'auto';
@@ -295,6 +300,12 @@ class ContiEffectsManager {
                 this.soundsLoadedCount++;
                 this.audioBuffers[key] = audio;
                 
+                // Actualizar barra de progreso real
+                if (loaderFill) {
+                    const progress = (this.soundsLoadedCount / this.soundsTotalCount) * 100;
+                    loaderFill.style.width = progress + '%';
+                }
+                
                 if (onProgress) {
                     onProgress(this.soundsLoadedCount, this.soundsTotalCount);
                 }
@@ -302,13 +313,19 @@ class ContiEffectsManager {
                 if (this.soundsLoadedCount === this.soundsTotalCount) {
                     this.audioLoaded = true;
                     console.log('🔊 Todos los sonidos MP3 precargados correctamente (' + this.soundsTotalCount + ' archivos).');
-                    setTimeout(() => this.playSound('splash'), 200);
+                    this._showSplashButton();
                 }
             }, { once: true });
 
             audio.addEventListener('error', (err) => {
                 this.soundsLoadedCount++;
                 console.warn('⚠️ No se pudo cargar el sonido: ' + path + '. El juego continuará sin este sonido.');
+                
+                // Actualizar barra incluso si falla
+                if (loaderFill) {
+                    const progress = (this.soundsLoadedCount / this.soundsTotalCount) * 100;
+                    loaderFill.style.width = progress + '%';
+                }
                 
                 if (onProgress) {
                     onProgress(this.soundsLoadedCount, this.soundsTotalCount);
@@ -317,13 +334,33 @@ class ContiEffectsManager {
                 if (this.soundsLoadedCount === this.soundsTotalCount && !this.audioLoaded) {
                     this.audioLoadError = true;
                     console.warn('🔇 Algunos sonidos no se cargaron. La app funcionará sin audio.');
-                    if (this.audioBuffers['splash']) {
-                        setTimeout(() => this.playSound('splash'), 200);
-                    }
+                    this._showSplashButton();
                 }
             });
 
             audio.load();
+        }
+    }
+
+    /**
+     * Muestra el botón "Iniciar Experiencia" en el splash screen.
+     * El sonido splash se reproduce cuando el usuario hace clic,
+     * lo cual desbloquea el audio en iOS/Safari.
+     */
+    _showSplashButton() {
+        const skipBtn = document.getElementById('skip-splash-btn');
+        const splashScreen = document.getElementById('splash-screen');
+        
+        if (skipBtn) {
+            skipBtn.style.display = 'block';
+            skipBtn.addEventListener('click', () => {
+                // Reproducir splash (gesto del usuario desbloquea audio en iOS)
+                this.playSound('splash');
+                // Ocultar splash screen
+                if (splashScreen) {
+                    splashScreen.classList.add('hidden');
+                }
+            }, { once: true });
         }
     }
 
