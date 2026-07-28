@@ -2,268 +2,269 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ContiLab: Desafío Contable y Financiero</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#A2D2FF">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="ContiLab">
-    <link rel="apple-touch-icon" href="icono-app.PNG">
-    <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ContiChallenge: Desafío Contable y Financiero</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#A2D2FF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ContiChallenge">
+    <link rel="apple-touch-icon" href="icono-app.PNG">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Canvas para efectos visuales (Partículas de monedas, confeti, alertas) -->
-    <canvas id="effects-canvas"></canvas>
+    <!-- Canvas para efectos visuales (Partículas de monedas, confeti, alertas) -->
+    <canvas id="effects-canvas"></canvas>
 
-    <!-- Splash Screen (Pantalla de carga que desbloquea audio en iOS) -->
-    <div id="splash-screen">
-        <div class="splash-overlay">
-            <h1 class="splash-game-title">ContiLab</h1>
-            <p class="splash-game-subtitle">Desafío Contable y Financiero</p>
-            
-            <!-- Barra de Progreso Visual de Carga -->
-            <div class="loader-bar">
-                <div class="loader-fill" id="loader-fill"></div>
-            </div>
-            
-            <!-- Botón para desbloquear audio y entrar al juego -->
-            <button class="skip-splash-btn pulse-ready" id="skip-splash-btn" style="display: none;">
-                ¡Iniciar Experiencia! ⚡
-            </button>
-        </div>
-    </div>
+    <!-- Splash Screen (Pantalla de carga que desbloquea audio en iOS) -->
+    <div id="splash-screen">
+        <div class="splash-overlay">
+            <h1 class="splash-game-title">ContiChallenge</h1>
+            <p class="splash-game-subtitle">Desafío Contable y Financiero</p>
+            
+            <!-- Barra de Progreso Visual de Carga -->
+            <div class="loader-bar">
+                <div class="loader-fill" id="loader-fill"></div>
+            </div>
+            
+            <!-- Botón para desbloquear audio y entrar al juego -->
+            <button class="skip-splash-btn pulse-ready" id="skip-splash-btn" style="display: none;">
+                ¡Iniciar Experiencia! ⚡
+            </button>
+        </div>
+    </div>
 
-    <!-- App Principal -->
-    <div class="app-card" id="app-card">
-        <!-- Header -->
-        <div class="app-header">
-            <img src="logo-colegio.jpg" alt="Logo Escolar" class="school-logo" onerror="this.classList.add('logo-placeholder'); this.alt='🏫 Institución Educativa';">
-            <div class="logo-placeholder" style="display:none;">🏫 Institución Educativa</div>
-        </div>
+    <!-- App Principal -->
+    <div class="app-card" id="app-card">
+        <!-- Header -->
+        <div class="app-header">
+            <img src="logo-colegio.jpg" alt="Logo Escolar" class="school-logo" onerror="this.classList.add('logo-placeholder'); this.alt='🏫 Institución Educativa';">
+            <div class="logo-placeholder" style="display:none;">🏫 Institución Educativa</div>
+        </div>
 
-        <!-- Barra de Estado -->
-        <div class="status-bar">
-            <div class="progress-container">
-                <div class="progress-fill" id="progress-fill"></div>
-            </div>
-            <div class="score-badge" id="score-badge">⭐ 0 pts</div>
-            <div class="lives-display" id="lives-display">❤️❤️❤️</div>
-            <div class="streak-display" id="streak-display">🔥 0</div>
-            <div class="timer-display" id="timer-display">⏱️ 30s</div>
-            <div class="level-display" id="level-display" style="background: #10B981; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 0.75rem;">Nivel 1</div>
-        </div>
+        <!-- Barra de Estado -->
+        <div class="status-bar">
+            <div class="progress-container">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="score-badge" id="score-badge">⭐ 0 pts</div>
+            <div class="lives-display" id="lives-display">❤️❤️❤️</div>
+            <div class="streak-display" id="streak-display">🔥 0</div>
+            <div class="timer-display" id="timer-display">⏱️ 30s</div>
+            <div class="level-display" id="level-display" style="background: #10B981; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 0.75rem;">Nivel 1</div>
+        </div>
 
-        <!-- Power-ups Bar -->
-        <div class="powerups-bar" id="powerups-bar">
-            <button class="powerup-btn" id="powerup-fifty" title="50/50: Elimina dos opciones incorrectas">
-                ✂️ 50/50 <small>(3)</small>
-            </button>
-            <button class="powerup-btn" id="powerup-time" title="Tiempo extra: +15 segundos">
-                ⏳ +Tiempo <small>(2)</small>
-            </button>
-            <button class="powerup-btn" id="powerup-freeze" title="Congelar tiempo: Detiene el reloj 10s">
-                ❄️ Congelar <small>(1)</small>
-            </button>
-            <button class="powerup-btn" id="powerup-hint" title="Pista: Muestra una ayuda sin revelar la respuesta">
-                💡 Pista <small>(2)</small>
-            </button>
-        </div>
+        <!-- Power-ups Bar -->
+        <div class="powerups-bar" id="powerups-bar">
+            <button class="powerup-btn" id="powerup-fifty" title="50/50: Elimina dos opciones incorrectas">
+                ✂️ 50/50 <small>(3)</small>
+            </button>
+            <button class="powerup-btn" id="powerup-time" title="Tiempo extra: +15 segundos">
+                ⏳ +Tiempo <small>(2)</small>
+            </button>
+            <button class="powerup-btn" id="powerup-freeze" title="Congelar tiempo: Detiene el reloj 10s">
+                ❄️ Congelar <small>(1)</small>
+            </button>
+            <button class="powerup-btn" id="powerup-hint" title="Pista: Muestra una ayuda sin revelar la respuesta">
+                💡 Pista <small>(2)</small>
+            </button>
+        </div>
 
-        <!-- Pantalla de Bienvenida -->
-        <div class="screen active" id="screen-welcome">
-            <div class="character-box">
-                <div class="rabbit-svg-container"></div>
-                <div class="character-speech" id="character-speech">
-                    ¡Hola! Soy Conti Conti, tu guía contable y financiero 🐰
-                </div>
-            </div>
-            <h2 class="welcome-title">¿Qué tanto sabes sobre contabilidad y finanzas?</h2>
-            <p class="welcome-sub">Completa los 4 niveles demostrando tus conocimientos</p>
+        <!-- Pantalla de Bienvenida -->
+        <div class="screen active" id="screen-welcome">
+            <div class="character-box">
+                <div class="rabbit-svg-container"></div>
+                <div class="character-speech" id="character-speech">
+                    ¡Hola! Soy Conti Conti, tu guía contable y financiero 🐰
+                </div>
+            </div>
+            <h2 class="welcome-title">¿Qué tanto sabes sobre contabilidad y finanzas?</h2>
+            <p class="welcome-sub">Completa los 4 niveles demostrando tus conocimientos</p>
 
-            <div class="splash-credits-box">
-                <b>🎓 Proyecto Presentado por:</b><br>
-                <b>Valeska Romero</b><br>
-                Estudiante de la especialidad de Contabilidad
-            </div>
+            <div class="splash-credits-box">
+                <b>🎓 Proyecto Presentado por:</b><br>
+                <b>Valeska Romero</b><br>
+                Estudiante de la especialidad de Contabilidad
+            </div>
 
-            <div class="info-card">
-                <strong>🎯 Niveles del desafío:</strong><br>
-                🟢 <b>Nivel 1:</b> Fondo de Emergencia (30s)<br>
-                🔵 <b>Nivel 2:</b> Contabilidad y Nómina (25s)<br>
-                🟣 <b>Nivel 3:</b> Estados Financieros (20s)<br>
-                🔴 <b>Nivel 4:</b> Cálculos Técnicos Avanzados (20s)
-            </div>
+            <div class="info-card">
+                <strong>🎯 Niveles del desafío:</strong><br>
+                🟢 <b>Nivel 1:</b> Fondo de Emergencia (30s)<br>
+                🔵 <b>Nivel 2:</b> Contabilidad y Nómina (25s)<br>
+                🟣 <b>Nivel 3:</b> Estados Financieros (20s)<br>
+                🔴 <b>Nivel 4:</b> Cálculos Técnicos Avanzados (20s)
+            </div>
 
-            <div class="mode-grid">
-                <div class="mode-card selected" id="mode-normal" onclick="selectMode('normal')">
-                    <div class="mode-icon">🐢</div>
-                    <div class="mode-title">Modo Normal</div>
-                    <div class="mode-desc">Sin presión de tiempo</div>
-                </div>
-                <div class="mode-card" id="mode-timed" onclick="selectMode('timed')">
-                    <div class="mode-icon">⚡</div>
-                    <div class="mode-title">Contrarreloj</div>
-                    <div class="mode-desc">20s - 30s por pregunta</div>
-                </div>
-            </div>
+            <div class="mode-grid">
+                <div class="mode-card selected" id="mode-normal" onclick="selectMode('normal')">
+                    <div class="mode-icon">🐢</div>
+                    <div class="mode-title">Modo Normal</div>
+                    <div class="mode-desc">Sin presión de tiempo</div>
+                </div>
+                <div class="mode-card" id="mode-timed" onclick="selectMode('timed')">
+                    <div class="mode-icon">⚡</div>
+                    <div class="mode-title">Contrarreloj</div>
+                    <div class="mode-desc">20s - 30s por pregunta</div>
+                </div>
+            </div>
 
-            <button class="main-btn pulse-ready" id="btn-start" onclick="startGame()">
-                ¡Comenzar Desafío! 🚀
-            </button>
-            <div class="btn-group">
-                <button class="main-btn secondary" onclick="showScreen('screen-badges')">
-                    Ver Insignias 🏅
-                </button>
-                <button class="main-btn secondary" onclick="showScreen('screen-leaderboard')">
-                    Clasificación 🏆
-                </button>
-            </div>
-            <p class="credits">Desarrollado por Romeroweb | v5.2</p>
-        </div>
+            <button class="main-btn pulse-ready" id="btn-start" onclick="startGame()">
+                ¡Comenzar Desafío! 🚀
+            </button>
+            <div class="btn-group">
+                <button class="main-btn secondary" onclick="showScreen('screen-badges')">
+                    Ver Insignias 🏅
+                </button>
+                <button class="main-btn secondary" onclick="showScreen('screen-leaderboard')">
+                    Clasificación 🏆
+                </button>
+            </div>
+            <p class="credits">Desarrollado por Romeroweb | v5.2</p>
+        </div>
 
-        <!-- Pantalla de Pregunta -->
-        <div class="screen" id="screen-question">
-            <div class="character-box">
-                <div class="rabbit-svg-container" id="rabbit-svg"></div>
-                <div class="character-speech" id="question-speech">¡Piensa bien tu respuesta! 🤔</div>
-            </div>
-            <div class="question-text" id="question-text"></div>
-            <img class="question-image" id="question-image" alt="Imagen de la pregunta" style="display:none;">
-            <div class="options-grid" id="options-grid"></div>
-            <div class="matching-container" id="matching-container" style="display:none;"></div>
-            <div class="drag-container" id="drag-container" style="display:none;"></div>
-            <div class="slider-container" id="slider-container" style="display:none;"></div>
-            <div class="feedback-box" id="feedback-box"></div>
-            <button class="main-btn" id="btn-next" style="display:none;" onclick="nextQuestion()">
-                Siguiente Pregunta ➡️
-            </button>
-        </div>
+        <!-- Pantalla de Pregunta -->
+        <div class="screen" id="screen-question">
+            <div class="character-box">
+                <div class="rabbit-svg-container" id="rabbit-svg"></div>
+                <div class="character-speech" id="question-speech">¡Piensa bien tu respuesta! 🤔</div>
+            </div>
+            <div class="question-text" id="question-text"></div>
+            <img class="question-image" id="question-image" alt="Imagen de la pregunta" style="display:none;">
+            <div class="options-grid" id="options-grid"></div>
+            <div class="matching-container" id="matching-container" style="display:none;"></div>
+            <div class="drag-container" id="drag-container" style="display:none;"></div>
+            <div class="slider-container" id="slider-container" style="display:none;"></div>
+            <div class="feedback-box" id="feedback-box"></div>
+            <button class="main-btn" id="btn-next" style="display:none;" onclick="nextQuestion()">
+                Siguiente Pregunta ➡️
+            </button>
+        </div>
 
-        <!-- Pantalla de Transición entre Niveles -->
-        <div class="screen" id="screen-level-transition">
-            <div class="character-box">
-                <div class="rabbit-svg-container"></div>
-                <div class="character-speech" id="transition-speech">¡Excelente! Has completado el nivel 🎉</div>
-            </div>
-            <h2 class="welcome-title" id="transition-title">🟢 Nivel Completado</h2>
-            <div class="share-card">
-                <div class="share-label">Puntuación del nivel</div>
-                <div class="share-score" id="level-score-display">0</div>
-                <div class="share-label">puntos</div>
-                <div id="level-stars"></div>
-            </div>
-            <div class="teacher-tribute-card">
-                <div class="teacher-tribute-text">
-                    🌟 "La excelencia de la especialidad de Contabilidad se refleja en el compromiso, la dedicación y la calidad profesional de sus profesoras, quienes inspiran a sus estudiantes a dar siempre lo mejor de sí." ✨
-                </div>
-            </div>
-            <button class="main-btn pulse-ready" id="btn-next-level" onclick="goToNextLevel()">
-                Siguiente Nivel ➡️
-            </button>
-        </div>
+        <!-- Pantalla de Transición entre Niveles -->
+        <div class="screen" id="screen-level-transition">
+            <div class="character-box">
+                <div class="rabbit-svg-container"></div>
+                <div class="character-speech" id="transition-speech">¡Excelente! Has completado el nivel 🎉</div>
+            </div>
+            <h2 class="welcome-title" id="transition-title">🟢 Nivel Completado</h2>
+            <div class="share-card">
+                <div class="share-label">Puntuación del nivel</div>
+                <div class="share-score" id="level-score-display">0</div>
+                <div class="share-label">puntos</div>
+                <div id="level-stars"></div>
+            </div>
+            <div class="teacher-tribute-card">
+                <div class="teacher-tribute-text">
+                    🌟 "La excelencia de la especialidad de Contabilidad se refleja en el compromiso, la dedicación y la calidad profesional de sus profesoras, quienes inspiran a sus estudiantes a dar siempre lo mejor de sí." ✨
+                </div>
+            </div>
+            <button class="main-btn pulse-ready" id="btn-next-level" onclick="goToNextLevel()">
+                Siguiente Nivel ➡️
+            </button>
+        </div>
 
-        <!-- Pantalla de Resultados Final -->
-        <div class="screen" id="screen-results">
-            <div class="character-box">
-                <div class="rabbit-svg-container"></div>
-                <div class="character-speech" id="result-character-speech">¡Gran trabajo completando el desafío! 🐰🎉</div>
-            </div>
-            <h2 class="welcome-title">🎉 ¡Desafío Completado!</h2>
-            <div class="share-card" id="share-card">
-                <div class="share-label">Tu puntuación final</div>
-                <div class="share-score" id="final-score">0</div>
-                <div class="share-label">puntos</div>
-                <div class="share-badges" id="share-badges"></div>
-            </div>
-            <div class="radar-chart-container">
-                <h3>📊 Análisis por Temas</h3>
-                <div id="topic-analysis"></div>
-            </div>
-            <div class="btn-group">
-                <button class="main-btn" onclick="goToFinalScreen()">Ver Mensaje Final 📜</button>
-                <button class="main-btn secondary" onclick="shareResults()">Compartir 📤</button>
-            </div>
-            <button class="main-btn secondary" onclick="showScreen('screen-leaderboard')">Ver Clasificación 🏆</button>
-            <button class="main-btn danger" onclick="showScreen('screen-welcome')">Volver al Inicio 🏠</button>
-        </div>
+        <!-- Pantalla de Resultados Final -->
+        <div class="screen" id="screen-results">
+            <div class="character-box">
+                <div class="rabbit-svg-container"></div>
+                <div class="character-speech" id="result-character-speech">¡Gran trabajo completando el desafío! 🐰🎉</div>
+            </div>
+            <h2 class="welcome-title">🎉 ¡Desafío Completado!</h2>
+            <div class="share-card" id="share-card">
+                <div class="share-label">Tu puntuación final</div>
+                <div class="share-score" id="final-score">0</div>
+                <div class="share-label">puntos</div>
+                <div class="share-badges" id="share-badges"></div>
+            </div>
+            <div class="radar-chart-container">
+                <h3>📊 Análisis por Temas</h3>
+                <div id="topic-analysis"></div>
+            </div>
+            <div class="btn-group">
+                <button class="main-btn" onclick="goToFinalScreen()">Ver Mensaje Final 📜</button>
+                <button class="main-btn secondary" onclick="shareResults()">Compartir 📤</button>
+            </div>
+            <button class="main-btn secondary" onclick="showScreen('screen-leaderboard')">Ver Clasificación 🏆</button>
+            <button class="main-btn danger" onclick="showScreen('screen-welcome')">Volver al Inicio 🏠</button>
+        </div>
 
-        <!-- Pantalla Final con Agradecimiento -->
-        <div class="screen" id="screen-final">
-            <div style="text-align: center; margin-bottom: 10px;">
-                <img src="conejo-uniforme.PNG" alt="Conti Conti" style="max-height: 100px;" onerror="this.style.display='none';">
-            </div>
-            <div class="info-card">
-                💡 <b>La Contabilidad en tu Vida Diaria:</b><br>
-                La contabilidad no solo se utiliza en las empresas. También nos ayuda a organizar nuestros ingresos, controlar nuestros gastos, ahorrar y prepararnos para enfrentar imprevistos mediante herramientas como el fondo de emergencia.
-            </div>
-            <div class="info-card" style="border-left-color: #10B981; background: #F0FDF4;">
-                📊 <b>¡Conoce la especialidad de Contabilidad!</b><br>
-                Si te interesa aprender a administrar el dinero, comprender cómo funcionan las empresas y desarrollar habilidades útiles para tu futuro, ¡te invitamos a conocer nuestra especialidad!
-            </div>
-            <div class="teacher-tribute-card">
-                <div class="teacher-tribute-text">
-                    🌟 "La excelencia de la especialidad de Contabilidad se refleja en el compromiso, la dedicación y la calidad profesional de sus profesoras, quienes inspiran a sus estudiantes a dar siempre lo mejor de sí." ✨
-                </div>
-            </div>
-            <p style="font-size: 0.82rem; font-weight: 700; color: var(--gris-texto); margin-top: 2px;">Especialidades de nuestro colegio:</p>
-            <div class="specialty-list">
-                <span class="specialty-tag">🍳 Gastronomía</span>
-                <span class="specialty-tag">👶 Atención de Párvulos</span>
-                <span class="specialty-tag" style="background: var(--verde-menta); border-color: #86EFAC;">📊 Contabilidad</span>
-                <span class="specialty-tag">🥫 Elaboración Ind. Alimentos</span>
-                <span class="specialty-tag">⚡ Electrónica</span>
-            </div>
-            <p style="font-size: 0.9rem; font-weight: 700; color: var(--azul-oscuro); margin: 6px 0;">
-                "¡Tu futuro comienza con una buena educación financiera!"
-            </p>
-            <button class="main-btn" onclick="restartGame()">🔄 Volver a Jugar</button>
-            <div class="credits">
-                ✨ Desarrollado por <b>Valeska Romero</b> – Estudiante de la especialidad de Contabilidad
-            </div>
-        </div>
+        <!-- Pantalla Final con Agradecimiento -->
+        <div class="screen" id="screen-final">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <img src="conejo-uniforme.PNG" alt="Conti Conti" style="max-height: 100px;" onerror="this.style.display='none';">
+            </div>
+            <div class="info-card">
+                💡 <b>La Contabilidad en tu Vida Diaria:</b><br>
+                La contabilidad no solo se utiliza en las empresas. También nos ayuda a organizar nuestros ingresos, controlar nuestros gastos, ahorrar y prepararnos para enfrentar imprevistos mediante herramientas como el fondo de emergencia.
+            </div>
+            <div class="info-card" style="border-left-color: #10B981; background: #F0FDF4;">
+                📊 <b>¡Conoce la especialidad de Contabilidad!</b><br>
+                Si te interesa aprender a administrar el dinero, comprender cómo funcionan las empresas y desarrollar habilidades útiles para tu futuro, ¡te invitamos a conocer nuestra especialidad!
+            </div>
+            <div class="teacher-tribute-card">
+                <div class="teacher-tribute-text">
+                    🌟 "La excelencia de la especialidad de Contabilidad se refleja en el compromiso, la dedicación y la calidad profesional de sus profesoras, quienes inspiran a sus estudiantes a dar siempre lo mejor de sí." ✨
+                </div>
+            </div>
+            <p style="font-size: 0.82rem; font-weight: 700; color: var(--gris-texto); margin-top: 2px;">Especialidades de nuestro colegio:</p>
+            <div class="specialty-list">
+                <span class="specialty-tag">🍳 Gastronomía</span>
+                <span class="specialty-tag">👶 Atención de Párvulos</span>
+                <span class="specialty-tag" style="background: var(--verde-menta); border-color: #86EFAC;">📊 Contabilidad</span>
+                <span class="specialty-tag">🥫 Elaboración Ind. Alimentos</span>
+                <span class="specialty-tag">⚡ Electrónica</span>
+            </div>
+            <p style="font-size: 0.9rem; font-weight: 700; color: var(--azul-oscuro); margin: 6px 0;">
+                "¡Tu futuro comienza con una buena educación financiera!"
+            </p>
+            <button class="main-btn" onclick="restartGame()">🔄 Volver a Jugar</button>
+            <div class="credits">
+                ✨ Desarrollado por <b>Valeska Romero</b> – Estudiante de la especialidad de Contabilidad
+            </div>
+        </div>
 
-        <!-- Pantalla de Insignias -->
-        <div class="screen" id="screen-badges">
-            <h2 class="welcome-title">🏅 Tus Insignias</h2>
-            <div class="badges-grid" id="badges-grid"></div>
-            <button class="main-btn" onclick="showScreen('screen-welcome')">Volver 🏠</button>
-        </div>
+        <!-- Pantalla de Insignias -->
+        <div class="screen" id="screen-badges">
+            <h2 class="welcome-title">🏅 Tus Insignias</h2>
+            <div class="badges-grid" id="badges-grid"></div>
+            <button class="main-btn" onclick="showScreen('screen-welcome')">Volver 🏠</button>
+        </div>
 
-        <!-- Pantalla de Leaderboard -->
-        <div class="screen" id="screen-leaderboard">
-            <h2 class="welcome-title">🏆 Tabla de Clasificación</h2>
-            <table class="leaderboard-table" id="leaderboard-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Jugador</th>
-                        <th>Puntos</th>
-                        <th>Insignias</th>
-                    </tr>
-                </thead>
-                <tbody id="leaderboard-body"></tbody>
-            </table>
-            <button class="main-btn" onclick="showScreen('screen-welcome')">Volver 🏠</button>
-        </div>
-    </div>
+        <!-- Pantalla de Leaderboard -->
+        <div class="screen" id="screen-leaderboard">
+            <h2 class="welcome-title">🏆 Tabla de Clasificación</h2>
+            <table class="leaderboard-table" id="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Jugador</th>
+                        <th>Puntos</th>
+                        <th>Insignias</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body"></tbody>
+            </table>
+            <button class="main-btn" onclick="showScreen('screen-welcome')">Volver 🏠</button>
+        </div>
+    </div>
 
-    <!-- Scripts en orden correcto de carga -->
-    <script src="rabbit-svg.js"></script>
-    <script src="effects.js"></script>
-    <script src="app.js"></script>
+    <!-- Scripts en orden correcto de carga -->
+    <script src="rabbit-svg.js"></script>
+    <script src="effects.js"></script>
+    <script src="app.js"></script>
 
-    <!-- Registro del Service Worker (PWA) -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
-                    .catch(err => console.error('Error al registrar el Service Worker:', err));
-            });
-        }
-    </script>
+    <!-- Registro del Service Worker (PWA) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+                    .catch(err => console.error('Error al registrar el Service Worker:', err));
+            });
+        }
+    </script>
 </body>
 </html>
+
