@@ -1,46 +1,46 @@
 
 /**
  * ============================================================
- * ContiGame Engine v3.4.2 — Producción
+ * ContiGame Engine v3.5.0 — Producción
  * Lógica del juego, control de estado y flujos financieros
  * Para "ContiLab: Desafío Contable y Financiero"
  * ============================================================
  *
+ * Cambios v3.5.0 sobre v3.4.2:
+ *   - MEJORA: Sistema de niveles bloqueados progresivamente.
+ *     Solo el Nivel 1 está disponible al inicio. Los niveles 2, 3 y 4
+ *     se desbloquean al completar el nivel anterior. El progreso se
+ *     guarda en localStorage.
+ *   - MEJORA: Preguntas de ahorro (ID 2 y ID 7) reemplazadas por
+ *     preguntas de contabilidad a nivel de bachillerato:
+ *       ID 2 (nuevo): Objetivo principal de la contabilidad.
+ *       ID 7 (nuevo): ¿Qué son las cuentas contables?
+ *   - MEJORA: Frase inspiradora en el splash screen durante la carga:
+ *     "El fondo de emergencia no es para ganar dinero; es para comprar tranquilidad."
+ *
  * Cambios v3.4.2 sobre v3.4.1:
  *   - FIX CRÍTICO: El power-up de congelar (❄️) ahora se limpia
- *     correctamente al cambiar de pregunta. Se añadió _freezeTimeout
- *     al estado global para rastrear el setTimeout. loadQuestion(),
- *     nextQuestion(), endLevel() y restartGame() ahora limpian el
- *     timeout y resetean isFrozen = false, evitando que el timer de
- *     la nueva pregunta quede bloqueado por una congelación anterior.
+ *     correctamente al cambiar de pregunta.
+ *   - FIX: _freezeTimeout en estado global.
  *
  * Cambios v3.4.1 sobre v3.4:
  *   - ROBUSTEZ: Limpieza de _boredTimeout en handleCorrectAnswer()
- *     e handleIncorrectAnswer() para evitar que el conejo muestre
- *     animación 'bored' mientras el usuario lee la explicación.
- *   - ROBUSTEZ: El modal de nombre (showNamePromptModal) ahora
- *     se cierra al presionar la tecla Escape, igual que "Omitir".
+ *     e handleIncorrectAnswer().
+ *   - ROBUSTEZ: Modal de nombre cierra con Escape.
  *
  * Cambios v3.4 sobre v3.3:
- *   - FIX CRÍTICO: El temporizador ahora se reinicia correctamente
- *     en cada pregunta. Se fuerza clearInterval() y se restablece
- *     state.timer al valor del nivel actual dentro de startTimer().
- *   - FIX CRÍTICO: nextQuestion() ahora limpia el intervalo antes
- *     de cargar la siguiente pregunta, evitando intervalos múltiples.
- *   - FIX: loadQuestion() asegura state.timerInterval = null después
- *     de cada clearInterval().
+ *   - FIX CRÍTICO: Temporizador se reinicia correctamente en cada pregunta.
+ *   - FIX: nextQuestion() limpia intervalo anterior.
  *
  * Cambios v3.3 sobre v3.2:
  *   - MEJORA PEDAGÓGICA: Propiedad 'hint' independiente en las 46 preguntas.
  *   - MEJORA PEDAGÓGICA: Nueva pregunta ID 411 con haber no imponible.
  *   - MEJORA PEDAGÓGICA: Estado 'sad' eliminado. Growth Mindset.
  *   - MEJORA PEDAGÓGICA: Aclaración de montos netos en preguntas de IVA.
- *   - MEJORA SENSORIAL: Flash blanco en aciertos rápidos, destello score-badge,
- *     sonido+explosión drag táctil, doble confeti en transición.
+ *   - MEJORA SENSORIAL: Flash blanco, destello score-badge, sonido+explosión drag.
  *   - CORRECCIÓN: Muletillas festivas eliminadas del Nivel 1.
  *   - CORRECCIÓN: Error ortográfico "classifies" → "clasifica" (ID 207).
- *   - FIX: clonado profundo, cálculo de estrellas, applyHint, localStorage,
- *     prompt/alert reemplazado, soporte táctil drag.
+ *   - FIX: clonado profundo, cálculo de estrellas, applyHint, localStorage.
  */
 
 // ===== ESTADO GLOBAL =====
@@ -81,7 +81,14 @@ const state = {
         financierPro: false,
         noPowerups: false
     },
-    topicScores: {}
+    topicScores: {},
+    // Niveles desbloqueados (guardados en localStorage)
+    unlockedLevels: {
+        1: true,
+        2: false,
+        3: false,
+        4: false
+    }
 };
 
 // ===== BANCO DE PREGUNTAS =====
@@ -96,12 +103,12 @@ const generalQuestions = [
         points: 100
     },
     {
-        id: 2, topic: 'ahorro', type: 'multiple',
-        question: '¿Cuál es la regla 50/30/20 para ahorrar?',
-        options: ['50% necesidades, 30% deseos, 20% ahorro', '50% ahorro, 30% inversión, 20% gastos', '50% gastos, 30% ahorro, 20% inversión', '50% deseos, 30% necesidades, 20% deudas'],
+        id: 2, topic: 'contabilidad', type: 'multiple',
+        question: '¿Cuál es el objetivo principal de la contabilidad?',
+        options: ['Registrar, clasificar y resumir las operaciones financieras', 'Calcular impuestos exclusivamente', 'Contratar personal para la empresa', 'Diseñar estrategias de marketing'],
         correct: 0,
-        explanation: 'La regla 50/30/20 sugiere destinar 50% a necesidades básicas, 30% a gastos personales y 20% al ahorro.',
-        hint: 'La mitad de tus ingresos debe cubrir lo esencial, y una quinta parte debería reservarse.',
+        explanation: 'La contabilidad tiene como objetivo registrar, clasificar y resumir las operaciones financieras de una entidad para facilitar la toma de decisiones.',
+        hint: 'No se limita solo a impuestos ni a contratación. Piensa en el proceso completo de la información financiera.',
         points: 100
     },
     {
@@ -144,11 +151,12 @@ const generalQuestions = [
         points: 200
     },
     {
-        id: 7, topic: 'inversion', type: 'slider',
-        question: '¿Qué porcentaje de tus ingresos recomiendan los expertos ahorrar mensualmente?',
-        min: 0, max: 50, correctAnswer: 20, tolerance: 5,
-        explanation: 'Los expertos recomiendan ahorrar al menos el 20% de los ingresos mensuales.',
-        hint: 'Según la regla 50/30/20, ¿qué porcentaje se destina al ahorro?',
+        id: 7, topic: 'contabilidad', type: 'multiple',
+        question: '¿Qué son las cuentas contables?',
+        options: ['Registros donde se anotan los aumentos y disminuciones de cada elemento del patrimonio', 'Documentos legales para pagar impuestos', 'Listas de empleados de una empresa', 'Contratos con proveedores'],
+        correct: 0,
+        explanation: 'Las cuentas contables son registros individuales donde se anotan los movimientos (aumentos y disminuciones) de cada elemento del activo, pasivo, patrimonio, ingresos y gastos.',
+        hint: 'Cada elemento del patrimonio tiene su propio registro donde se anotan sus cambios.',
         points: 150
     },
     {
@@ -322,13 +330,58 @@ function playSound(type) {
 
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', () => {
+    loadUnlockedLevels();
     setupSplashScreen();
     loadBadges();
     loadLeaderboard();
     setupPowerups();
     createSpeedBonusToast();
+    updateLevelStatusDisplay();
     if (typeof injectRabbitSVGs === 'function') injectRabbitSVGs();
 });
+
+// ===== SISTEMA DE NIVELES BLOQUEADOS =====
+
+function loadUnlockedLevels() {
+    const saved = safeLocalGet('conti_unlocked_levels', null);
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            state.unlockedLevels = { ...state.unlockedLevels, ...parsed };
+        } catch (e) {
+            console.warn('No se pudo leer niveles desbloqueados, usando valores por defecto.');
+        }
+    }
+}
+
+function saveUnlockedLevels() {
+    safeLocalSet('conti_unlocked_levels', JSON.stringify(state.unlockedLevels));
+}
+
+function unlockNextLevel(currentLevel) {
+    const nextLevel = currentLevel + 1;
+    if (nextLevel <= 4 && !state.unlockedLevels[nextLevel]) {
+        state.unlockedLevels[nextLevel] = true;
+        saveUnlockedLevels();
+        updateLevelStatusDisplay();
+        console.log('🔓 Nivel ' + nextLevel + ' desbloqueado.');
+    }
+}
+
+function updateLevelStatusDisplay() {
+    for (let i = 2; i <= 4; i++) {
+        const statusEl = document.getElementById('status-level-' + i);
+        if (statusEl) {
+            if (state.unlockedLevels[i]) {
+                statusEl.textContent = '✅ Disponible';
+                statusEl.style.color = '#10B981';
+            } else {
+                statusEl.textContent = '🔒 Bloqueado';
+                statusEl.style.color = '#94A3B8';
+            }
+        }
+    }
+}
 
 function createSpeedBonusToast() {
     if (document.getElementById('speed-bonus-toast')) return;
@@ -354,13 +407,6 @@ function triggerVisualCoinsFromElement(element, count = 12) {
 }
 
 function setupSplashScreen() {
-    // El splash screen ahora es controlado por effects.js.
-    // El botón "Iniciar Experiencia" aparece cuando los sonidos están listos.
-    // El usuario debe hacer clic para desbloquear el audio (importante en iOS).
-    // Ya no se oculta automáticamente.
-    
-    // Fallback de seguridad: si después de 15 segundos no aparece el botón,
-    // ocultar el splash screen automáticamente para no bloquear la app.
     const splashScreen = document.getElementById('splash-screen');
     setTimeout(() => {
         if (splashScreen && !splashScreen.classList.contains('hidden')) {
@@ -388,6 +434,7 @@ function showScreen(screenId) {
     }
     if (screenId === 'screen-badges') loadBadges();
     if (screenId === 'screen-leaderboard') loadLeaderboard();
+    if (screenId === 'screen-welcome') updateLevelStatusDisplay();
     if (typeof injectRabbitSVGs === 'function') setTimeout(injectRabbitSVGs, 50);
 }
 
@@ -414,6 +461,12 @@ function startGame() {
 }
 
 function startLevel(levelNum) {
+    // Verificar si el nivel está desbloqueado
+    if (!state.unlockedLevels[levelNum]) {
+        console.warn('Nivel ' + levelNum + ' bloqueado. No se puede iniciar.');
+        return;
+    }
+    
     state.currentLevel = levelNum; state.currentQuestion = 0; state.lives = 3; state.streak = 0;
     state.levelScore = 0; state.isFrozen = false; state.powerupsUsedThisLevel = false; state.levelPerfect = true;
     state.bonusQuestionActive = false; state.correctInLevel = 0;
@@ -444,8 +497,15 @@ function startLevel(levelNum) {
 
 function goToNextLevel() {
     const nextLevel = state.currentLevel + 1;
-    if (nextLevel <= 4) { startLevel(nextLevel); }
-    else { showFinalResults(); }
+    // Verificar si el siguiente nivel está desbloqueado
+    if (nextLevel <= 4 && state.unlockedLevels[nextLevel]) {
+        startLevel(nextLevel);
+    } else if (nextLevel > 4) {
+        showFinalResults();
+    } else {
+        console.warn('Nivel ' + nextLevel + ' bloqueado.');
+        showScreen('screen-welcome');
+    }
 }
 
 function updateLevelDisplay() {
@@ -983,6 +1043,9 @@ function endLevel() {
     const totalQ = state.totalQuestions || 10;
     const starCount = state.levelPerfect ? 3 : (state.correctInLevel >= totalQ * 0.7 ? 2 : 1);
     state.levelStars[state.currentLevel] = starCount;
+    
+    // Desbloquear el siguiente nivel
+    unlockNextLevel(state.currentLevel);
     
     if (state.levelPerfect && state.lives === 3 && !state.badges.perfectScore) {
         state.badges.perfectScore = true;
