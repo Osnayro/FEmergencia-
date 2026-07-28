@@ -1,15 +1,16 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Conti Conti | Desafío Financiero Avanzado</title>
+    <title>ContiLab: Desafío Contable y Financiero</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A2D2FF">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Conti Conti">
+    <meta name="apple-mobile-web-app-title" content="ContiLab">
     <link rel="apple-touch-icon" href="icono-app.PNG">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -17,24 +18,21 @@
     <!-- Canvas para efectos visuales (Partículas de monedas, confeti, alertas) -->
     <canvas id="effects-canvas"></canvas>
 
-    <!-- Splash Screen -->
+    <!-- Splash Screen (Pantalla de carga que desbloquea audio en iOS) -->
     <div id="splash-screen">
-        <div class="splash-content">
-            <img src="logo.jpg" alt="Conti Conti Logo" class="splash-logo" onerror="this.style.display='none'">
-            <img src="conejo-uniforme.PNG" alt="Mascota Conti" class="conejo-uniforme-logo" onerror="this.style.display='none'">
-            <div class="splash-tag">📊 Especialidad de Contabilidad</div>
-            <h1 class="splash-title">
-                Desafío Interactivo:
-                <span class="highlight-red-title">Fondo de Emergencia</span>
-            </h1>
-            <div class="splash-credits-box">
-                <strong>🏆 Desafío de Contabilidad y Finanzas</strong><br>
-                <small>Demuestra tus conocimientos en 4 niveles progresivos</small>
-            </div>
+        <div class="splash-overlay">
+            <h1 class="splash-game-title">ContiLab</h1>
+            <p class="splash-game-subtitle">Desafío Contable y Financiero</p>
+            
+            <!-- Barra de Progreso Visual de Carga -->
             <div class="loader-bar">
                 <div class="loader-fill" id="loader-fill"></div>
             </div>
-            <button class="skip-splash-btn" id="skip-splash-btn">Iniciar Ahora ⚡</button>
+            
+            <!-- Botón para desbloquear audio y entrar al juego -->
+            <button class="skip-splash-btn pulse-ready" id="skip-splash-btn" style="display: none;">
+                ¡Iniciar Experiencia! ⚡
+            </button>
         </div>
     </div>
 
@@ -51,7 +49,6 @@
             <div class="progress-container">
                 <div class="progress-fill" id="progress-fill"></div>
             </div>
-            <!-- El score-badge servirá como punto de destino para las animaciones de monedas -->
             <div class="score-badge" id="score-badge">⭐ 0 pts</div>
             <div class="lives-display" id="lives-display">❤️❤️❤️</div>
             <div class="streak-display" id="streak-display">🔥 0</div>
@@ -124,7 +121,7 @@
                     Clasificación 🏆
                 </button>
             </div>
-            <p class="credits">Desarrollado por Romeroweb | v5.0</p>
+            <p class="credits">Desarrollado por Romeroweb | v5.2</p>
         </div>
 
         <!-- Pantalla de Pregunta -->
@@ -151,22 +148,18 @@
                 <div class="rabbit-svg-container"></div>
                 <div class="character-speech" id="transition-speech">¡Excelente! Has completado el nivel 🎉</div>
             </div>
-
             <h2 class="welcome-title" id="transition-title">🟢 Nivel Completado</h2>
-            
             <div class="share-card">
                 <div class="share-label">Puntuación del nivel</div>
                 <div class="share-score" id="level-score-display">0</div>
                 <div class="share-label">puntos</div>
                 <div id="level-stars"></div>
             </div>
-
             <div class="teacher-tribute-card">
                 <div class="teacher-tribute-text">
                     🌟 "La excelencia de la especialidad de Contabilidad se refleja en el compromiso, la dedicación y la calidad profesional de sus profesoras, quienes inspiran a sus estudiantes a dar siempre lo mejor de sí." ✨
                 </div>
             </div>
-
             <button class="main-btn pulse-ready" id="btn-next-level" onclick="goToNextLevel()">
                 Siguiente Nivel ➡️
             </button>
@@ -202,23 +195,19 @@
             <div style="text-align: center; margin-bottom: 10px;">
                 <img src="conejo-uniforme.PNG" alt="Conti Conti" style="max-height: 100px;" onerror="this.style.display='none';">
             </div>
-
             <div class="info-card">
                 💡 <b>La Contabilidad en tu Vida Diaria:</b><br>
                 La contabilidad no solo se utiliza en las empresas. También nos ayuda a organizar nuestros ingresos, controlar nuestros gastos, ahorrar y prepararnos para enfrentar imprevistos mediante herramientas como el fondo de emergencia.
             </div>
-
             <div class="info-card" style="border-left-color: #10B981; background: #F0FDF4;">
                 📊 <b>¡Conoce la especialidad de Contabilidad!</b><br>
                 Si te interesa aprender a administrar el dinero, comprender cómo funcionan las empresas y desarrollar habilidades útiles para tu futuro, ¡te invitamos a conocer nuestra especialidad!
             </div>
-
             <div class="teacher-tribute-card">
                 <div class="teacher-tribute-text">
                     🌟 "La excelencia de la especialidad de Contabilidad se refleja en el compromiso, la dedicación y la calidad profesional de sus profesoras, quienes inspiran a sus estudiantes a dar siempre lo mejor de sí." ✨
                 </div>
             </div>
-
             <p style="font-size: 0.82rem; font-weight: 700; color: var(--gris-texto); margin-top: 2px;">Especialidades de nuestro colegio:</p>
             <div class="specialty-list">
                 <span class="specialty-tag">🍳 Gastronomía</span>
@@ -227,13 +216,10 @@
                 <span class="specialty-tag">🥫 Elaboración Ind. Alimentos</span>
                 <span class="specialty-tag">⚡ Electrónica</span>
             </div>
-
             <p style="font-size: 0.9rem; font-weight: 700; color: var(--azul-oscuro); margin: 6px 0;">
                 "¡Tu futuro comienza con una buena educación financiera!"
             </p>
-
             <button class="main-btn" onclick="restartGame()">🔄 Volver a Jugar</button>
-
             <div class="credits">
                 ✨ Desarrollado por <b>Valeska Romero</b> – Estudiante de la especialidad de Contabilidad
             </div>
