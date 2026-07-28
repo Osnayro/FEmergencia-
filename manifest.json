@@ -1,7 +1,7 @@
 
 {
-    "name": "Conti Conti - Desafío Financiero",
-    "short_name": "Conti Conti",
+    "name": "ContiChallenge - Desafío contable i  Financiero",
+    "short_name": "ContiChallenge",
     "description": "Aplicación educativa interactiva para aprender contabilidad y finanzas de forma divertida",
     "start_url": "/",
     "display": "standalone",
