@@ -3,7 +3,7 @@
  * ============================================================
  * ContiGame Engine v3.4.2 — Producción
  * Lógica del juego, control de estado y flujos financieros
- * Para "Conti Conti - Desafío Financiero"
+ * Para "ContiLab: Desafío Contable y Financiero"
  * ============================================================
  *
  * Cambios v3.4.2 sobre v3.4.1:
@@ -354,10 +354,20 @@ function triggerVisualCoinsFromElement(element, count = 12) {
 }
 
 function setupSplashScreen() {
-    const skipBtn = document.getElementById('skip-splash-btn');
+    // El splash screen ahora es controlado por effects.js.
+    // El botón "Iniciar Experiencia" aparece cuando los sonidos están listos.
+    // El usuario debe hacer clic para desbloquear el audio (importante en iOS).
+    // Ya no se oculta automáticamente.
+    
+    // Fallback de seguridad: si después de 15 segundos no aparece el botón,
+    // ocultar el splash screen automáticamente para no bloquear la app.
     const splashScreen = document.getElementById('splash-screen');
-    setTimeout(() => { if (splashScreen && !splashScreen.classList.contains('hidden')) splashScreen.classList.add('hidden'); }, 6000);
-    if (skipBtn) skipBtn.addEventListener('click', () => splashScreen.classList.add('hidden'));
+    setTimeout(() => {
+        if (splashScreen && !splashScreen.classList.contains('hidden')) {
+            console.warn('⏰ Fallback: Splash screen ocultado por timeout de seguridad.');
+            splashScreen.classList.add('hidden');
+        }
+    }, 15000);
 }
 
 function setupPowerups() {
@@ -569,7 +579,6 @@ function loadQuestion() {
     clearInterval(state.timerInterval);
     state.timerInterval = null;
     if (state._boredTimeout) clearTimeout(state._boredTimeout);
-    // Resetear estado de congelación al cambiar de pregunta
     if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
     state._freezeTimeout = null;
     state.isFrozen = false;
@@ -953,7 +962,6 @@ function showFeedback(message, type) {
 function nextQuestion() {
     clearInterval(state.timerInterval);
     state.timerInterval = null;
-    // Resetear estado de congelación al avanzar de pregunta
     state.isFrozen = false;
     if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
     state._freezeTimeout = null;
@@ -968,7 +976,6 @@ function endLevel() {
     clearInterval(state.timerInterval);
     state.timerInterval = null;
     if (state._boredTimeout) clearTimeout(state._boredTimeout);
-    // Resetear estado de congelación al terminar nivel
     if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
     state._freezeTimeout = null;
     state.isFrozen = false;
@@ -1431,9 +1438,9 @@ function loadLeaderboard() {
 
 // ===== COMPARTIR =====
 function shareResults() {
-    const text = `🎉 ¡Acabo de conseguir ${state.score} puntos en Conti Conti Desafío Financiero! ¿Puedes superarme? 🏆`;
+    const text = `🎉 ¡Acabo de conseguir ${state.score} puntos en ContiLab: Desafío Contable y Financiero! ¿Puedes superarme? 🏆`;
     if (navigator.share) {
-        navigator.share({ title: 'Conti Conti', text, url: window.location.href }).catch(() => {});
+        navigator.share({ title: 'ContiLab', text, url: window.location.href }).catch(() => {});
     } else {
         navigator.clipboard.writeText(text).then(() => {
             if (window.effectsManager) {
