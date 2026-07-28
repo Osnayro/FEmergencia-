@@ -1,15 +1,16 @@
 
-
-const CACHE_NAME = 'conti-conti-v1';
+const CACHE_NAME = 'contichallenge-v1';
 const urlsToCache = [
     '/',
     'index.html',
     'styles.css',
     'app.js',
+    'effects.js',
+    'rabbit-svg.js',
     'manifest.json',
-    'logo.svg',
-    'conejo-uniforme.svg',
-    'icono-app.PNG'
+    'icono-app.PNG',
+    'conejo-uniforme.PNG',
+    'logo-colegio.jpg'
 ];
 
 // Instalar Service Worker
