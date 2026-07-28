@@ -4,7 +4,7 @@
  * rabbit-svg.js v2.0 — Conejo Conti Conti Rediseñado
  * Orejas articuladas (2 segmentos), rostro expresivo,
  * cuerpo redondeado tipo "peluche adorable".
- * Para "Conti Conti - Desafío Financiero"
+ * Para "ContiLab: Desafío Contable y Financiero"
  * ============================================================
  *
  * NOVEDADES v2.0:
