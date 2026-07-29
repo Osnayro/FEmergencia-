@@ -1,25 +1,29 @@
 
 /**
  * ============================================================
- * ContiEffectsManager v5.3.0 — Producción
+ * ContiEffectsManager v5.3.1 — Producción
  * Efectos visuales (Canvas 2D) + Sonidos (pistas MP3 + síntesis) + Toasts
  * Para "ContiChallenge: Desafío Contable y Financiero"
  * ============================================================
  *
+ * Novedades v5.3.1 sobre v5.3.0:
+ *   - MEJORA: playTick() simplificado. Eliminadas 4 de las 5 capas
+ *     de síntesis (ring mod, cuerpo resonante, ruido, armónico agudo).
+ *     Ahora es un click seco y percusivo de ~50ms con un solo
+ *     oscilador square 1800→800Hz. Ideal para sonido de urgencia
+ *     repetitivo. Reduce ~90% el uso de CPU por tick.
+ *
  * Novedades v5.3.0 sobre v5.2.1:
  *   - FIX iOS: AudioContext global unificado para playTick().
- *   - FIX iOS: Respaldo playIncorrectFallback() para cuando se agota
- *     el tiempo sin gesto del usuario. Estrategia de 3 capas:
- *       1. Nuevo Audio('sounds/incorrect.mp3')
- *       2. Síntesis con AudioContext global (_playIncorrectWithAudioContext)
- *       3. Silencio (el juego continúa)
- *   - NUEVO: Método initGlobalAudio() para inicializar el AudioContext.
- *   - MEJORA: _showSplashButton() ahora muestra el botón en estado "ready"
- *     (verde) con animación de titilado hasta que los recursos se cargan.
+ *   - FIX iOS: Respaldo playIncorrectFallback().
+ *   - NUEVO: Método initGlobalAudio().
+ *   - MEJORA: _showSplashButton() con botón verde "ready".
  *
  * Estructura de archivos requerida:
  *   /sounds/splash.mp3, correct.mp3, incorrect.mp3, levelup.mp3,
  *   levelstart.mp3, achievement.mp3, powerup.mp3, coin.mp3, explosion.mp3
+ *
+ * Nota: tick se genera por síntesis en playTick(). No requiere archivo.
  */
 
 class ContiEffectsManager {
@@ -81,7 +85,7 @@ class ContiEffectsManager {
         this.startLoop();
         this._preloadSounds();
 
-        console.log('🎨 ContiEffectsManager v5.3.0 listo | Partículas máx:', this.maxParticles, '| Volumen:', this.masterVolume, '| Audio: MP3 + Síntesis tick + Respaldo iPhone');
+        console.log('🎨 ContiEffectsManager v5.3.1 listo | Partículas máx:', this.maxParticles, '| Volumen:', this.masterVolume, '| Audio: MP3 + Tick simplificado + Respaldo iPhone');
     }
 
     // ================================================================
@@ -300,9 +304,7 @@ class ContiEffectsManager {
         const skipBtn = document.getElementById('skip-splash-btn');
         const splashScreen = document.getElementById('splash-screen');
         
-        if (loaderFill) {
-            loaderFill.style.width = '100%';
-        }
+        if (loaderFill) loaderFill.style.width = '100%';
         
         if (loaderLabel) {
             loaderLabel.textContent = '¡Listo! Todos los recursos cargados.';
@@ -317,9 +319,7 @@ class ContiEffectsManager {
             skipBtn.addEventListener('click', () => {
                 this.initGlobalAudio();
                 this.playSound('splash');
-                if (splashScreen) {
-                    splashScreen.classList.add('hidden');
-                }
+                if (splashScreen) splashScreen.classList.add('hidden');
             }, { once: true });
         }
     }
@@ -398,105 +398,36 @@ class ContiEffectsManager {
         osc.stop(now + 0.5);
     }
 
+    /**
+     * v5.3.1: Tick de reloj simplificado.
+     * Click seco y percusivo de ~50ms. Un solo oscilador square
+     * con barrido descendente 1800→800Hz. Ideal para sonido de
+     * urgencia repetitivo. Reduce ~90% el uso de CPU vs v5.3.0.
+     */
     playTick() {
         if (!this.audioCtxReady || !this.audioCtx) return;
         if (this.audioCtx.state === 'suspended') { this.audioCtx.resume(); return; }
+        
         const ctx = this.audioCtx;
         const now = ctx.currentTime;
         const vol = this.masterVolume;
-        const masterGain = ctx.createGain();
-        masterGain.gain.value = 1.0;
 
-        const compressor = ctx.createDynamicsCompressor();
-        compressor.threshold.setValueAtTime(-24, now);
-        compressor.knee.setValueAtTime(6, now);
-        compressor.ratio.setValueAtTime(12, now);
-        compressor.attack.setValueAtTime(0.003, now);
-        compressor.release.setValueAtTime(0.080, now);
-        compressor.connect(masterGain);
-        masterGain.connect(ctx.destination);
-
-        const oscClick = ctx.createOscillator();
-        const gainClick = ctx.createGain();
-        oscClick.type = 'sine';
-        oscClick.frequency.setValueAtTime(4500, now);
-        oscClick.frequency.exponentialRampToValueAtTime(2200, now + 0.060);
-        gainClick.gain.setValueAtTime(0.00001, now);
-        gainClick.gain.exponentialRampToValueAtTime(0.45 * vol, now + 0.0005);
-        gainClick.gain.exponentialRampToValueAtTime(0.00001, now + 0.080);
-        oscClick.connect(gainClick);
-        gainClick.connect(compressor);
-
-        const oscRing = ctx.createOscillator();
-        const gainRing = ctx.createGain();
-        const ringMod = ctx.createOscillator();
-        const gainRingMod = ctx.createGain();
-        oscRing.type = 'triangle';
-        oscRing.frequency.setValueAtTime(820, now);
-        oscRing.frequency.exponentialRampToValueAtTime(650, now + 0.150);
-        ringMod.type = 'sine';
-        ringMod.frequency.setValueAtTime(45, now);
-        gainRingMod.gain.setValueAtTime(0.3, now);
-        gainRing.gain.setValueAtTime(0.00001, now);
-        gainRing.gain.exponentialRampToValueAtTime(0.18 * vol, now + 0.002);
-        gainRing.gain.exponentialRampToValueAtTime(0.00001, now + 0.200);
-        ringMod.connect(gainRingMod);
-        gainRingMod.connect(gainRing.gain);
-        oscRing.connect(gainRing);
-        gainRing.connect(compressor);
-
-        const oscBody = ctx.createOscillator();
-        const gainBody = ctx.createGain();
-        oscBody.type = 'sine';
-        oscBody.frequency.setValueAtTime(110, now);
-        oscBody.frequency.exponentialRampToValueAtTime(95, now + 0.300);
-        gainBody.gain.setValueAtTime(0.00001, now);
-        gainBody.gain.exponentialRampToValueAtTime(0.22 * vol, now + 0.005);
-        gainBody.gain.exponentialRampToValueAtTime(0.00001, now + 0.320);
-        oscBody.connect(gainBody);
-        gainBody.connect(compressor);
-
-        const bufferSize = Math.floor(ctx.sampleRate * 0.050);
-        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-            data[i] = ((Math.random() * 2 - 1) + (Math.random() * 2 - 1)) * 0.25;
-        }
-        const noise = ctx.createBufferSource();
-        noise.buffer = noiseBuffer;
-        const noiseFilter = ctx.createBiquadFilter();
-        noiseFilter.type = 'bandpass';
-        noiseFilter.frequency.setValueAtTime(6200, now);
-        noiseFilter.Q.value = 2.5;
-        const gainNoise = ctx.createGain();
-        gainNoise.gain.setValueAtTime(0.00001, now);
-        gainNoise.gain.exponentialRampToValueAtTime(0.12 * vol, now + 0.0005);
-        gainNoise.gain.exponentialRampToValueAtTime(0.00001, now + 0.040);
-        noise.connect(noiseFilter);
-        noiseFilter.connect(gainNoise);
-        gainNoise.connect(compressor);
-
-        const oscHarm = ctx.createOscillator();
-        const gainHarm = ctx.createGain();
-        oscHarm.type = 'sine';
-        oscHarm.frequency.setValueAtTime(9000, now);
-        oscHarm.frequency.exponentialRampToValueAtTime(7000, now + 0.030);
-        gainHarm.gain.setValueAtTime(0.00001, now);
-        gainHarm.gain.exponentialRampToValueAtTime(0.08 * vol, now + 0.001);
-        gainHarm.gain.exponentialRampToValueAtTime(0.00001, now + 0.050);
-        oscHarm.connect(gainHarm);
-        gainHarm.connect(compressor);
-
-        oscClick.start(now); oscClick.stop(now + 0.100);
-        oscRing.start(now); oscRing.stop(now + 0.220);
-        ringMod.start(now); ringMod.stop(now + 0.220);
-        oscBody.start(now); oscBody.stop(now + 0.350);
-        noise.start(now); noise.stop(now + 0.050);
-        oscHarm.start(now); oscHarm.stop(now + 0.060);
-
-        masterGain.gain.setValueAtTime(1.0, now);
-        masterGain.gain.setValueAtTime(1.0, now + 0.350);
-        masterGain.gain.linearRampToValueAtTime(0.00001, now + 0.400);
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(1800, now);
+        osc.frequency.exponentialRampToValueAtTime(800, now + 0.03);
+        
+        gain.gain.setValueAtTime(0.00001, now);
+        gain.gain.exponentialRampToValueAtTime(0.3 * vol, now + 0.002);
+        gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.050);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start(now);
+        osc.stop(now + 0.055);
     }
 
     ensureAudio() { return; }
