@@ -3,7 +3,7 @@
  * ============================================================
  * ContiEffectsManager v5.3.0 — Producción
  * Efectos visuales (Canvas 2D) + Sonidos (pistas MP3 + síntesis) + Toasts
- * Para "ContiLab: Desafío Contable y Financiero"
+ * Para "ContiChallenge: Desafío Contable y Financiero"
  * ============================================================
  *
  * Novedades v5.3.0 sobre v5.2.1:
@@ -13,8 +13,9 @@
  *       1. Nuevo Audio('sounds/incorrect.mp3')
  *       2. Síntesis con AudioContext global (_playIncorrectWithAudioContext)
  *       3. Silencio (el juego continúa)
- *   - NUEVO: Método initGlobalAudio() para inicializar el AudioContext
- *     global de forma segura y compatible con iOS.
+ *   - NUEVO: Método initGlobalAudio() para inicializar el AudioContext.
+ *   - MEJORA: _showSplashButton() ahora muestra el botón en estado "ready"
+ *     (verde) con animación de titilado hasta que los recursos se cargan.
  *
  * Estructura de archivos requerida:
  *   /sounds/splash.mp3, correct.mp3, incorrect.mp3, levelup.mp3,
@@ -295,15 +296,30 @@ class ContiEffectsManager {
 
     _showSplashButton() {
         const loaderFill = document.getElementById('loader-fill');
+        const loaderLabel = document.getElementById('loader-label');
         const skipBtn = document.getElementById('skip-splash-btn');
         const splashScreen = document.getElementById('splash-screen');
-        if (loaderFill) loaderFill.style.width = '100%';
+        
+        if (loaderFill) {
+            loaderFill.style.width = '100%';
+        }
+        
+        if (loaderLabel) {
+            loaderLabel.textContent = '¡Listo! Todos los recursos cargados.';
+            loaderLabel.style.color = '#10B981';
+        }
+        
         if (skipBtn) {
-            skipBtn.style.display = 'block';
+            skipBtn.style.display = 'flex';
+            skipBtn.classList.add('ready');
+            skipBtn.disabled = false;
+            
             skipBtn.addEventListener('click', () => {
                 this.initGlobalAudio();
                 this.playSound('splash');
-                if (splashScreen) splashScreen.classList.add('hidden');
+                if (splashScreen) {
+                    splashScreen.classList.add('hidden');
+                }
             }, { once: true });
         }
     }
