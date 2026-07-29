@@ -37,7 +37,6 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-/* ===== ACCESIBILIDAD DE TECLADO ===== */
 :focus-visible {
     outline: 3px solid var(--foco-anillo);
     outline-offset: 2px;
@@ -78,17 +77,12 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-image: url('conejo-uniforme.PNG');
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-color: #A2D2FF;
+    background: linear-gradient(135deg, #E8F1F5 0%, #A2D2FF 50%, #B8E9C0 100%);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    text-align: center;
     padding: 20px;
     transition: opacity 0.8s ease, visibility 0.8s;
 }
@@ -99,82 +93,171 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     pointer-events: none;
 }
 
-/* Capa semitransparente sobre el fondo */
-.splash-overlay {
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    padding: 40px 30px;
-    border-radius: 24px;
-    max-width: 420px;
+.splash-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    max-width: 800px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 28px;
+    padding: 35px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+    animation: zoomIn 0.6s ease-out;
+}
+
+.splash-image {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.splash-character-img {
+    max-height: 320px;
+    max-width: 280px;
+    object-fit: contain;
+    filter: drop-shadow(0px 10px 25px rgba(0, 0, 0, 0.2));
+    animation: float 3s infinite ease-in-out;
+}
+
+.splash-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    min-width: 280px;
+}
+
+.splash-app-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--azul-oscuro);
+    letter-spacing: 1px;
+    margin: 0;
+    line-height: 1.1;
+}
+
+.splash-app-subtitle {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--texto-secundario);
+    margin: 0;
+}
+
+.splash-loader-container {
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-    animation: zoomIn 0.6s ease-out;
+    gap: 8px;
 }
 
-/* Título del juego */
-.splash-game-title {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: var(--azul-oscuro);
-    margin-bottom: 4px;
-    letter-spacing: 1px;
-}
-
-/* Subtítulo */
-.splash-game-subtitle {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--texto-secundario);
-    margin-bottom: 24px;
-}
-
-/* Barra de progreso */
-.loader-bar {
+.splash-loader-bar {
     width: 100%;
-    height: 8px;
+    height: 10px;
     background: #E2E8F0;
     border-radius: 10px;
     overflow: hidden;
-    margin-bottom: 20px;
 }
 
-.loader-fill {
+.splash-loader-fill {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #3B82F6, #10B981);
-    transition: width 0.3s ease;
+    background: linear-gradient(90deg, #10B981, #34D399);
+    border-radius: 10px;
+    transition: width 0.4s ease;
 }
 
-/* Botón de iniciar */
-.skip-splash-btn {
-    background: linear-gradient(135deg, #2563EB, #1D4ED8);
-    color: white;
-    border: none;
-    padding: 14px 32px;
-    font-size: 1.1rem;
+.splash-loader-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #94A3B8;
+    transition: color 0.3s ease;
+}
+
+.splash-start-btn {
+    width: 100%;
+    padding: 15px 28px;
+    font-size: 1.05rem;
     font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+    border: none;
     border-radius: 50px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
-    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+    background: #94A3B8;
+    color: white;
+    box-shadow: 0 4px 15px rgba(148, 163, 184, 0.3);
+    animation: splashBtnPulse 1.5s infinite ease-in-out;
 }
 
-.skip-splash-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(37, 99, 235, 0.5);
+.splash-start-btn.ready {
+    background: linear-gradient(135deg, #10B981, #059669);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    animation: none;
 }
 
-.skip-splash-btn:active {
+.splash-start-btn.ready:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.5);
+}
+
+.splash-start-btn.ready:active {
     transform: scale(0.96);
 }
 
-.skip-splash-btn.pulse-ready {
-    animation: btnPulse 1.2s infinite ease-in-out;
+.splash-start-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.splash-start-btn.ready:disabled {
+    cursor: pointer;
+    opacity: 1;
+}
+
+.splash-btn-text {
+    position: relative;
+    z-index: 1;
+}
+
+.splash-btn-icon {
+    font-size: 1.3rem;
+    position: relative;
+    z-index: 1;
+    animation: splashIconBounce 0.6s infinite ease-in-out;
+}
+
+.splash-start-btn.ready .splash-btn-icon {
+    animation: none;
+}
+
+@keyframes splashBtnPulse {
+    0%, 100% { 
+        box-shadow: 0 4px 15px rgba(148, 163, 184, 0.3);
+        background: #94A3B8;
+    }
+    50% { 
+        box-shadow: 0 4px 25px rgba(148, 163, 184, 0.6);
+        background: #A8B5C4;
+    }
+}
+
+@keyframes splashIconBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
 }
 
 /* ===== APP CARD ===== */
@@ -362,7 +445,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     transition: filter 0.3s ease;
 }
 
-/* --- Base de orejas (anclada, se mueve poco) --- */
 .ear-base {
     transform-origin: center center;
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -372,7 +454,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     transition: fill 0.4s ease;
 }
 
-/* --- Punta de oreja (móvil, se dobla) --- */
 .ear-tip-group {
     transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -381,12 +462,10 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     transition: fill 0.4s ease;
 }
 
-/* --- Boca (transición suave entre expresiones) --- */
 .mouth {
     transition: d 0.35s ease;
 }
 
-/* --- Mejillas (transición de opacidad) --- */
 .cheek {
     transition: opacity 0.35s ease, fill 0.35s ease;
 }
@@ -395,7 +474,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
    ESTADOS DEL CONEJO
    ================================================================ */
 
-/* --- PENSANDO (default) --- */
 .rabbit-svg.thinking .ear-tip-group-left {
     animation: earTipThink 1.2s infinite ease-in-out;
 }
@@ -403,7 +481,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     animation: earTipThink 1.2s infinite ease-in-out 0.6s;
 }
 
-/* --- CORRECTO (orejas se levantan, puntas brillan) --- */
 .rabbit-svg.correct .ear-tip-group-left {
     transform: rotate(-25deg) translateY(-4px);
 }
@@ -430,7 +507,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     fill: #FFAB91;
 }
 
-/* --- INCORRECTO (puntas caen, orejas se aplanan, triste) --- */
 .rabbit-svg.incorrect .ear-tip-group-left {
     transform: rotate(55deg) translateY(8px);
 }
@@ -458,7 +534,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     d: path("M65 77 Q70 72 75 77");
 }
 
-/* --- NERVIOSO --- */
 .rabbit-svg.nervous .ear-tip-group-left {
     animation: earTipShake 0.12s infinite ease-in-out;
 }
@@ -472,7 +547,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     filter: drop-shadow(0px 8px 14px rgba(255,0,0,0.2));
 }
 
-/* --- ABURRIDO --- */
 .rabbit-svg.bored .ear-tip-group-left {
     transform: rotate(40deg) translateY(6px);
 }
@@ -483,7 +557,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     fill: #E2E8F0 !important;
 }
 
-/* --- IMPRESIONADO (estrellas en ojos) --- */
 .rabbit-svg.impressed .ear-tip-group-left {
     animation: earTipHelicopter 0.25s infinite linear;
 }
@@ -500,7 +573,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     d: path("M62 73 Q70 83 78 73");
 }
 
-/* --- TRISTE (lágrimas) --- */
 .rabbit-svg.sad .ear-tip-group-left {
     transform: rotate(60deg) translateY(10px);
 }
@@ -528,7 +600,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     d: path("M66 78 Q70 71 74 78");
 }
 
-/* --- CELEBRANDO --- */
 .rabbit-svg.celebrating .ear-tip-group-left {
     animation: earTipWave 0.35s ease-in-out 4;
 }
@@ -543,7 +614,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     fill: #FFD700 !important;
 }
 
-/* --- PENSANDO PROFUNDO --- */
 .rabbit-svg.deep-think .ear-tip-group-left {
     transform: rotate(-30deg) translateX(-4px);
 }
@@ -555,7 +625,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     animation: questionFloat 1.5s infinite ease-in-out;
 }
 
-/* --- CONFIADO (gafas) --- */
 .rabbit-svg.confident .ear-tip-group-left {
     transform: rotate(-30deg) translateY(-6px);
 }
@@ -566,7 +635,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     opacity: 1;
 }
 
-/* --- CONGELADO --- */
 .rabbit-svg.frozen .ear-tip-group-left {
     transform: rotate(-12deg);
 }
@@ -585,7 +653,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     opacity: 1;
 }
 
-/* --- DETERMINADO (fuego en ojos) --- */
 .rabbit-svg.determined .ear-tip-group-left {
     transform: rotate(-40deg) translateX(-6px);
 }
@@ -600,7 +667,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     d: path("M64 74 Q70 78 76 74");
 }
 
-/* --- GRADUACIÓN --- */
 .rabbit-svg.graduate .ear-tip-group-left {
     transform: rotate(-18deg) translateY(-8px);
 }
@@ -1180,7 +1246,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     font-size: 0.8rem;
 }
 
-/* Star rating */
 .star-rating {
     display: flex;
     gap: 4px;
@@ -1353,7 +1418,7 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     transform: translateX(-50%) translateY(-100px);
 }
 
-/* ===== TOASTS (reemplazo de alert) ===== */
+/* ===== TOASTS ===== */
 #toast-container {
     position: fixed;
     left: 50%;
@@ -1369,7 +1434,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
    KEYFRAMES
    ================================================================ */
 
-/* --- Orejas articuladas (nuevos) --- */
 @keyframes earTipThink {
     0%, 100% { transform: rotate(-8deg); }
     50% { transform: rotate(-20deg); }
@@ -1430,7 +1494,6 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     50% { r: 3.8; }
 }
 
-/* --- Generales (conservados) --- */
 @keyframes loadProgress {
     0% { width: 0%; }
     100% { width: 100%; }
@@ -1553,6 +1616,22 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
     100% { opacity: 0; transform: translateY(-30px) scale(0.9); }
 }
 
+@keyframes splashBtnPulse {
+    0%, 100% { 
+        box-shadow: 0 4px 15px rgba(148, 163, 184, 0.3);
+        background: #94A3B8;
+    }
+    50% { 
+        box-shadow: 0 4px 25px rgba(148, 163, 184, 0.6);
+        background: #A8B5C4;
+    }
+}
+
+@keyframes splashIconBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
 /* ===== ACCESSIBILITY ===== */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -1570,12 +1649,19 @@ body.level-4 { background: linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 100%); }
         border-radius: 20px;
     }
     
-    .splash-overlay {
-        padding: 30px 20px;
+    .splash-container {
+        flex-direction: column;
+        gap: 20px;
+        padding: 25px 20px;
     }
     
-    .splash-game-title {
-        font-size: 1.8rem;
+    .splash-character-img {
+        max-height: 200px;
+        max-width: 180px;
+    }
+    
+    .splash-app-title {
+        font-size: 1.6rem;
     }
     
     .welcome-title {
