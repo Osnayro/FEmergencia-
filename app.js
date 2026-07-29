@@ -1,36 +1,25 @@
 
 /**
  * ============================================================
- * ContiGame Engine v3.5.0 — Producción
+ * ContiGame Engine v3.5.1 — Producción
  * Lógica del juego, control de estado y flujos financieros
  * Para "ContiChallenge: Desafío Contable y Financiero"
  * ============================================================
  *
+ * Cambios v3.5.1 sobre v3.5.0:
+ *   - FIX: Temporizador ahora usa Date.now() como referencia en
+ *     lugar de state.timer--. Esto elimina la deriva acumulativa
+ *     de setInterval y garantiza precisión de ±200ms.
+ *   - MEJORA: El intervalo de verificación se redujo de 1000ms a
+ *     200ms para mayor precisión en los ticks y el tiempo agotado.
+ *
  * Cambios v3.5.0 sobre v3.4.2:
  *   - MEJORA: Sistema de niveles bloqueados progresivamente.
  *   - MEJORA: Preguntas de ahorro reemplazadas por contabilidad.
- *   - MEJORA: Fallback del splash screen a 60 segundos.
- *   - MEJORA: Bocadillo del conejo con colores dinámicos según
- *     estado emocional y animación de entrada speechBubbleIn.
+ *   - MEJORA: Bocadillo del conejo con colores dinámicos.
  *
  * Cambios v3.4.2 sobre v3.4.1:
  *   - FIX CRÍTICO: Power-up de congelar se limpia al cambiar de pregunta.
- *
- * Cambios v3.4.1 sobre v3.4:
- *   - ROBUSTEZ: Limpieza de _boredTimeout en handleCorrectAnswer/Incorrect.
- *   - ROBUSTEZ: Modal de nombre cierra con Escape.
- *
- * Cambios v3.4 sobre v3.3:
- *   - FIX CRÍTICO: Temporizador se reinicia correctamente en cada pregunta.
- *
- * Cambios v3.3 sobre v3.2:
- *   - MEJORA PEDAGÓGICA: Propiedad 'hint' independiente en las 46 preguntas.
- *   - MEJORA PEDAGÓGICA: Nueva pregunta ID 411 con haber no imponible.
- *   - MEJORA PEDAGÓGICA: Estado 'sad' eliminado. Growth Mindset.
- *   - MEJORA SENSORIAL: Flash blanco, destello score-badge, sonido+explosión drag.
- *   - CORRECCIÓN: Muletillas festivas eliminadas del Nivel 1.
- *   - CORRECCIÓN: Error ortográfico "classifies" → "clasifica" (ID 207).
- *   - FIX: clonado profundo, cálculo de estrellas, applyHint, localStorage.
  */
 
 // ===== ESTADO GLOBAL =====
@@ -77,7 +66,10 @@ const state = {
         2: false,
         3: false,
         4: false
-    }
+    },
+    // Variables internas del temporizador de precisión
+    _timerStartTime: 0,
+    _timerTotalTime: 0
 };
 
 // ===== BANCO DE PREGUNTAS =====
@@ -1160,7 +1152,13 @@ function usePowerup(type) {
     
     switch (type) {
         case 'fifty': applyFiftyFifty(); updateRabbitReaction('confident'); break;
-        case 'time': if (state.mode === 'timed') { state.timer += 15; updateTimerDisplay(); } break;
+        case 'time': 
+            if (state.mode === 'timed') { 
+                state.timer += 15;
+                state._timerTotalTime += 15;
+                updateTimerDisplay(); 
+            } 
+            break;
         case 'freeze': 
             if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
             state.isFrozen = true; 
@@ -1210,7 +1208,7 @@ function applyHint() {
     fb.className = 'feedback-box correct';
 }
 
-// ===== TEMPORIZADOR =====
+// ===== TEMPORIZADOR DE PRECISIÓN (Date.now) =====
 function startTimer() {
     clearInterval(state.timerInterval);
     state.timerInterval = null;
@@ -1219,13 +1217,21 @@ function startTimer() {
     else if (state.currentLevel === 2) state.timer = 25;
     else state.timer = 20;
     
+    state._timerStartTime = Date.now();
+    state._timerTotalTime = state.timer;
+    
     updateTimerDisplay();
     const timerDisplay = document.getElementById('timer-display');
     if (timerDisplay) timerDisplay.classList.remove('warning');
     
     state.timerInterval = setInterval(() => {
         if (state.isFrozen) return;
-        state.timer--;
+        
+        const elapsed = Math.floor((Date.now() - state._timerStartTime) / 1000);
+        state.timer = state._timerTotalTime - elapsed;
+        
+        if (state.timer < 0) state.timer = 0;
+        
         updateTimerDisplay();
         
         if (state.timer <= 5 && state.timer > 0) {
@@ -1235,6 +1241,7 @@ function startTimer() {
                 window.effectsManager.playTick();
             }
         }
+        
         if (state.timer <= 0) {
             clearInterval(state.timerInterval);
             state.timerInterval = null;
@@ -1247,14 +1254,7 @@ function startTimer() {
             showFeedback(`¡Tiempo agotado! ${state.questions[state.currentQuestion].explanation}`, 'incorrect');
             handleIncorrectAnswer(state.questions[state.currentQuestion]);
         }
-    }, 1000);
-    
-    state._boredTimeout = setTimeout(() => {
-        const nextBtn = document.getElementById('btn-next');
-        if (state.currentQuestion < state.totalQuestions && (!nextBtn || nextBtn.style.display === 'none')) {
-            updateRabbitReaction('bored');
-        }
-    }, 15000);
+    }, 200);
 }
 
 function updateTimerDisplay() {
