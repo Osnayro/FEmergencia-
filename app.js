@@ -3,39 +3,30 @@
  * ============================================================
  * ContiGame Engine v3.5.0 — Producción
  * Lógica del juego, control de estado y flujos financieros
- * Para "ContiLab: Desafío Contable y Financiero"
+ * Para "ContiChallenge: Desafío Contable y Financiero"
  * ============================================================
  *
  * Cambios v3.5.0 sobre v3.4.2:
  *   - MEJORA: Sistema de niveles bloqueados progresivamente.
- *     Solo el Nivel 1 está disponible al inicio. Los niveles 2, 3 y 4
- *     se desbloquean al completar el nivel anterior. El progreso se
- *     guarda en localStorage.
- *   - MEJORA: Preguntas de ahorro (ID 2 y ID 7) reemplazadas por
- *     preguntas de contabilidad a nivel de bachillerato:
- *       ID 2 (nuevo): Objetivo principal de la contabilidad.
- *       ID 7 (nuevo): ¿Qué son las cuentas contables?
- *   - MEJORA: Fallback del splash screen aumentado a 60 segundos.
+ *   - MEJORA: Preguntas de ahorro reemplazadas por contabilidad.
+ *   - MEJORA: Fallback del splash screen a 60 segundos.
+ *   - MEJORA: Bocadillo del conejo con colores dinámicos según
+ *     estado emocional y animación de entrada speechBubbleIn.
  *
  * Cambios v3.4.2 sobre v3.4.1:
- *   - FIX CRÍTICO: El power-up de congelar (❄️) ahora se limpia
- *     correctamente al cambiar de pregunta.
- *   - FIX: _freezeTimeout en estado global.
+ *   - FIX CRÍTICO: Power-up de congelar se limpia al cambiar de pregunta.
  *
  * Cambios v3.4.1 sobre v3.4:
- *   - ROBUSTEZ: Limpieza de _boredTimeout en handleCorrectAnswer()
- *     e handleIncorrectAnswer().
+ *   - ROBUSTEZ: Limpieza de _boredTimeout en handleCorrectAnswer/Incorrect.
  *   - ROBUSTEZ: Modal de nombre cierra con Escape.
  *
  * Cambios v3.4 sobre v3.3:
  *   - FIX CRÍTICO: Temporizador se reinicia correctamente en cada pregunta.
- *   - FIX: nextQuestion() limpia intervalo anterior.
  *
  * Cambios v3.3 sobre v3.2:
  *   - MEJORA PEDAGÓGICA: Propiedad 'hint' independiente en las 46 preguntas.
  *   - MEJORA PEDAGÓGICA: Nueva pregunta ID 411 con haber no imponible.
  *   - MEJORA PEDAGÓGICA: Estado 'sad' eliminado. Growth Mindset.
- *   - MEJORA PEDAGÓGICA: Aclaración de montos netos en preguntas de IVA.
  *   - MEJORA SENSORIAL: Flash blanco, destello score-badge, sonido+explosión drag.
  *   - CORRECCIÓN: Muletillas festivas eliminadas del Nivel 1.
  *   - CORRECCIÓN: Error ortográfico "classifies" → "clasifica" (ID 207).
@@ -524,108 +515,70 @@ function updateRabbitReaction(reaction) {
     const speech = document.getElementById('question-speech');
     const messages = {
         'thinking': [
-            '¡Piensa bien tu respuesta! 🤔',
-            'Tú puedes hacerlo 💪',
-            'Analiza con cuidado 📊',
-            'Confío en tu razonamiento 🧠',
-            'Lee cada opción con atención 👀',
-            '¿Cuál será la correcta? 🤓',
-            'Tómate tu tiempo ⏳',
-            'Confía en lo que sabes 📚'
+            '¡Piensa bien tu respuesta! 🤔', 'Tú puedes hacerlo 💪', 'Analiza con cuidado 📊',
+            'Confío en tu razonamiento 🧠', 'Lee cada opción con atención 👀',
+            '¿Cuál será la correcta? 🤓', 'Tómate tu tiempo ⏳', 'Confía en lo que sabes 📚'
         ],
         'nervous': [
-            '¡El tiempo se acaba! ⏰',
-            '¡Rápido, confía en ti! 😰',
-            '¡No te congeles! ❄️',
-            '¡Elige ya, tú sabes! ⚡',
-            '¡Últimos segundos! 🚨',
-            '¡Vamos, no te detengas! 🏃'
+            '¡El tiempo se acaba! ⏰', '¡Rápido, confía en ti! 😰', '¡No te congeles! ❄️',
+            '¡Elige ya, tú sabes! ⚡', '¡Últimos segundos! 🚨', '¡Vamos, no te detengas! 🏃'
         ],
         'bored': [
-            '¡Despierta, campeón! ☕',
-            '¡Vamos, tú puedes! 😴',
-            '¡No te duermas en clase! 💤',
-            '¡Espabila esa mente! 🧃',
-            '¡Que no decaiga el ánimo! 🎈',
-            '¿Necesitas un café virtual? ☕✨'
+            '¡Despierta, campeón! ☕', '¡Vamos, tú puedes! 😴', '¡No te duermas en clase! 💤',
+            '¡Espabila esa mente! 🧃', '¡Que no decaiga el ánimo! 🎈', '¿Necesitas un café virtual? ☕✨'
         ],
         'impressed': [
-            '¡Impresionante racha! 🤩',
-            '¡Eres increíble! 🌟',
-            '¡Qué genio financiero! 🧠',
-            '¡Nadie te para hoy! 🔥',
-            '¡Estás arrasando! 💥',
-            '¡Eres una máquina! ⚙️💨',
+            '¡Impresionante racha! 🤩', '¡Eres increíble! 🌟', '¡Qué genio financiero! 🧠',
+            '¡Nadie te para hoy! 🔥', '¡Estás arrasando! 💥', '¡Eres una máquina! ⚙️💨',
             '¡Conti Conti está orgulloso! 🐰✨'
         ],
         'celebrating': [
-            '¡Perfecto, nivel impecable! 🥳',
-            '¡Eres el orgullo de Contabilidad! 🎉',
-            '¡Nivel superado con honores! 🏆',
-            '¡Así se hace, crack! 🌟',
-            '¡Cada vez más cerca de la cima! ⛰️',
-            '¡Qué satisfacción da aprender! 🎓✨'
+            '¡Perfecto, nivel impecable! 🥳', '¡Eres el orgullo de Contabilidad! 🎉',
+            '¡Nivel superado con honores! 🏆', '¡Así se hace, crack! 🌟',
+            '¡Cada vez más cerca de la cima! ⛰️', '¡Qué satisfacción da aprender! 🎓✨'
         ],
         'deep-think': [
-            '¡Nivel experto activado! 🔬',
-            '¡Piensa profundamente! 🧐',
-            '¡Confía en tus cálculos! 📐',
-            'Esto es para mentes brillantes 💡',
-            '¡Activa tu modo calculadora! 🧮',
-            'Los números no mienten 🔢'
+            '¡Nivel experto activado! 🔬', '¡Piensa profundamente! 🧐', '¡Confía en tus cálculos! 📐',
+            'Esto es para mentes brillantes 💡', '¡Activa tu modo calculadora! 🧮', 'Los números no mienten 🔢'
         ],
         'confident': [
-            '¡Eliminamos dos, ahora es fácil! 😎',
-            '¡El 50/50 te respalda! ✨',
-            '¡Tú tienes el control! 🕶️',
-            '¡Camino despejado hacia el éxito! 🛤️',
-            '¡Ahora solo quedan las buenas! ✅',
-            '¡Con esta ayuda es pan comido! 🍞'
+            '¡Eliminamos dos, ahora es fácil! 😎', '¡El 50/50 te respalda! ✨',
+            '¡Tú tienes el control! 🕶️', '¡Camino despejado hacia el éxito! 🛤️',
+            '¡Ahora solo quedan las buenas! ✅', '¡Con esta ayuda es pan comido! 🍞'
         ],
         'frozen': [
-            '¡Tiempo congelado! 🥶',
-            '¡Relájate y piensa tranquilo! ❄️',
-            '¡Sin prisa, el reloj se detuvo! ⛄',
-            '¡Respira hondo, tienes tiempo! 🌬️',
-            '¡Aprovecha estos segundos extra! ⏸️',
-            '¡El frío te da claridad mental! 🧊'
+            '¡Tiempo congelado! 🥶', '¡Relájate y piensa tranquilo! ❄️', '¡Sin prisa, el reloj se detuvo! ⛄',
+            '¡Respira hondo, tienes tiempo! 🌬️', '¡Aprovecha estos segundos extra! ⏸️', '¡El frío te da claridad mental! 🧊'
         ],
         'determined': [
-            '¡Ahora sí, con todo! 😤',
-            '¡Esta no la fallo! 💪🔥',
-            '¡Con más ganas que nunca! 🦾',
-            '¡A corregir el rumbo! 🧭',
-            '¡El error me hizo más fuerte! ⚡',
-            '¡Voy con todo en esta! 🎯',
-            'Cada error es una lección aprendida 📚',
-            '¡Los genios también se equivocan y aprenden! 🧠💡'
+            '¡Ahora sí, con todo! 😤', '¡Esta no la fallo! 💪🔥', '¡Con más ganas que nunca! 🦾',
+            '¡A corregir el rumbo! 🧭', '¡El error me hizo más fuerte! ⚡', '¡Voy con todo en esta! 🎯',
+            'Cada error es una lección aprendida 📚', '¡Los genios también se equivocan y aprenden! 🧠💡'
         ],
         'graduate': [
-            '¡Lo lograste, eres un crack! 🎓',
-            '¡Graduado con honores financieros! 🏅',
-            '¡Conti Conti te admira! 👨‍🎓🐰',
-            '¡Tu futuro financiero es brillante! 💰✨',
-            '¡De estudiante a MAESTRO! 🧠👑',
-            '¡Hoy celebras tu conocimiento! 🎉📚'
+            '¡Lo lograste, eres un crack! 🎓', '¡Graduado con honores financieros! 🏅',
+            '¡Conti Conti te admira! 👨‍🎓🐰', '¡Tu futuro financiero es brillante! 💰✨',
+            '¡De estudiante a MAESTRO! 🧠👑', '¡Hoy celebras tu conocimiento! 🎉📚'
         ],
         'correct': [
-            '¡Respuesta correcta! ✨',
-            '¡Bien hecho! 🌟',
-            '¡Así se hace! 💪',
-            '¡Esa es la actitud! 🎯',
-            '¡Vas por buen camino! 🛤️'
+            '¡Respuesta correcta! ✨', '¡Bien hecho! 🌟', '¡Así se hace! 💪',
+            '¡Esa es la actitud! 🎯', '¡Vas por buen camino! 🛤️'
         ],
         'incorrect': [
-            '¡No era esa, pero no pasa nada! 💪',
-            '¡Aprender es equivocarse! 📚',
-            '¡Revisa la explicación! 👀',
-            '¡La próxima la tienes! 🎯',
+            '¡No era esa, pero no pasa nada! 💪', '¡Aprender es equivocarse! 📚',
+            '¡Revisa la explicación! 👀', '¡La próxima la tienes! 🎯',
             '¡Error detectado, conocimiento ganado! 🧠'
         ]
     };
     
     const list = messages[reaction] || messages['thinking'];
-    if (speech) speech.textContent = list[Math.floor(Math.random() * list.length)];
+    if (speech) {
+        speech.textContent = list[Math.floor(Math.random() * list.length)];
+        speech.className = 'character-speech state-' + reaction;
+        speech.style.animation = 'none';
+        speech.offsetHeight;
+        speech.style.animation = 'speechBubbleIn 0.4s ease-out';
+    }
 }
 
 // ===== CARGA DE PREGUNTAS =====
@@ -1286,6 +1239,11 @@ function startTimer() {
             clearInterval(state.timerInterval);
             state.timerInterval = null;
             if (timerDisplay) timerDisplay.classList.remove('warning');
+            
+            if (window.effectsManager) {
+                window.effectsManager.playIncorrectFallback();
+            }
+            
             showFeedback(`¡Tiempo agotado! ${state.questions[state.currentQuestion].explanation}`, 'incorrect');
             handleIncorrectAnswer(state.questions[state.currentQuestion]);
         }
@@ -1496,9 +1454,9 @@ function loadLeaderboard() {
 
 // ===== COMPARTIR =====
 function shareResults() {
-    const text = `🎉 ¡Acabo de conseguir ${state.score} puntos en ContiLab: Desafío Contable y Financiero! ¿Puedes superarme? 🏆`;
+    const text = `🎉 ¡Acabo de conseguir ${state.score} puntos en ContiChallenge: Desafío Contable y Financiero! ¿Puedes superarme? 🏆`;
     if (navigator.share) {
-        navigator.share({ title: 'ContiLab', text, url: window.location.href }).catch(() => {});
+        navigator.share({ title: 'ContiChallenge', text, url: window.location.href }).catch(() => {});
     } else {
         navigator.clipboard.writeText(text).then(() => {
             if (window.effectsManager) {
