@@ -5,1467 +5,171 @@
  * Lógica del juego, control de estado y flujos financieros
  * Para "ContiChallenge: Desafío Contable y Financiero"
  * ============================================================
- *
- * Cambios v3.5.0 sobre v3.4.2:
- *   - MEJORA: Sistema de niveles bloqueados progresivamente.
- *   - MEJORA: Preguntas de ahorro reemplazadas por contabilidad.
- *   - MEJORA: Fallback del splash screen a 60 segundos.
- *   - MEJORA: Bocadillo del conejo con colores dinámicos según
- *     estado emocional y animación de entrada speechBubbleIn.
- *
- * Cambios v3.4.2 sobre v3.4.1:
- *   - FIX CRÍTICO: Power-up de congelar se limpia al cambiar de pregunta.
- *
- * Cambios v3.4.1 sobre v3.4:
- *   - ROBUSTEZ: Limpieza de _boredTimeout en handleCorrectAnswer/Incorrect.
- *   - ROBUSTEZ: Modal de nombre cierra con Escape.
- *
- * Cambios v3.4 sobre v3.3:
- *   - FIX CRÍTICO: Temporizador se reinicia correctamente en cada pregunta.
- *
- * Cambios v3.3 sobre v3.2:
- *   - MEJORA PEDAGÓGICA: Propiedad 'hint' independiente en las 46 preguntas.
- *   - MEJORA PEDAGÓGICA: Nueva pregunta ID 411 con haber no imponible.
- *   - MEJORA PEDAGÓGICA: Estado 'sad' eliminado. Growth Mindset.
- *   - MEJORA SENSORIAL: Flash blanco, destello score-badge, sonido+explosión drag.
- *   - CORRECCIÓN: Muletillas festivas eliminadas del Nivel 1.
- *   - CORRECCIÓN: Error ortográfico "classifies" → "clasifica" (ID 207).
- *   - FIX: clonado profundo, cálculo de estrellas, applyHint, localStorage.
  */
 
 // ===== ESTADO GLOBAL =====
 const state = {
-    score: 0,
-    levelScore: 0,
-    lives: 3,
-    streak: 0,
-    maxStreak: 0,
-    currentQuestion: 0,
-    totalQuestions: 10,
-    currentLevel: 1,
-    mode: 'normal',
-    timer: 30,
-    timerInterval: null,
-    _boredTimeout: null,
-    _freezeTimeout: null,
-    isFrozen: false,
-    questions: [],
-    answeredCorrectly: {},
-    correctInLevel: 0,
-    powerups: {
-        fifty: 3,
-        time: 2,
-        freeze: 1,
-        hint: 2
-    },
-    powerupsUsedThisLevel: false,
-    levelPerfect: true,
-    questionStartTime: 0,
-    bonusQuestionActive: false,
-    levelStars: {},
-    badges: {
-        perfectScore: false,
-        speedDemon: false,
-        survivor: false,
-        streaker: false,
-        financierPro: false,
-        noPowerups: false
-    },
+    score: 0, levelScore: 0, lives: 3, streak: 0, maxStreak: 0,
+    currentQuestion: 0, totalQuestions: 10, currentLevel: 1, mode: 'normal',
+    timer: 30, timerInterval: null, _boredTimeout: null, _freezeTimeout: null,
+    isFrozen: false, questions: [], answeredCorrectly: {}, correctInLevel: 0,
+    powerups: { fifty: 3, time: 2, freeze: 1, hint: 2 },
+    powerupsUsedThisLevel: false, levelPerfect: true, questionStartTime: 0,
+    bonusQuestionActive: false, levelStars: {},
+    badges: { perfectScore: false, speedDemon: false, survivor: false, streaker: false, financierPro: false, noPowerups: false },
     topicScores: {},
-    unlockedLevels: {
-        1: true,
-        2: false,
-        3: false,
-        4: false
-    }
+    unlockedLevels: { 1: true, 2: false, 3: false, 4: false }
 };
 
-// ===== BANCO DE PREGUNTAS =====
+// ===== BANCO DE PREGUNTAS (75 preguntas - 15 por nivel) =====
 const generalQuestions = [
-    {
-        id: 1, topic: 'presupuesto', type: 'multiple',
-        question: '¿Qué es un presupuesto?',
-        options: ['Un plan de gastos e ingresos', 'Un tipo de impuesto', 'Una cuenta bancaria', 'Un préstamo'],
-        correct: 0,
-        explanation: 'Un presupuesto es un plan financiero que estima ingresos y gastos en un período determinado.',
-        hint: 'Piensa en una herramienta que te ayuda a planificar en qué gastarás tu dinero antes de recibirlo.',
-        points: 100
-    },
-    {
-        id: 2, topic: 'contabilidad', type: 'multiple',
-        question: '¿Cuál es el objetivo principal de la contabilidad?',
-        options: ['Registrar, clasificar y resumir las operaciones financieras', 'Calcular impuestos exclusivamente', 'Contratar personal para la empresa', 'Diseñar estrategias de marketing'],
-        correct: 0,
-        explanation: 'La contabilidad tiene como objetivo registrar, clasificar y resumir las operaciones financieras de una entidad para facilitar la toma de decisiones.',
-        hint: 'No se limita solo a impuestos ni a contratación. Piensa en el proceso completo de la información financiera.',
-        points: 100
-    },
-    {
-        id: 3, topic: 'inversion', type: 'multiple',
-        question: '¿Qué significa "diversificar" en inversiones?',
-        options: ['Invertir en diferentes activos para reducir riesgo', 'Poner todo el dinero en una sola acción', 'Retirar todo el dinero del banco', 'Solo invertir en bienes raíces'],
-        correct: 0,
-        explanation: 'Diversificar es distribuir las inversiones en distintos activos para minimizar el riesgo de pérdida.',
-        hint: 'Es lo opuesto a "poner todos los huevos en la misma canasta".',
-        points: 100
-    },
-    {
-        id: 4, topic: 'credito', type: 'multiple',
-        question: '¿Qué es el historial crediticio?',
-        options: ['Un registro de cómo has manejado tus deudas', 'El saldo de tu cuenta bancaria', 'Una lista de tus inversiones', 'Tu declaración de impuestos'],
-        correct: 0,
-        explanation: 'El historial crediticio muestra tu comportamiento de pago de deudas y determina tu puntaje crediticio.',
-        hint: 'Es como tu "hoja de vida financiera" que los bancos revisan antes de prestarte dinero.',
-        points: 100
-    },
-    {
-        id: 5, topic: 'contabilidad', type: 'multiple',
-        question: 'En contabilidad, ¿qué representa el "activo"?',
-        options: ['Bienes y derechos de una empresa', 'Las deudas de la empresa', 'Las ganancias del año', 'Los gastos mensuales'],
-        correct: 0,
-        explanation: 'El activo son todos los bienes y derechos que posee una empresa o persona.',
-        hint: 'Es todo lo que tiene valor y pertenece a la empresa: dinero, edificios, vehículos, cuentas por cobrar.',
-        points: 100
-    },
-    {
-        id: 6, topic: 'presupuesto', type: 'matching',
-        question: 'Empareja los conceptos con sus definiciones:',
-        pairs: [
-            { left: 'Ingreso', right: 'Dinero recibido', id: 1 },
-            { left: 'Gasto', right: 'Dinero desembolsado', id: 2 },
-            { left: 'Ahorro', right: 'Dinero reservado', id: 3 },
-            { left: 'Inversión', right: 'Dinero que genera más dinero', id: 4 }
-        ],
-        hint: 'Relaciona cada término con lo que representa: entrada, salida, reserva o crecimiento del dinero.',
-        points: 200
-    },
-    {
-        id: 7, topic: 'contabilidad', type: 'multiple',
-        question: '¿Qué son las cuentas contables?',
-        options: ['Registros donde se anotan los aumentos y disminuciones de cada elemento del patrimonio', 'Documentos legales para pagar impuestos', 'Listas de empleados de una empresa', 'Contratos con proveedores'],
-        correct: 0,
-        explanation: 'Las cuentas contables son registros individuales donde se anotan los movimientos (aumentos y disminuciones) de cada elemento del activo, pasivo, patrimonio, ingresos y gastos.',
-        hint: 'Cada elemento del patrimonio tiene su propio registro donde se anotan sus cambios.',
-        points: 150
-    },
-    {
-        id: 8, topic: 'credito', type: 'multiple',
-        question: '¿Qué es mejor para tu salud financiera?',
-        options: ['Pagar el total de la tarjeta de crédito cada mes', 'Pagar solo el mínimo requerido', 'Tener muchas tarjetas de crédito', 'Usar el crédito para gastos diarios'],
-        correct: 0,
-        explanation: 'Pagar el total cada mes evita intereses y mantiene un buen historial crediticio.',
-        hint: 'Los intereses de las tarjetas de crédito son muy altos. ¿Qué opción evita pagarlos?',
-        points: 100
-    },
-    {
-        id: 9, topic: 'contabilidad', type: 'multiple',
-        question: 'La ecuación contable fundamental es:',
-        options: ['Activo = Pasivo + Patrimonio', 'Activo = Ingresos - Gastos', 'Pasivo = Activo + Patrimonio', 'Patrimonio = Activo - Ingresos'],
-        correct: 0,
-        explanation: 'Activo = Pasivo + Patrimonio es la base de la contabilidad por partida doble.',
-        hint: 'Recuerda qué elementos financian los bienes que tiene la empresa: deudas con terceros y aportes de los dueños.',
-        points: 100
-    },
-    {
-        id: 10, topic: 'finanzas', type: 'drag',
-        question: 'Ordena los pasos para crear un plan financiero saludable:',
-        items: ['Analizar ingresos y gastos', 'Establecer metas financieras', 'Crear un presupuesto', 'Ahorrar e invertir regularmente', 'Revisar y ajustar periódicamente'],
-        hint: 'Primero debes saber cuánto ganas y gastas, luego fijar objetivos, y finalmente hacer seguimiento.',
-        points: 200
-    },
-    {
-        id: 11, topic: 'presupuesto', type: 'multiple',
-        question: '¿Qué es un gasto hormiga?',
-        options: ['Pequeños gastos diarios que suman grandes cantidades', 'Gastos en insecticidas', 'Grandes compras planificadas', 'Inversiones pequeñas'],
-        correct: 0,
-        explanation: 'Los gastos hormiga son pequeñas compras frecuentes que parecen insignificantes pero suman mucho al mes.',
-        hint: 'Son esos pequeños gustos diarios que parecen inofensivos pero que al final del mes suman una cantidad sorprendente.',
-        points: 100
-    },
-    {
-        id: 12, topic: 'inversion', type: 'multiple',
-        question: '¿Qué es el interés compuesto?',
-        options: ['Intereses que generan más intereses con el tiempo', 'Un tipo de impuesto financiero', 'El interés que cobra el banco', 'Una comisión por inversión'],
-        correct: 0,
-        explanation: 'El interés compuesto hace que tu dinero crezca exponencialmente al reinvertir las ganancias.',
-        hint: 'Es como una bola de nieve: los intereses ganados se suman al capital y generan nuevos intereses.',
-        points: 100
-    }
+    { id: 1, topic: 'presupuesto', type: 'multiple', question: '¿Qué es un presupuesto personal o familiar?', options: ['Un plan financiero que proyecta ingresos y gastos', 'Un tipo de impuesto cobrado por el SII', 'El saldo final de una cuenta corriente', 'Un crédito solicitado al banco'], correct: 0, explanation: 'Un presupuesto proyecta tus ingresos y prevé los gastos en un período determinado para mantener la estabilidad financiera.', hint: 'Es una herramienta de planificación previa al uso del dinero.', points: 100 },
+    { id: 2, topic: 'contabilidad', type: 'multiple', question: '¿Cuál es el objetivo principal de la contabilidad en una empresa?', options: ['Registrar, clasificar y resumir operaciones financieras para la toma de decisiones', 'Calcular únicamente las vacaciones del personal', 'Diseñar campañas publicitarias y de ventas', 'Fijar libremente los precios de mercado'], correct: 0, explanation: 'La contabilidad proporciona información estructurada y fidedigna sobre la situación financiera de la entidad.', hint: 'Abarca el ciclo completo de la información económica y financiera.', points: 100 },
+    { id: 3, topic: 'inversion', type: 'multiple', question: '¿En qué consiste la diversificación de inversiones?', options: ['Distribuir los recursos en diferentes activos para minimizar riesgos', 'Invertir todo el capital en un solo fondo mutuo', 'Mantener todo el dinero en efectivo bajo el colchón', 'Gastar las ganancias en bienes de consumo inmediato'], correct: 0, explanation: 'Diversificar reduce el impacto negativo si uno de los activos disminuye su rendimiento.', hint: 'Busca mitigar pérdidas repartiendo el capital en distintas alternativas.', points: 100 },
+    { id: 4, topic: 'credito', type: 'multiple', question: '¿Qué mide el informe comercial e historial crediticio (ej. Dicom) en Chile?', options: ['El comportamiento histórico de pago y cumplimiento de deudas', 'La cantidad de dinero ahorrada en la AFP', 'El nivel de educación formal alcanzado', 'El saldo disponible en la tarjeta de débito'], correct: 0, explanation: 'El historial crediticio evalúa el riesgo financiero de una persona según su puntualidad en el pago de compromisos.', hint: 'Es la carta de presentación financiera ante los evaluadores de crédito.', points: 100 },
+    { id: 5, topic: 'contabilidad', type: 'multiple', question: 'En la estructura contable, ¿qué define a un "Activo"?', options: ['Recursos y bienes controlados por la empresa con potencial de generar beneficios', 'Las obligaciones y deudas pendientes con proveedores', 'El capital aportado únicamente por los accionistas', 'Los gastos operacionales del período'], correct: 0, explanation: 'Los Activos son los bienes, derechos y recursos económicos que posee una entidad.', hint: 'Incluye caja, bancos, mercaderías, maquinarias y cuentas por cobrar.', points: 100 },
+    { id: 6, topic: 'presupuesto', type: 'matching', question: 'Empareja cada concepto financiero con su definición:', pairs: [{ left: 'Ingreso', right: 'Flujo de dinero percibido', id: 1 }, { left: 'Gasto', right: 'Desembolso por bienes/servicios', id: 2 }, { left: 'Ahorro', right: 'Excedente no consumido del ingreso', id: 3 }, { left: 'Inversión', right: 'Capital destinado a generar rentabilidad', id: 4 }], hint: 'Relaciona entradas, salidas, reservas y capital productivo.', points: 200 },
+    { id: 7, topic: 'contabilidad', type: 'multiple', question: '¿Cuál es la Ecuación Fundamental de la Contabilidad?', options: ['Activo = Pasivo + Patrimonio', 'Activo = Ingresos - Gastos', 'Pasivo = Activo + Patrimonio', 'Patrimonio = Pasivo - Activo'], correct: 0, explanation: 'Todo lo que la empresa posee (Activo) ha sido financiado por terceros (Pasivo) o por los dueños (Patrimonio).', hint: 'Mantiene el equilibrio permanente de la doble entrada.', points: 100 },
+    { id: 8, topic: 'presupuesto', type: 'multiple', question: '¿A qué se refiere el concepto de "gasto hormiga"?', options: ['Sumas pequeñas de consumo diario no planificado que afectan el presupuesto', 'Afectaciones por plagas en inventarios', 'Compras al por mayor con descuentos', 'Gastos de mantención industrial'], correct: 0, explanation: 'Son compras menores pero repetitivas que acumuladas representan un monto elevado.', hint: 'Parecen inofensivos de forma aislada, pero impactan el total acumulado.', points: 100 },
+    { id: 9, topic: 'finanzas', type: 'multiple', question: '¿Qué organismo público regula y fiscaliza el mercado de valores y seguros en Chile?', options: ['Comisión para el Mercado Financiero (CMF)', 'Servicio de Impuestos Internos (SII)', 'Tesorería General de la República', 'Subsecretaría de Economía'], correct: 0, explanation: 'La CMF vela por la transparencia y estabilidad del sistema financiero en Chile.', hint: 'Fiscaliza a bancos, aseguradoras y administradoras de fondos.', points: 100 },
+    { id: 10, topic: 'presupuesto', type: 'multiple', question: '¿Qué es la regla presupuestaria 50/30/20?', options: ['50% necesidades, 30% deseos, 20% ahorro e inversión', '50% ahorro, 30% gastos fijos, 20% impuestos', '50% deudas, 30% comida, 20% arriendo', '50% inversión, 30% ocio, 20% fondo de riesgo'], correct: 0, explanation: 'Es una metodología popular de educación financiera para distribuir de forma razonable los ingresos netos.', hint: 'Destina la mitad a lo vital, un tercio a gustos y la quinta parte al futuro.', points: 100 },
+    { id: 11, topic: 'contabilidad', type: 'multiple', question: 'En términos contables, ¿qué representa un "Pasivo"?', options: ['Deudas y obligaciones financieras pendientes de pago', 'Los recursos acumulados en la caja chica', 'El capital aportado por los dueños', 'Las utilidades acumuladas del año anterior'], correct: 0, explanation: 'Los pasivos reflejan las obligaciones financieras frente a terceros (proveedores, bancos, empleados).', hint: 'Es todo lo que la empresa debe a fuentes externas.', points: 100 },
+    { id: 12, topic: 'finanzas', type: 'multiple', question: '¿Qué es la inflación?', options: ['El aumento generalizado y sostenido de los precios de bienes y servicios', 'El descuento aplicado durante eventos como el CyberDay', 'El incremento constante del sueldo mínimo', 'La devaluación del dólar respecto al euro'], correct: 0, explanation: 'La inflación reduce el poder adquisitivo de la moneda a lo largo del tiempo.', hint: 'Hace que con la misma cantidad de dinero compres menos cosas.', points: 100 },
+    { id: 13, topic: 'finanzas', type: 'multiple', question: 'En Chile, ¿qué indicador se utiliza comunmente para reajustar valores según la inflación?', options: ['Unidad de Fomento (UF)', 'Índice de Precios al Consumidor (IPC)', 'Tasa de Política Monetaria (TPM)', 'Dólar Observado'], correct: 0, explanation: 'La UF es una unidad de cuenta reajustable según la variación del IPC diario.', hint: 'Se usa habitualmente en dividendos, arriendos y créditos hipotecarios.', points: 100 },
+    { id: 14, topic: 'contabilidad', type: 'multiple', question: '¿Qué es el "Patrimonio" de una empresa?', options: ['El valor residual de los activos de la entidad una vez deducidos todos sus pasivos', 'El total acumulado en efectivo en los bancos', 'El valor bruto de las ventas del mes', 'Los impuestos pendientes de devolución'], correct: 0, explanation: 'El Patrimonio Neto representa la participación o aporte neto de los propietarios en la empresa.', hint: 'Aplica la fórmula: Activos - Pasivos.', points: 100 },
+    { id: 15, topic: 'finanzas', type: 'multiple', question: '¿A qué hace referencia el interés compuesto?', options: ['A los intereses generados que se van sumando al capital para generar nuevos intereses', 'Al interés cobrado solo sobre el capital originario', 'A la tasa fija aplicada únicamente en la primera cuota', 'Al cobro de impuestos por transacciones bancarias'], correct: 0, explanation: 'En el interés compuesto los intereses se capitalizan periódicamente ("interés sobre interés").', hint: 'Efecto multiplicador que hace crecer exponencialmente una inversión con el tiempo.', points: 100 }
 ];
 
-// Nivel 1: Fondo de Emergencia
 const fondoEmergenciaQuestions = [
-    { id: 101, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué es un fondo de emergencia?', options: ['Dinero para comprar regalos', 'Un ahorro destinado a cubrir gastos inesperados', 'Un préstamo bancario', 'Dinero para vacaciones'], correct: 1, explanation: 'Es un ahorro destinado a cubrir gastos inesperados como urgencias médicas o reparaciones.', hint: 'Piensa en un dinero guardado exclusivamente para momentos difíciles e inesperados, no para gustos.', points: 100 },
-    { id: 102, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál de estas situaciones corresponde a una emergencia?', options: ['Hospitalización inesperada', 'Comprar ropa', 'Ir al cine', 'Comprar un celular nuevo'], correct: 0, explanation: 'Una emergencia de salud no se planifica y requiere fondos inmediatos.', hint: 'Una emergencia es algo urgente que no puedes posponer y que afecta tu salud o seguridad.', points: 100 },
-    { id: 103, topic: 'fondo-emergencia', type: 'multiple', question: '¿Para qué sirve un fondo de emergencia?', options: ['Comprar cosas por impulso', 'Ahorrar para vacaciones', 'Cubrir gastos inesperados sin endeudarse', 'Comprar tecnología'], correct: 2, explanation: 'Te protege de pedir préstamos con intereses altos cuando surgen imprevistos.', hint: 'Su propósito es evitar que un imprevisto te obligue a adquirir deudas costosas.', points: 100 },
-    { id: 104, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuándo es recomendable ahorrar?', options: ['Solo cuando sobra dinero', 'Todos los meses', 'Una vez al año', 'Nunca'], correct: 1, explanation: 'El ahorro es un hábito constante que se planifica cada mes, sin importar el monto.', hint: 'La constancia es más importante que la cantidad. No esperes a que "sobre" dinero para empezar.', points: 100 },
-    { id: 105, topic: 'fondo-emergencia', type: 'multiple', question: 'Si se rompe el refrigerador de tu casa, ¿qué sería lo más recomendable?', options: ['Pedir un préstamo', 'Esperar varios meses', 'Utilizar el fondo de emergencia', 'No hacer nada'], correct: 2, explanation: 'Es una urgencia doméstica para la cual está diseñado este fondo.', hint: 'Para eso creaste el fondo de emergencia: para resolver problemas sin endeudarte.', points: 100 },
-    { id: 106, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál de estas opciones NO corresponde a una emergencia?', options: ['Una operación médica', 'Una reparación urgente', 'Comprar el último modelo de celular', 'Reparar una fuga de agua'], correct: 2, explanation: 'Cambiar de teléfono por gusto es un deseo, no una emergencia.', hint: 'Diferencia entre lo que es urgente y necesario versus lo que es un simple deseo de consumo.', points: 100 },
-    { id: 107, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué documento permite conocer cómo se distribuye el sueldo de un trabajador?', options: ['Factura', 'Boleta', 'Planilla de remuneraciones', 'Balance general'], correct: 2, explanation: 'En la planilla de remuneraciones se detallan los haberes, descuentos y líquido a pagar.', hint: 'Es el documento que detalla todos los ingresos y descuentos que aplican al sueldo de un trabajador.', points: 100 },
-    { id: 108, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué representa el sueldo líquido?', options: ['El sueldo antes de descuentos', 'El dinero destinado a la AFP', 'El dinero que finalmente recibe el trabajador', 'Los impuestos'], correct: 2, explanation: 'Es el monto real entregado al trabajador después de aplicar todos los descuentos legales.', hint: 'Es el dinero que efectivamente llega a tu bolsillo después de todas las retenciones.', points: 100 },
-    { id: 109, topic: 'fondo-emergencia', type: 'multiple', question: '¿Por qué la planilla de remuneraciones puede ayudar a crear un fondo de emergencia?', options: ['Porque aumenta el sueldo', 'Porque elimina gastos', 'Porque permite saber cuánto dinero recibe una persona y cuánto puede ahorrar', 'Porque evita pagar impuestos'], correct: 2, explanation: 'Saber tus ingresos exactos permite calcular tu capacidad de ahorro mensual.', hint: 'Conocer con precisión cuánto dinero recibes es el primer paso para planificar cuánto puedes ahorrar.', points: 100 },
-    { id: 110, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál de las siguientes especialidades enseña sobre remuneraciones, educación financiera, administración y contabilidad?', options: ['🍳 Gastronomía', '👶 Atención de Párvulos', '📊 Contabilidad', '🥫 Elaboración Industrial de Alimentos', '⚡ Electrónica'], correct: 2, explanation: 'Contabilidad entrega las herramientas para administrar el dinero y las organizaciones.', hint: 'Es la especialidad que se enfoca en registrar, analizar y gestionar la información financiera.', points: 100 },
-    { id: 111, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuántos meses de gastos debe cubrir idealmente un fondo de emergencia?', options: ['1 mes', '2 meses', 'De 3 a 6 meses', '12 meses o más'], correct: 2, explanation: 'Los expertos recomiendan cubrir entre 3 y 6 meses de gastos básicos.', hint: 'No es solo un mes, pero tampoco necesitas un año completo. Busca el rango intermedio recomendado.', points: 100 },
-    { id: 112, topic: 'fondo-emergencia', type: 'multiple', question: '¿Dónde es mejor guardar el dinero del fondo de emergencia?', options: ['En una alcancía en casa', 'Invertido en acciones', 'En una cuenta de ahorro de fácil acceso', 'Prestado a un familiar'], correct: 2, explanation: 'Debe estar disponible rápidamente y sin riesgo de pérdida.', hint: 'Necesitas que el dinero esté seguro pero accesible de inmediato cuando surja la emergencia.', points: 100 },
-    { id: 113, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué característica debe tener un fondo de emergencia?', options: ['Alta rentabilidad', 'Liquidez inmediata', 'Plazo fijo a 5 años', 'Inversión en criptomonedas'], correct: 1, explanation: 'La liquidez permite disponer del dinero en el momento exacto de la emergencia.', hint: 'En una emergencia no puedes esperar días para retirar tu dinero. Necesitas que esté disponible al instante.', points: 100 },
-    { id: 114, topic: 'fondo-emergencia', type: 'multiple', question: 'Si ganas $500.000 mensuales, ¿cuánto deberías tener idealmente en tu fondo de emergencia?', options: ['$100.000', '$500.000', 'Entre $1.500.000 y $3.000.000', '$10.000.000'], correct: 2, explanation: 'Equivale a 3-6 meses de gastos. Si tus gastos son $500.000, necesitas entre $1.5 y $3 millones.', hint: 'Multiplica tus gastos mensuales por el número de meses recomendado (entre 3 y 6).', points: 100 },
-    { id: 115, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál es el primer paso para crear un fondo de emergencia?', options: ['Calcular los gastos mensuales básicos', 'Pedir un préstamo', 'Invertir en la bolsa', 'Gastar menos en entretención'], correct: 0, explanation: 'Primero debes saber cuánto necesitas para cubrir tus gastos esenciales.', hint: 'Antes de ahorrar, necesitas saber exactamente cuánto gastas en lo esencial cada mes.', points: 100 }
+    { id: 101, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál es el propósito esencial de un fondo de emergencia?', options: ['Adquirir artículos de lujo en liquidación', 'Cubrir contingencias financieras imprevistas sin recurrir a deudas costosas', 'Invertir en instrumentos de alto riesgo bursátil', 'Financiar las vacaciones anuales'], correct: 1, explanation: 'Funciona como un colchón de protección ante eventualidades como desempleo, emergencias de salud o reparaciones urgentes.', hint: 'Aporta liquidez ante imprevistos para no sobreendeudarse.', points: 100 },
+    { id: 102, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué situación justifica plenamente el uso del fondo de emergencia?', options: ['Un tratamiento médico no programado ni cubierto en su totalidad', 'El cambio del automóvil por un modelo del año', 'Viajes de descanso no planificados', 'Aprovechar ofertas informales de vestuario'], correct: 0, explanation: 'Un problema de salud imprevisto es una urgencia real que afecta la integridad y estabilidad.', hint: 'Diferencia eventos urgentes e inevitables de simples deseos.', points: 100 },
+    { id: 103, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuántos meses de gastos fijos de subsistencia se aconseja mantener en el fondo de emergencia?', options: ['1 semana', 'Entre 3 y 6 meses', 'Mínimo 5 años', 'No se requiere un fondo previo'], correct: 1, explanation: 'Permite mantener la operatividad básica del hogar mientras se soluciona la contingencia laboral o de ingresos.', hint: 'Cubre un período intermedio de resguardo.', points: 100 },
+    { id: 104, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué atributo principal debe poseer el instrumento donde se deposita el fondo de emergencia?', options: ['Alta liquidez y bajo riesgo (disponibilidad inmediata)', 'Baja liquidez y alta volatilidad', 'Cierre de giros por más de 10 años', 'Inversión exclusiva en criptoactivos'], correct: 0, explanation: 'En una emergencia el dinero debe rescatarse de forma rápida y sin pérdida de capital originario.', hint: 'Prioriza disponibilidad sobre altas rentabilidades con riesgo.', points: 100 },
+    { id: 105, topic: 'fondo-emergencia', type: 'multiple', question: 'En Chile, ¿qué documento laboral detalla la liquidación del sueldo del trabajador?', options: ['Factura electrónica', 'Liquidación de sueldos', 'Orden de compra', 'Guía de despacho'], correct: 1, explanation: 'La liquidación de sueldos expone formalmente haberes, descuentos previsionales, impuestos y el líquido a pagar.', hint: 'Es el comprobante legal de la remuneración periódica.', points: 100 },
+    { id: 106, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué es el "Sueldo Líquido" o "Líquido a Pagar"?', options: ['Monto retenido por las AFP', 'Monto final que percibe el trabajador tras deducciones legales', 'El sueldo base antes de los descuentos', 'La gratificación anual repartida'], correct: 1, explanation: 'Sueldo Líquido = Haberes Totales - Descuentos Legales (Previsión, Salud, Impuestos, etc.).', hint: 'Es el monto real depositado en la cuenta del trabajador.', points: 100 },
+    { id: 107, topic: 'fondo-emergencia', type: 'multiple', question: '¿Para qué sirve un fondo de emergencia?', options: ['Comprar cosas por impulso', 'Ahorrar para vacaciones', 'Cubrir gastos inesperados sin endeudarse', 'Comprar tecnología'], correct: 2, explanation: 'Te protege de pedir préstamos con intereses altos cuando surgen imprevistos.', hint: 'Su propósito es evitar que un imprevisto te obligue a adquirir deudas costosas.', points: 100 },
+    { id: 108, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuándo es recomendable ahorrar?', options: ['Solo cuando sobra dinero', 'Todos los meses', 'Una vez al año', 'Nunca'], correct: 1, explanation: 'El ahorro es un hábito constante que se planifica cada mes, sin importar el monto.', hint: 'La constancia es más importante que la cantidad. No esperes a que "sobre" dinero para empezar.', points: 100 },
+    { id: 109, topic: 'fondo-emergencia', type: 'multiple', question: '¿Por qué no es recomendable mantener el fondo de emergencia acumulado en dinero en efectivo en el hogar?', options: ['Por riesgos de robo, pérdidas físicas y pérdida de poder adquisitivo frente a la inflación', 'Porque los billetes caducan legalmente cada seis meses', 'Porque es ilegal poseer dinero en efectivo en la vivienda', 'Porque devenga comisiones bancarias mensuales automáticas'], correct: 0, explanation: 'El dinero físico en casa corre riesgos de seguridad y desvalorización continua por inflación.', hint: 'Evalúa los riesgos de seguridad y de desvalorización por la UF/IPC.', points: 100 },
+    { id: 110, topic: 'fondo-emergencia', type: 'multiple', question: 'Si utilizas parte de tu fondo de emergencia para una reparación urgente de la vivienda, ¿cuál es el paso a seguir?', options: ['Reponer prioritariamente el dinero extraído en los siguientes presupuestos mensuales', 'Cerrar la cuenta de ahorro de inmediato', 'Solicitar un crédito adicional para celebrar el arreglo', 'Ignorar el saldo restante y no volver a ahorrar'], correct: 0, explanation: 'Tras usar el fondo por una urgencia real, la prioridad debe ser reponer el capital gastado.', hint: 'Reconstruye el escudo financiero tan pronto como sea posible.', points: 100 },
+    { id: 111, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál es el principal riesgo de utilizar la tarjeta de crédito para cubrir emergencias en vez de un fondo propio?', options: ['Pagar elevados intereses financieros y adquirir compromisos que comprometen el ingreso futuro', 'Incurrir en faltas ante el Servicio de Impuestos Internos', 'Que la tarjeta pierda vigencia de forma inmediata', 'Que se descuente automáticamente del sueldo bruto del mes'], correct: 0, explanation: 'Financiar emergencias con deuda endeuda los meses venideros con altos costos de tasa de interés.', hint: 'Recurrir a crédito aumenta los gastos fijos futuros.', points: 100 },
+    { id: 112, topic: 'fondo-emergencia', type: 'multiple', question: '¿Qué tipo de instrumento financiero NO es recomendable para guardar un fondo de emergencia?', options: ['Acciones de empresas emergentes de alta volatilidad bursátil', 'Cuentas de ahorro a la vista con giros incondicionales', 'Fondos mutuos conservadores de mercado monetario', 'Depósitos a plazo fijo de muy corto período (30 días)'], correct: 0, explanation: 'Las acciones volátiles pueden caer de precio justo cuando se necesite retirar el dinero.', hint: 'Evita instrumentos cuya rentabilidad fluctúe drásticamente en el corto plazo.', points: 100 },
+    { id: 113, topic: 'fondo-emergencia', type: 'multiple', question: 'Si tus ingresos disminuyen de manera temporal, ¿qué rubro de gastos debes reducir en primer lugar?', options: ['Gastos prescindibles y de entretenimiento (gastos variables opcionales)', 'Arriendo o dividendo de la vivienda habitual', 'Pagos de servicios básicos como agua y electricidad', 'Cotizaciones mínimas de salud obligatoria'], correct: 0, explanation: 'Primero se recortan consumos de ocio o prescindibles para mantener protegidas las necesidades básicas.', hint: 'Identifica cuáles son gastos no esenciales en la planilla.', points: 100 },
+    { id: 114, topic: 'fondo-emergencia', type: 'multiple', question: '¿A qué se refiere el término "Sobreendeudamiento"?', options: ['Cuando las cuotas de deudas superan la capacidad real de pago del ingreso mensual', 'Ahorrar más del 50% de las remuneraciones en depósitos a plazo', 'Tener habilitadas más de dos tarjetas de débito activas', 'Cobrar sueldos imponibles por sobre el tope legal'], correct: 0, explanation: 'El sobreendeudamiento ahoga el presupuesto familiar y destruye la estabilidad económica.', hint: 'Ocurre cuando la carga de deudas absorbe casi todo el ingreso.', points: 100 },
+    { id: 115, topic: 'fondo-emergencia', type: 'multiple', question: '¿Cuál es el primer paso práctico para recortar presupuestariamente deudas descontroladas?', options: ['Listar todas las deudas con sus tasas de interés y priorizar el pago de las más costosas', 'Ignorar las notificaciones de los acreedores', 'Solicitar un nuevo crédito con mayor tasa para pagar el anterior', 'Gastar los ahorros reservados en consumos recreativos'], correct: 0, explanation: 'Consolidar el mapa de deudas permite aplicar estrategias como el método avalancha (pagar el interés más alto primero).', hint: 'Organiza y visualiza los saldos exigibles y sus intereses asociados.', points: 100 }
 ];
 
-// Nivel 2: Contabilidad y Nómina
 const nivel2Questions = [
-    { id: 201, topic: 'contabilidad', type: 'multiple', question: 'Si una empresa cobra $500 en efectivo por un servicio realizado, ¿cuál es el registro contable correcto?', options: ['Cargar (Débito) a Caja y Abonar (Crédito) a Ingresos por Servicios', 'Cargar a Ingresos por Servicios y Abonar a Caja', 'Cargar a Banco y Abonar a Cuentas por Cobrar', 'Cargar a Gastos Generales y Abonar a Caja'], correct: 0, explanation: 'El dinero entra a la empresa (Activo aumenta por el Debe en Caja) y se reconoce la venta (Ingreso aumenta por el Haber).', hint: 'Cuando recibes efectivo por un servicio, ¿qué cuenta de Activo aumenta y qué cuenta de Ingreso se reconoce?', points: 150 },
-    { id: 202, topic: 'contabilidad', type: 'multiple', question: '¿Qué ocurre en la ecuación contable cuando una empresa compra mercancía al contado?', options: ['Aumenta un Activo (Inventario) y disminuye otro Activo (Caja)', 'Aumenta un Activo y aumenta un Pasivo', 'Disminuye el Patrimonio y aumenta el Pasivo', 'Aumenta el Pasivo y disminuye el Activo'], correct: 0, explanation: 'Es un intercambio de activos: ingresa Inventario y sale Efectivo/Caja por el mismo valor.', hint: 'Al pagar al contado, no generas deuda. Solo intercambias un tipo de activo por otro.', points: 150 },
-    { id: 203, topic: 'tributacion', type: 'multiple', question: 'En el cálculo del IVA sobre ventas netas, ¿qué representa el Débito Fiscal?', options: ['El IVA cobrado a los clientes en las ventas de la empresa', 'El IVA pagado a los proveedores al comprar insumos', 'El impuesto sobre la renta que se paga a fin de año', 'Un dinero que la administración tributaria le debe a la empresa'], correct: 0, explanation: 'El Débito Fiscal es el IVA recaudado de las ventas. Representa un pasivo con el fisco.', hint: 'Es el IVA que tus clientes te pagan a ti y que luego debes entregar al fisco.', points: 150 },
-    { id: 204, topic: 'tributacion', type: 'multiple', question: 'Si en un mes generas $200 de Débito Fiscal (sobre ventas netas) y pagaste $120 de Crédito Fiscal, ¿cuánto debes pagar al fisco?', options: ['$80', '$320', '$120', '$0 (Queda saldo a favor)'], correct: 0, explanation: 'Impuesto a pagar = Débito Fiscal ($200) menos Crédito Fiscal ($120) = $80.', hint: 'Al IVA que cobraste en tus ventas réstale el IVA que pagaste en tus compras.', points: 150 },
-    { id: 205, topic: 'nomina', type: 'multiple', question: '¿Cuál es la diferencia entre el Sueldo Bruto y el Sueldo Líquido?', options: ['El Sueldo Bruto es el total pactado; el Líquido es lo que recibe el trabajador tras descuentos de ley', 'El Sueldo Líquido es antes de impuestos y el Bruto es después', 'El Sueldo Bruto se paga en efectivo y el Líquido mediante cheque', 'Son exactamente el mismo monto'], correct: 0, explanation: 'El Sueldo Bruto incluye todos los haberes. Al restarle las retenciones legales se obtiene el Sueldo Líquido.', hint: 'Uno es el monto antes de descuentos y el otro es lo que efectivamente recibes en tu cuenta bancaria.', points: 150 },
-    { id: 206, topic: 'contabilidad', type: 'multiple', question: '¿Cuál de las siguientes cuentas es de naturaleza ACREEDORA (aumenta por el Haber)?', options: ['Cuentas por Pagar (Pasivo)', 'Caja Chica (Activo)', 'Gastos de Arriendo (Gasto)', 'Banco (Activo)'], correct: 0, explanation: 'Las cuentas de Pasivo, Patrimonio e Ingresos nacen y aumentan por el Haber.', hint: 'Las deudas y obligaciones aumentan por el Haber. ¿Cuál de estas opciones es una deuda?', points: 150 },
-    { id: 207, topic: 'contabilidad', type: 'multiple', question: '¿Para qué sirve el Libro Mayor en la contabilidad diaria?', options: ['Para agrupar los saldos individuales y movimientos de cada cuenta contable', 'Para anotar las facturas del día en orden cronológico', 'Para calcular el sueldo de los trabajadores', 'Para pagar los impuestos directamente'], correct: 0, explanation: 'El Libro Mayor clasifica las operaciones por cada cuenta específica para conocer su saldo.', hint: 'Mientras el Libro Diario registra cronológicamente, este libro agrupa por cuentas individuales.', points: 150 },
-    { id: 208, topic: 'contabilidad', type: 'multiple', question: 'Se compra un equipo de oficina por $1.000 a crédito firmando una letra. ¿Qué cuenta de pasivo aumenta?', options: ['Documentos por Pagar', 'Cuentas por Cobrar', 'Capital Social', 'Gastos Operativos'], correct: 0, explanation: 'Al existir un compromiso formal respaldado por un documento, la deuda se registra en Documentos por Pagar.', hint: 'Al firmar un documento que respalda la deuda, usas una cuenta específica de pasivo diferente a "Cuentas por Pagar".', points: 150 },
-    { id: 209, topic: 'nomina', type: 'multiple', question: '¿Qué representan los "Haberes No Imponibles" en una planilla de remuneraciones?', options: ['Asignaciones que no sufren descuentos legales, como la movilización o colación', 'El sueldo base antes de calcular las horas extras', 'Los préstamos que la empresa le otorga al trabajador', 'Los impuestos cobrados directamente por el gobierno'], correct: 0, explanation: 'Son compensaciones por gastos de trabajo sobre los cuales no se aplican retenciones.', hint: 'Son montos que se pagan al trabajador pero sobre los cuales no se calculan impuestos ni cotizaciones.', points: 150 },
-    { id: 210, topic: 'contabilidad', type: 'multiple', question: '¿Cuál es el principio contable de la "Partida Doble"?', options: ['No hay deudor sin acreedor: la suma del Debe debe ser igual a la suma del Haber', 'Todas las compras se deben hacer por duplicado', 'Los impuestos se pagan dos veces al año', 'Las ganancias siempre deben duplicar a las pérdidas'], correct: 0, explanation: 'La partida doble garantiza el equilibrio patrimonial en todo asiento contable.', hint: 'Cada transacción afecta al menos dos cuentas y los totales del Debe y Haber siempre deben coincidir.', points: 150 }
+    { id: 201, topic: 'contabilidad', type: 'multiple', question: 'Si una empresa vende mercaderías por $500.000 al contado, ¿cuál es el registro contable de la entrada de recursos?', options: ['Débito (Carga) a Caja/Banco y Crédito (Abona) a Ingresos por Ventas', 'Carga a Ingresos por Ventas y Abona a Caja', 'Carga a Proveedores y Abona a Costo de Ventas', 'Carga a Capital y Abona a Banco'], correct: 0, explanation: 'El activo disponible aumenta en el Debe (Caja) e incrementa las cuentas de Ingreso en el Haber.', hint: 'Registra el aumento de liquidez y el reconocimiento del ingreso.', points: 150 },
+    { id: 202, topic: 'tributacion', type: 'multiple', question: 'En Chile, ¿cuál es la tasa vigente del Impuesto al Valor Agregado (IVA)?', options: ['19%', '16%', '15%', '21%'], correct: 0, explanation: 'La tasa general de IVA aplicable a las ventas de bienes y servicios en Chile es del 19%.', hint: 'Aplica a la gran mayoría de las transacciones comerciales en el país.', points: 150 },
+    { id: 203, topic: 'tributacion', type: 'multiple', question: '¿Qué representa el "Crédito Fiscal IVA" para un contribuyente comerciante?', options: ['El IVA soportado y pagado en las compras y adquisiciones del giro', 'El IVA recargado a los clientes en las facturas de venta', 'Un impuesto de retención a la renta de los trabajadores', 'El pago total mensual por patentes municipales'], correct: 0, explanation: 'El Crédito Fiscal es el IVA pagado a proveedores, el cual reduce la obligación tributaria neta ante el SII.', hint: 'Corresponde al IVA pagado al adquirir insumos o mercadería.', points: 150 },
+    { id: 204, topic: 'tributacion', type: 'multiple', question: 'Si una empresa genera $380.000 en Débito Fiscal y posee $200.000 en Crédito Fiscal en el mes, ¿cuánto IVA debe declarar y pagar en el Formulario 29 (F29)?', options: ['$180.000', '$580.000', '$200.000', '$0 (Le queda remanente)'], correct: 0, explanation: 'IVA a Pagar = Débito Fiscal - Crédito Fiscal ($380.000 - $200.000 = $180.000).', hint: 'Resta el IVA pagado en compras del IVA cobrado en ventas.', points: 150 },
+    { id: 205, topic: 'nomina', type: 'multiple', question: 'En Chile, ¿cuál de los siguientes ítems se considera un Haber NO Imponible en la liquidación de sueldo?', options: ['Asignación de movilización y colación', 'Sueldo Base', 'Horas Extraordinarias', 'Comisiones por ventas'], correct: 0, explanation: 'Las asignaciones de colación, movilización y pérdida de caja compensan gastos del trabajo y no constituyen remuneración imponible.', hint: 'Son montos destinados a cubrir gastos de traslado y alimentación operativos.', points: 150 },
+    { id: 206, topic: 'contabilidad', type: 'multiple', question: 'Las cuentas contables del grupo PASIVO presentan habitualmente una naturaleza de saldo:', options: ['Acreedora (nacen y aumentan por el Haber)', 'Deudora (nacen y aumentan por el Debe)', 'Neutro sin variaciones', 'Exclusivamente variable en el activo'], correct: 0, explanation: 'Los Pasivos (obligaciones con terceros) y el Patrimonio se incrementan a través del Haber.', hint: 'Representan deudas y financiamiento externo.', points: 150 },
+    { id: 207, topic: 'contabilidad', type: 'multiple', question: '¿Qué función cumple el Libro Diario en el ciclo contable?', options: ['Cronológicamente registrar de día en día todas las operaciones financieras', 'Resumir el saldo final de cada cuenta al cierre del año', 'Listar los datos de contacto de los trabajadores', 'Controlar la asistencia diaria del personal'], correct: 0, explanation: 'En el Libro Diario se anotan los asientos de cada transacción en estricto orden cronológico.', hint: 'Es el libro obligatorio de registro diario.', points: 150 },
+    { id: 208, topic: 'nomina', type: 'multiple', question: 'En el sistema de previsión chileno, ¿a cuánto equivale el descuento legal obligatorio para la cuenta de capitalización individual (AFP)?', options: ['10% de la remuneración imponible (más comisión de la AFP)', '7% de la remuneración imponible', '0.6% de la remuneración imponible', '19% del sueldo bruto'], correct: 0, explanation: 'El aporte obligatorio al fondo de pensiones es del 10% imponible base, adicional a la comisión de la administradora.', hint: 'Es el porcentaje directo a la cuenta individual de pensiones.', points: 150 },
+    { id: 209, topic: 'nomina', type: 'multiple', question: '¿Cuál es el porcentaje legal mínimo retenido para el sistema de Salud (Fonasa o Isapre) sobre el total imponible?', options: ['7%', '10%', '12%', '19%'], correct: 0, explanation: 'El cotizante debe destinar obligatoriamente al menos un 7% imponible para cobertura de salud.', hint: 'Porcentaje fijado por ley para la cotización de salud.', points: 150 },
+    { id: 210, topic: 'contabilidad', type: 'multiple', question: '¿A qué principio responde la regla: "Toda transacción afecta al menos a dos cuentas manteniendo la igualdad de cargos y abonos"?', options: ['Principio de Partida Doble', 'Principio de Caja Estricta', 'Criterio de Devengado Proporcional', 'Valor Histórico Reajustado'], correct: 0, explanation: 'La Partida Doble es la base del registro contable: No hay deudor sin acreedor.', hint: 'Garantiza el balance estricto entre el Debe y el Haber.', points: 150 },
+    { id: 211, topic: 'tributacion', type: 'multiple', question: '¿Qué documento tributario emite en Chile un profesional independiente que presta servicios de asesoría?', options: ['Boleta de Honorarios Electrónica', 'Factura de Venta Afecta', 'Guía de Despacho', 'Nota de Crédito'], correct: 0, explanation: 'Los profesionales independientes que emiten rentas de segunda categoría utilizan Boletas de Honorarios.', hint: 'Aplica para trabajadores independientes sin relación de dependencia laboral.', points: 150 },
+    { id: 212, topic: 'nomina', type: 'multiple', question: 'En el Código del Trabajo en Chile, ¿cómo se pagan las Horas Extraordinarias imponibles?', options: ['Con un recargo mínimo del 50% sobre el sueldo convenido para la jornada ordinaria', 'Al mismo valor que la hora ordinaria regular', 'Con un recargo del 10% obligatorio por ley', 'Se compensan únicamente con días de vacaciones'], correct: 0, explanation: 'Las horas extraordinarias se pagan con un recargo del 50% sobre el valor hora ordinario.', hint: 'Recuerda el factor legal de recargo por sobretiempo.', points: 150 },
+    { id: 213, topic: 'contabilidad', type: 'multiple', question: 'Las cuentas contables de Gasto o Pérdida tienen una naturaleza de saldo:', options: ['Deudora (nacen y aumentan por el Debe)', 'Acreedora (nacen y aumentan por el Haber)', 'Sin saldo al cierre del ciclo', 'Exclusivamente neutra'], correct: 0, explanation: 'Los gastos, costos y activos incrementan su saldo mediante anotaciones en el Debe.', hint: 'Registran consumos de recursos que reducen el patrimonio.', points: 150 },
+    { id: 214, topic: 'contabilidad', type: 'multiple', question: '¿Qué es el Balance de Comprobación y de Saldos?', options: ['Un informe que verifica que la suma de los débitos sea igual a la suma de los créditos', 'El documento formal para pedir préstamos en un banco comercial', 'La declaración jurada enviada a los inversionistas extranjeros', 'Un catálogo de precios impreso para los vendedores'], correct: 0, explanation: 'Comprueba el cumplimiento de la partida doble en los registros del Libro Mayor.', hint: 'Verifica la igualdad aritmética entre el Debe y el Haber.', points: 150 },
+    { id: 215, topic: 'contabilidad', type: 'multiple', question: '¿A qué grupo contable pertenece la cuenta "Proveedores"?', options: ['Pasivo Corriente', 'Activo Corriente', 'Gastos Operacionales', 'Patrimonio Neto'], correct: 0, explanation: 'Representa obligaciones contraídas por adquisiciones a crédito de mercaderías o insumos a corto plazo.', hint: 'Corresponde a deudas con quienes abastecen de existencias a la empresa.', points: 150 }
 ];
 
-// Nivel 3: Estados Financieros
 const nivel3Questions = [
-    { id: 301, topic: 'estados-financieros', type: 'multiple', question: '¿Qué fórmula se utiliza para determinar la Utilidad Bruta en el Estado de Resultados?', options: ['Ventas Netas - Costo de Ventas', 'Ingresos Totales - Gastos Administrativos', 'Activo Total - Pasivo Total', 'Utilidad Neta + Impuestos'], correct: 0, explanation: 'La Utilidad Bruta mide la ganancia directa generada por la venta de productos antes de restar los gastos operativos.', hint: 'Solo considera el ingreso por ventas y el costo directo de lo vendido, sin incluir gastos administrativos.', points: 200 },
-    { id: 302, topic: 'analisis-financiero', type: 'slider', question: 'Si una empresa tiene $15.000 de Activo Corriente y $5.000 de Pasivo Corriente, ¿cuál es su Razón de Liquidez Corriente?', min: 0, max: 5, correctAnswer: 3, tolerance: 0, explanation: 'Razón Corriente = $15.000 / $5.000 = 3. La empresa posee $3 en activos líquidos por cada $1 de deuda.', hint: 'Divide el Activo Corriente entre el Pasivo Corriente. El resultado indica cuántos pesos tienes por cada peso que debes.', points: 200 },
-    { id: 303, topic: 'inventario', type: 'multiple', question: 'En un período con precios al alza, ¿qué ocurre al aplicar el método PEPS (FIFO)?', options: ['El Costo de Ventas es menor y la Utilidad Bruta se presenta más alta', 'El Costo de Ventas es mayor y la Utilidad Bruta disminuye', 'No hay ningún impacto en los estados financieros', 'El valor del inventario final resulta infravalorado'], correct: 0, explanation: 'Al vender primero los artículos antiguos (más baratos), el Costo de Ventas baja y la Utilidad sube.', hint: 'PEPS significa "Primero en Entrar, Primero en Salir". Si los precios suben, ¿qué pasa con los productos más antiguos?', points: 200 },
-    { id: 304, topic: 'estados-financieros', type: 'multiple', question: '¿Cómo se clasifican las deudas que la empresa debe pagar en un plazo menor a 12 meses?', options: ['Pasivo Corriente (o a Corto Plazo)', 'Pasivo No Corriente (o a Largo Plazo)', 'Patrimonio Neto', 'Activo Intangible'], correct: 0, explanation: 'Todas las obligaciones exigibles en un plazo máximo de un año forman parte del Pasivo Corriente.', hint: 'Si vence dentro del año, se clasifica como corriente o de corto plazo.', points: 200 },
-    { id: 305, topic: 'analisis-financiero', type: 'multiple', question: '¿Qué representa el Capital de Trabajo de una organización?', options: ['Los recursos disponibles para operar (Activo Corriente - Pasivo Corriente)', 'El total de las aportaciones de los socios', 'El valor de los edificios y maquinaria', 'El total de créditos solicitados a los bancos'], correct: 0, explanation: 'El Capital de Trabajo Neto indica la liquidez excedente para continuar operando.', hint: 'Es la diferencia entre lo que tienes disponible a corto plazo y lo que debes pagar a corto plazo.', points: 200 },
-    { id: 306, topic: 'estados-financieros', type: 'multiple', question: '¿Qué es la Depreciación Acumulada dentro del Balance General?', options: ['Una cuenta reguladora del activo que refleja la pérdida de valor de los bienes de uso', 'Un gasto que requiere salida directa de dinero', 'Una deuda a largo plazo con proveedores', 'Una reserva de dinero en efectivo'], correct: 0, explanation: 'Reduce el valor en libros de los activos fijos debido al desgaste, uso o tiempo.', hint: 'No es un gasto en efectivo, sino el reconocimiento contable del desgaste de equipos y maquinaria.', points: 200 },
-    { id: 307, topic: 'inventario', type: 'multiple', question: '¿En qué consiste el método del Promedio Ponderado para el control de inventarios?', options: ['Calcula un costo unitario medio dividiendo el costo total entre las unidades en existencia', 'Asigna el costo de las últimas unidades compradas a las primeras salidas', 'Aplica un valor estimado al azar', 'Utiliza únicamente el precio de venta al público'], correct: 0, explanation: 'El promedio ponderado suaviza las variaciones de precios recalculando el costo medio tras cada compra.', hint: 'Mezcla todos los costos y los divide entre el total de unidades para obtener un costo uniforme.', points: 200 },
-    { id: 308, topic: 'estados-financieros', type: 'multiple', question: 'Si una empresa reporta Ventas de $50.000 y Utilidad Neta de $10.000, ¿cuál es su Margen Neto?', options: ['20%', '50%', '5%', '10%'], correct: 0, explanation: 'Margen Neto = ($10.000 / $50.000) × 100 = 20%.', hint: 'Divide la Utilidad Neta entre las Ventas y multiplica por 100 para obtener el porcentaje.', points: 200 },
-    { id: 309, topic: 'analisis-financiero', type: 'multiple', question: '¿Cuál es la diferencia entre el Estado de Resultados y el Balance General?', options: ['El Estado de Resultados mide el desempeño durante un período; el Balance muestra la situación a una fecha', 'El Balance mide el rendimiento anual y el Estado de Resultados solo la liquidez', 'Ambos reportes muestran exactamente la misma información', 'El Estado de Resultados es interno y el Balance solo para entidades tributarias'], correct: 0, explanation: 'El Estado de Resultados es dinámico (flujos) y el Balance General es estático (foto a una fecha).', hint: 'Uno es como una película (muestra lo que pasó durante un tiempo) y el otro es como una fotografía (muestra un momento).', points: 200 },
-    { id: 310, topic: 'estados-financieros', type: 'multiple', question: '¿A qué grupo pertenecen el arriendo del local y los sueldos administrativos en el Estado de Resultados?', options: ['Gastos Operativos (Administración y Ventas)', 'Costo Directo de Ventas', 'Ingresos Extraordinarios', 'Pasivos a Largo Plazo'], correct: 0, explanation: 'Son desembolsos necesarios para la gestión operativa, clasificados como Gastos Operativos.', hint: 'No son el costo directo de fabricar el producto, sino los gastos necesarios para administrar el negocio.', points: 200 }
+    { id: 301, topic: 'estados-financieros', type: 'multiple', question: '¿Cómo se determina la Utilidad Bruta en el Estado de Resultados?', options: ['Ingresos por Ventas - Costo de Ventas', 'Ingresos Totales - Gastos Financieros', 'Activo Corriente - Pasivo Corriente', 'Utilidad Operacional + Impuestos de Primera Categoría'], correct: 0, explanation: 'La Utilidad Bruta resulta de restar el costo directo de lo vendido a los ingresos por ventas.', hint: 'Refleja el margen directo de comercialización o producción.', points: 200 },
+    { id: 302, topic: 'analisis-financiero', type: 'slider', question: 'Si el Activo Corriente de una Pyme es de $12.000.000 y su Pasivo Corriente es de $4.000.000, ¿cuál es su Razón de Liquidez Corriente?', min: 0, max: 5, correctAnswer: 3, tolerance: 0, explanation: 'Liquidez Corriente = Activo Corriente / Pasivo Corriente = $12.000.000 / $4.000.000 = 3,0.', hint: 'Divide el activo de corto plazo por el pasivo de corto plazo.', points: 200 },
+    { id: 303, topic: 'inventario', type: 'multiple', question: 'Bajo el método de inventario PEPS (Primero en Entrar, Primero en Salir), en contexto de inflación de costos:', options: ['El Costo de Ventas resulta menor y la Utilidad del período se presenta más alta', 'El Costo de Ventas se eleva y disminuyen los utilidades', 'No se genera impacto en la valoración final de las existencias', 'El inventario final queda subvalorado'], correct: 0, explanation: 'Como se costean primero las unidades más antiguas (más baratas), el costo de ventas disminuye y la utilidad contable sube.', hint: 'Analiza qué unidades más antiguas se imputan a ventas.', points: 200 },
+    { id: 304, topic: 'estados-financieros', type: 'multiple', question: 'En la clasificación del Balance General, los Pasivos Exigibles a un plazo menor de un año son:', options: ['Pasivos Corrientes o a Corto Plazo', 'Pasivos No Corrientes o a Largo Plazo', 'Patrimonio Neto', 'Activos Intangibles'], correct: 0, explanation: 'Las deudas con vencimiento menor o igual a 12 meses forman el Pasivo Corriente.', hint: 'Obligaciones operativas de liquidación inmediata.', points: 200 },
+    { id: 305, topic: 'analisis-financiero', type: 'multiple', question: '¿Cómo se calcula el Capital de Trabajo Neto Operativo?', options: ['Activo Corriente - Pasivo Corriente', 'Activo Total - Pasivo Total', 'Patrimonio - Gastos de Administración', 'Flujo de Caja Imponible + Deuda'], correct: 0, explanation: 'El Capital de Trabajo mide el margen de liquidez disponible para la operación continuada.', hint: 'Resta obligaciones de corto plazo a los activos de disponibilidad cercana.', points: 200 },
+    { id: 306, topic: 'estados-financieros', type: 'multiple', question: '¿Qué representa la "Depreciación Acumulada" en el Balance General?', options: ['Una cuenta complementaria de activo que refleja el desgaste acumulado del activo fijo', 'Un compromiso de pago en efectivo al SII', 'Un ingreso extraordinario generado por venta de maquinaria', 'Un fondo en efectivo reservado en el banco'], correct: 0, explanation: 'Reduce el valor en libros de los activos fijos tangibles por uso, obsolescencia o paso del tiempo.', hint: 'Ajusta el valor original de los activos físicos de la empresa.', points: 200 },
+    { id: 307, topic: 'inventario', type: 'multiple', question: 'El método de valoración del Costo Promedio Ponderado (CPP) en existencias calcula:', options: ['Un costo unitario medio dividiendo el costo total de unidades disponibles entre el total de unidades en stock', 'Asignación directa de las compras más recientes a las primeras ventas', 'Estimación subjetiva según el precio de reemplazo', 'Valoración al precio de venta final'], correct: 0, explanation: 'El CPP promedia los valores de adquisición suavizando fluctuaciones de precios.', hint: 'Determina una media ponderada tras cada compra de existencias.', points: 200 },
+    { id: 308, topic: 'analisis-financiero', type: 'multiple', question: 'Si una empresa obtiene una Utilidad Neta de $5.000.000 con Ventas Totales de $25.000.000, ¿cuál es su Margen Neto de Ganancia?', options: ['20%', '25%', '15%', '50%'], correct: 0, explanation: 'Margen Neto = (Utilidad Neta / Ventas Totales) × 100 = ($5.000.000 / $25.000.000) × 100 = 20%.', hint: 'Divide la utilidad final entre las ventas y multiplica por 100.', points: 200 },
+    { id: 309, topic: 'estados-financieros', type: 'multiple', question: '¿Qué diferencia clave existe entre el Balance General y el Estado de Resultados?', options: ['El Balance General muestra la situación a una fecha determinada; el Estado de Resultados refleja el desempeño en un período', 'El Estado de Resultados es un reporte estático y el Balance es un flujo', 'El Balance solo incluye las deudas con bancos y el Estado de Resultados los impuestos', 'No presentan diferencias de fondo'], correct: 0, explanation: 'El Balance es una "fotografía" del patrimonio a una fecha; el Estado de Resultados es una "película" de flujos del período.', hint: 'Diferencia informes de carácter estático frente a dinámicos.', points: 200 },
+    { id: 310, topic: 'estados-financieros', type: 'multiple', question: 'En el Estado de Resultados, ¿dónde se ubican los sueldos del personal de administración y el arriendo de las oficinas corporativas?', options: ['Gastos de Administración y Ventas (Gastos Operacionales)', 'Costo Directo de Ventas', 'Ingresos No Operacionales', 'Activo Intangible diferido'], correct: 0, explanation: 'Constituyen gastos de apoyo logístico y operacional general que no están integrados directamente en el costo de producción.', hint: 'Desembolsos necesarios para mantener la infraestructura y gestión corporativa.', points: 200 },
+    { id: 311, topic: 'analisis-financiero', type: 'multiple', question: '¿Qué mide el Ratio de Endeudamiento sobre el Patrimonio (Pasivo Total / Patrimonio)?', options: ['La proporción de financiamiento proveniente de acreedores respecto al capital aportado por los dueños', 'El margen bruto dejado por cada venta individual', 'El número de días promedio en que se recupera la cobranza', 'La rentabilidad del activo total'], correct: 0, explanation: 'Indica el grado de apalancamiento financiero e independencia de la empresa frente a terceros.', hint: 'Mide la dependencia financiera de la empresa respecto de sus acreedores.', points: 200 },
+    { id: 312, topic: 'analisis-financiero', type: 'multiple', question: '¿Cómo se define la "Prueba Ácida" o Razón Ácida de liquidez?', options: ['(Activo Corriente - Inventarios) / Pasivo Corriente', 'Activo Total / Pasivo Total', 'Utilidad Neta / Capital Social', 'Caja / Pasivo No Corriente'], correct: 0, explanation: 'Es un test estricto de liquidez que descuenta los inventarios por ser el activo corriente menos líquido.', hint: 'Aísla las existencias del activo corriente antes de dividir.', points: 200 },
+    { id: 313, topic: 'analisis-financiero', type: 'multiple', question: '¿Qué indica una Razón de Liquidez Corriente menor a 1,0 en una empresa?', options: ['Que la empresa podría enfrentar dificultades para cumplir sus obligaciones de corto plazo', 'Que la empresa posee un exceso de fondos en efectivo sin rentabilizar', 'Que los accionistas recibieron un reparto extraordinario de dividendos', 'Que no posee deudas comerciales registradas'], correct: 0, explanation: 'Significa que los pasivos corrientes superan a los activos corrientes disponibles en el corto plazo.', hint: 'Tener menos de $1 en activos corrientes por cada $1 de deuda a corto plazo.', points: 200 },
+    { id: 314, topic: 'analisis-financiero', type: 'multiple', question: '¿Qué es el ROE (Return on Equity)?', options: ['Rentabilidad sobre el Patrimonio Neto (Utilidad Neta / Patrimonio)', 'Rentabilidad del producto sobre su precio de costo', 'Razón de endeudamiento a largo plazo bancario', 'Retención obligatoria en boletas de honorarios'], correct: 0, explanation: 'Mide la rentabilidad generada por la empresa sobre el capital invertido por los propietarios.', hint: 'Mide el retorno obtenido por los dueños sobre su capital.', points: 200 },
+    { id: 315, topic: 'analisis-financiero', type: 'multiple', question: '¿Qué indica el indicador ROA (Return on Assets)?', options: ['La eficiencia de la empresa para generar utilidades utilizando sus Activos Totales', 'El nivel de endeudamiento a corto plazo con proveedores', 'La tasa de retorno promedio de un depósito a plazo', 'El pago proporcional de Dividendos por Acción'], correct: 0, explanation: 'ROA = Utilidad Neta / Activos Totales; demuestra la efectividad en el uso de la infraestructura.', hint: 'Relaciona las utilidades con la totalidad de los recursos y bienes de la empresa.', points: 200 }
 ];
 
-// Nivel 4: Cálculos Avanzados
 const nivelAvanzadoQuestions = [
-    { id: 401, topic: 'contabilidad', type: 'multiple', question: 'Activo Total = $45.000, Pasivo Total = $18.000. Si los socios aportan $5.000 más, ¿nuevo Patrimonio?', options: ['$32.000', '$27.000', '$22.000', '$50.000'], correct: 0, explanation: 'Patrimonio Inicial = $45.000 - $18.000 = $27.000. Con aporte: $27.000 + $5.000 = $32.000.', hint: 'Usa la ecuación contable fundamental: Activo = Pasivo + Patrimonio. Luego suma el nuevo aporte.', points: 250 },
-    { id: 402, topic: 'tributacion', type: 'multiple', question: 'Ventas netas por $1.000 (más 16% IVA) y compras netas por $600 (más 16% IVA). ¿IVA a pagar?', options: ['$64', '$160', '$96', '$256'], correct: 0, explanation: 'Débito Fiscal = $1.000 × 0,16 = $160. Crédito Fiscal = $600 × 0,16 = $96. IVA = $160 - $96 = $64.', hint: 'Calcula el IVA por separado para ventas y compras sobre los montos netos, luego réstalos.', points: 250 },
-    { id: 403, topic: 'estados-financieros', type: 'multiple', question: 'Maquinaria de $12.000, vida útil 5 años, valor residual $2.000. ¿Valor en libros al año 2?', options: ['$8.000', '$10.000', '$4.000', '$6.000'], correct: 0, explanation: 'Depreciación anual = ($12.000 - $2.000) / 5 = $2.000. Año 2: $12.000 - $4.000 = $8.000.', hint: 'Resta el valor residual, divide entre los años de vida útil, y multiplica por los años transcurridos.', points: 250 },
-    { id: 404, topic: 'analisis-financiero', type: 'slider', question: 'Activo Corriente = $18.000, Inventario = $6.000, Pasivo Corriente = $8.000. ¿Prueba Ácida?', min: 0, max: 5, correctAnswer: 1.5, tolerance: 0.1, explanation: 'Prueba Ácida = ($18.000 - $6.000) / $8.000 = $12.000 / $8.000 = 1,5.', hint: 'A los Activos Corrientes réstales el Inventario (no es líquido) y divide entre el Pasivo Corriente.', points: 250 },
-    { id: 405, topic: 'estados-financieros', type: 'multiple', question: 'Ventas $80.000, Costo $50.000, Gastos Operativos $18.000. ¿Margen Operativo?', options: ['15%', '37,5%', '22,5%', '62,5%'], correct: 0, explanation: 'Utilidad Operativa = $80.000 - $50.000 - $18.000 = $12.000. Margen = ($12.000 / $80.000) × 100 = 15%.', hint: 'Resta todos los costos y gastos operativos de las ventas, luego divide el resultado entre las ventas.', points: 250 },
-    { id: 406, topic: 'nomina', type: 'multiple', question: 'Sueldo Base $800, horas extras $150, retenciones 10% del total imponible. ¿Sueldo Líquido?', options: ['$855', '$720', '$800', '$950'], correct: 0, explanation: 'Total Imponible = $800 + $150 = $950. Retenciones = $95. Líquido = $950 - $95 = $855.', hint: 'Suma el sueldo base y las horas extras, calcula el 10% de retención y réstalo del total.', points: 250 },
-    { id: 407, topic: 'inventarios', type: 'multiple', question: 'Inventario inicial: 10u a $10. Compra: 20u a $13. Venta: 15u. ¿Costo PEPS?', options: ['$165', '$195', '$150', '$180'], correct: 0, explanation: 'PEPS: 10u × $10 = $100 + 5u × $13 = $65. Total = $165.', hint: 'Las primeras unidades en entrar son las primeras en salir. Usa primero las de $10 y completa con las de $13.', points: 250 },
-    { id: 408, topic: 'inventarios', type: 'multiple', question: 'Mismos datos (10u a $10, 20u a $13). ¿Costo Promedio Ponderado unitario?', options: ['$12,00', '$11,50', '$13,00', '$10,00'], correct: 0, explanation: 'Costo Total = $360. Unidades = 30. Promedio = $360 / 30 = $12,00.', hint: 'Suma el costo total de todas las unidades disponibles y divídelo entre el número total de unidades.', points: 250 },
-    { id: 409, topic: 'matematica-financiera', type: 'multiple', question: 'Préstamo de $5.000 al 12% anual simple, a 6 meses. ¿Total a pagar?', options: ['$5.300', '$5.600', '$5.120', '$6.000'], correct: 0, explanation: 'Interés = $5.000 × 0,12 × (6/12) = $300. Total = $5.300.', hint: 'Con interés simple, calcula el interés anual y ajústalo al período de 6 meses (la mitad del año).', points: 250 },
-    { id: 410, topic: 'analisis-financiero', type: 'multiple', question: 'Activos Corrientes $25.000, Pasivos Corrientes $15.000. ¿Capital de Trabajo Neto?', options: ['$10.000', '$40.000', '1,66', '$15.000'], correct: 0, explanation: 'Capital de Trabajo = $25.000 - $15.000 = $10.000.', hint: 'Es una resta simple: lo que tienes disponible a corto plazo menos lo que debes a corto plazo.', points: 250 },
-    { id: 411, topic: 'nomina', type: 'multiple', question: 'Sueldo Base $1.000, horas extras $200, asignación de movilización $80 (no imponible). Retenciones 12% del total imponible. ¿Sueldo Líquido?', options: ['$1.056', '$1.136', '$1.200', '$1.280'], correct: 1, explanation: 'Total Imponible = $1.000 + $200 = $1.200 (la movilización es no imponible). Retenciones = $1.200 × 0,12 = $144. Líquido = $1.200 - $144 + $80 = $1.136.', hint: 'Recuerda que las asignaciones de movilización y colación son haberes no imponibles: no se les aplica el porcentaje de retención.', points: 250 }
+    { id: 401, topic: 'contabilidad', type: 'multiple', question: 'Una empresa posee Activos Totales por $60.000.000 y Pasivos Totales por $22.000.000. Si los socios realizan un nuevo aporte de capital de $8.000.000 en efectivo, ¿cuál es el nuevo valor del Patrimonio?', options: ['$46.000.000', '$38.000.000', '$68.000.000', '$30.000.000'], correct: 0, explanation: 'Patrimonio Inicial = Activo - Pasivo ($60M - $22M = $38M). Patrimonio Nuevo = $38M + $8M = $46.000.000.', hint: 'Calcula primero el Patrimonio inicial con la ecuación contable y suma la inyección de capital.', points: 250 },
+    { id: 402, topic: 'tributacion', type: 'multiple', question: 'Ventas Netas afectas a IVA por $2.000.000 (más 19% IVA) y Compras Netas afectas por $1.200.000 (más 19% IVA). ¿Cuál es el pago neto por concepto de IVA a declarar?', options: ['$152.000', '$380.000', '$228.000', '$608.000'], correct: 0, explanation: 'Débito Fiscal = $2.000.000 × 0,19 = $380.000. Crédito Fiscal = $1.200.000 × 0,19 = $228.000. IVA Neto a Pagar = $380.000 - $228.000 = $152.000.', hint: 'Aplica el 19% a ambos valores netos y calcula la diferencia entre Débito y Crédito.', points: 250 },
+    { id: 403, topic: 'estados-financieros', type: 'multiple', question: 'Se adquiere una camioneta de reparto por $15.000.000. Se estima una vida útil de 5 años y un valor residual de $3.000.000. Bajo método lineal, ¿cuál es el valor neto en libros al finalizar el año 2?', options: ['$10.200.000', '$12.000.000', '$9.000.000', '$7.800.000'], correct: 0, explanation: 'Depreciación Anual = ($15.000.000 - $3.000.000) / 5 = $2.400.000 por año. Depreciación Acumulada (2 años) = $4.800.000. Valor en Libros = $15.000.000 - $4.800.000 = $10.200.000.', hint: 'Calcula la cuota de depreciación anual sobre el valor depreciable (Costo - Valor Residual).', points: 250 },
+    { id: 404, topic: 'analisis-financiero', type: 'slider', question: 'Activo Corriente = $20.000.000, Inventarios = $8.000.000, Pasivo Corriente = $8.000.000. ¿Cuál es el indicador de la Prueba Ácida?', min: 0, max: 5, correctAnswer: 1.5, tolerance: 0.1, explanation: 'Prueba Ácida = (Activo Corriente - Inventarios) / Pasivo Corriente = ($20.000.000 - $8.000.000) / $8.000.000 = 1,5.', hint: 'Excluye las existencias por su menor liquidez antes de dividir por el pasivo corriente.', points: 250 },
+    { id: 405, topic: 'analisis-financiero', type: 'multiple', question: 'Ventas Totales = $100.000.000, Costo de Ventas = $60.000.000, Gastos Operacionales = $25.000.000. ¿Cuál es el Margen Operacional de la empresa?', options: ['15%', '40%', '25%', '35%'], correct: 0, explanation: 'Utilidad Operacional = $100M - $60M - $25M = $15M. Margen Operacional = ($15M / $100M) × 100 = 15%.', hint: 'Descuenta costos y gastos operacionales de los ingresos y calcula el porcentaje sobre ventas.', points: 250 },
+    { id: 406, topic: 'nomina', type: 'multiple', question: 'Un trabajador posee un Sueldo Base de $700.000 y Horas Extras por $100.000. Si sus descuentos previsionales legales obligatorios (AFP + Salud + Seguro Cesantía) suman un 18.1% de su Imponible, ¿cuál es su Sueldo Líquido (asumiendo que no paga impuesto a la renta ni tiene asignaciones no imponibles)?', options: ['$655.200', '$573.300', '$700.000', '$800.000'], correct: 0, explanation: 'Total Imponible = $700.000 + $100.000 = $800.000. Descuentos = $800.000 × 0,181 = $144.800. Sueldo Líquido = $800.000 - $144.800 = $655.200.', hint: 'Suma todos los haberes imponibles y descuenta el porcentaje previsional correspondiente.', points: 250 },
+    { id: 407, topic: 'inventarios', type: 'multiple', question: 'Movimiento de Existencias (PEPS): Inventario Inicial 10 unidades a $5.000 c/u. Compra 20 unidades a $7.000 c/u. Se venden 15 unidades. ¿Cuál es el Costo de Ventas aplicado?', options: ['$85.000', '$105.000', '$75.000', '$95.000'], correct: 0, explanation: 'Bajo PEPS se consumen primero las más antiguas: (10 unidades × $5.000 = $50.000) + (5 unidades × $7.000 = $35.000). Total = $85.000.', hint: 'Agota en primer lugar el stock originario antes de valorar al costo de la nueva compra.', points: 250 },
+    { id: 408, topic: 'inventarios', type: 'multiple', question: 'Mismos datos del ejercicio anterior (10u a $5.000 y 20u a $7.000). Bajo el método de Costo Promedio Ponderado (CPP), ¿cuál es el costo unitario medio de cada unidad en stock?', options: ['$6.333', '$6.000', '$7.000', '$5.500'], correct: 0, explanation: 'Costo Total = (10×$5.000) + (20×$7.000) = $50.000 + $140.000 = $190.000. Total Unidades = 30. CPP Unitario = $190.000 / 30 = $6.333,33.', hint: 'Suma el valor total acumulado y divídelo entre el stock físico total disponible.', points: 250 },
+    { id: 409, topic: 'matematica-financiera', type: 'multiple', question: 'Se solicita un préstamo a 6 meses por un monto de $2.000.000 con una tasa de interés simple anual del 12%. ¿Cuál es el valor total a cancelar al vencimiento?', options: ['$2.120.000', '$2.240.000', '$2.060.000', '$2.180.000'], correct: 0, explanation: 'Tasa semestral (6 meses) = 12% / 2 = 6%. Interés = $2.000.000 × 0,06 = $120.000. Total = $2.000.000 + $120.000 = $2.120.000.', hint: 'Proporciona la tasa de interés anual al período real de 6 meses (medio año).', points: 250 },
+    { id: 410, topic: 'nomina', type: 'multiple', question: 'Un empleado tiene un Sueldo Imponible de $900.000 y recibe una Asignación de Movilización (no imponible) de $60.000. Si sus deducciones de previsión equivalen al 18% del imponible, ¿cuál es su sueldo líquido abonado?', options: ['$798.000', '$738.000', '$858.000', '$960.000'], correct: 0, explanation: 'Descuentos Previsionales = $900.000 × 0,18 = $162.000. Sueldo Imponible Neto = $738.000. Sueldo Líquido = $738.000 + $60.000 (no imponible) = $798.000.', hint: 'Calcula las cotizaciones únicamente sobre el imponible y suma íntegramente los haberes no imponibles.', points: 250 },
+    { id: 411, topic: 'tributacion', type: 'multiple', question: 'Si un producto se vende a un Precio Bruto (con IVA incluido) de $119.000, ¿cuál es su Valor Neto antes de impuestos (19% IVA)?', options: ['$100.000', '$96.390', '$105.000', '$99.000'], correct: 0, explanation: 'Valor Neto = Precio Bruto / 1,19 = $119.000 / 1,19 = $100.000.', hint: 'Divide el valor total bruto entre 1,19 para aislar el neto.', points: 250 },
+    { id: 412, topic: 'matematica-financiera', type: 'multiple', question: 'Inviertes $1.000.000 en un Depósito a Plazo durante 2 años con una tasa de interés compuesto anual del 10%. ¿Cuál es el monto final acumulado?', options: ['$1.210.000', '$1.200.000', '$1.100.000', '$1.220.000'], correct: 0, explanation: 'Año 1 = $1.000.000 × 1,10 = $1.100.000. Año 2 = $1.100.000 × 1,10 = $1.210.000.', hint: 'Aplica el cálculo período a período capitalizando los intereses obtenidos.', points: 250 },
+    { id: 413, topic: 'nomina', type: 'multiple', question: 'Si la remuneración imponible de un trabajador es de $1.000.000, ¿cuánto debe descontar el empleador por cotización obligatoria de salud (7%) y AFP base (10%)?', options: ['$170.000', '$100.000', '$70.000', '$190.000'], correct: 0, explanation: 'Salud (7%) = $70.000. AFP Base (10%) = $100.000. Total retenido básico = $170.000.', hint: 'Suma el 10% obligatorio de pensión y el 7% legal de salud.', points: 250 },
+    { id: 414, topic: 'matematica-financiera', type: 'multiple', question: '¿Cuál es el valor del interés simple producido por un capital de $500.000 colocado al 5% mensual durante 4 meses?', options: ['$100.000', '$20.000', '$80.000', '$105.000'], correct: 0, explanation: 'Interés = Capital × Tasa × Tiempo = $500.000 × 0,05 × 4 = $100.000.', hint: 'Aplica la fórmula directa I = C × i × t.', points: 250 },
+    { id: 415, topic: 'analisis-financiero', type: 'multiple', question: 'Si la Utilidad Neta es de $6.000.000 y los Activos Totales suman $60.000.000, ¿cuál es el rendimiento sobre los activos (ROA)?', options: ['10%', '6%', '12%', '15%'], correct: 0, explanation: 'ROA = (Utilidad Neta / Activos Totales) × 100 = ($6.000.000 / $60.000.000) × 100 = 10%.', hint: 'Divide las utilidades finales entre el valor total de los activos de la empresa.', points: 250 }
 ];
 
-// Mapa de niveles
-const levelQuestionsMap = {
-    1: fondoEmergenciaQuestions,
-    2: nivel2Questions,
-    3: nivel3Questions,
-    4: nivelAvanzadoQuestions
-};
-
-const levelNames = {
-    1: '🟢 Fondo de Emergencia',
-    2: '🔵 Contabilidad y Nómina',
-    3: '🟣 Estados Financieros',
-    4: '🔴 Cálculos Avanzados'
-};
-
-const levelColors = {
-    1: '#10B981',
-    2: '#3B82F6',
-    3: '#8B5CF6',
-    4: '#EF4444'
-};
-
-// ===== UTILIDADES =====
-
-function deepCloneQuestions(arr) {
-    try {
-        return JSON.parse(JSON.stringify(arr));
-    } catch (e) {
-        console.warn('Error al clonar preguntas, usando array original.');
-        return arr;
-    }
-}
-
-function safeLocalGet(key, fallback) {
-    try {
-        const raw = localStorage.getItem(key);
-        return raw !== null ? raw : fallback;
-    } catch (e) {
-        console.warn('localStorage no disponible, usando valor por defecto para', key);
-        return fallback;
-    }
-}
-
-function safeLocalSet(key, value) {
-    try {
-        localStorage.setItem(key, value);
-        return true;
-    } catch (e) {
-        console.warn('No se pudo guardar en localStorage:', key);
-        return false;
-    }
-}
-
-// ===== SISTEMA DE SONIDO (Delega en ContiEffectsManager) =====
-function playSound(type) {
-    const alwaysPlay = ['correct', 'incorrect', 'levelup', 'levelstart', 'achievement', 'powerup'];
-    if (!alwaysPlay.includes(type) && state.mode === 'normal') return;
-    if (window.effectsManager) {
-        window.effectsManager.playSound(type);
-    }
-}
-
-// ===== INICIALIZACIÓN =====
-document.addEventListener('DOMContentLoaded', () => {
-    loadUnlockedLevels();
-    setupSplashScreen();
-    loadBadges();
-    loadLeaderboard();
-    setupPowerups();
-    createSpeedBonusToast();
-    updateLevelStatusDisplay();
-    if (typeof injectRabbitSVGs === 'function') injectRabbitSVGs();
-});
-
-// ===== SISTEMA DE NIVELES BLOQUEADOS =====
-
-function loadUnlockedLevels() {
-    const saved = safeLocalGet('conti_unlocked_levels', null);
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            state.unlockedLevels = { ...state.unlockedLevels, ...parsed };
-        } catch (e) {
-            console.warn('No se pudo leer niveles desbloqueados, usando valores por defecto.');
-        }
-    }
-}
-
-function saveUnlockedLevels() {
-    safeLocalSet('conti_unlocked_levels', JSON.stringify(state.unlockedLevels));
-}
-
-function unlockNextLevel(currentLevel) {
-    const nextLevel = currentLevel + 1;
-    if (nextLevel <= 4 && !state.unlockedLevels[nextLevel]) {
-        state.unlockedLevels[nextLevel] = true;
-        saveUnlockedLevels();
-        updateLevelStatusDisplay();
-        console.log('🔓 Nivel ' + nextLevel + ' desbloqueado.');
-    }
-}
-
-function updateLevelStatusDisplay() {
-    for (let i = 2; i <= 4; i++) {
-        const statusEl = document.getElementById('status-level-' + i);
-        if (statusEl) {
-            if (state.unlockedLevels[i]) {
-                statusEl.textContent = '✅ Disponible';
-                statusEl.style.color = '#10B981';
-            } else {
-                statusEl.textContent = '🔒 Bloqueado';
-                statusEl.style.color = '#94A3B8';
-            }
-        }
-    }
-}
-
-function createSpeedBonusToast() {
-    if (document.getElementById('speed-bonus-toast')) return;
-    const toast = document.createElement('div');
-    toast.className = 'speed-bonus-toast';
-    toast.id = 'speed-bonus-toast';
-    document.body.appendChild(toast);
-}
-
-function showSpeedBonus(points) {
-    const toast = document.getElementById('speed-bonus-toast');
-    if (!toast) return;
-    toast.textContent = `⚡ ¡Velocidad bonus! +${points} pts`;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.add('hide'), 1500);
-    setTimeout(() => { toast.classList.remove('show', 'hide'); }, 2000);
-}
-
-function triggerVisualCoinsFromElement(element, count = 12) {
-    if (window.effectsManager) {
-        window.effectsManager.triggerCoinExplosionFromElement(element, count);
-    }
-}
-
-function setupSplashScreen() {
-    const splashScreen = document.getElementById('splash-screen');
-    setTimeout(() => {
-        if (splashScreen && !splashScreen.classList.contains('hidden')) {
-            console.warn('⏰ Fallback: Splash screen ocultado por timeout de seguridad (60s).');
-            splashScreen.classList.add('hidden');
-        }
-    }, 60000);
-}
-
-function setupPowerups() {
-    document.getElementById('powerup-fifty')?.addEventListener('click', () => usePowerup('fifty'));
-    document.getElementById('powerup-time')?.addEventListener('click', () => usePowerup('time'));
-    document.getElementById('powerup-freeze')?.addEventListener('click', () => usePowerup('freeze'));
-    document.getElementById('powerup-hint')?.addEventListener('click', () => usePowerup('hint'));
-}
-
-// ===== NAVEGACIÓN =====
-function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    const screen = document.getElementById(screenId);
-    if (screen) { 
-        screen.classList.add('active'); 
-        screen.classList.add('screen-expand'); 
-        setTimeout(() => screen.classList.remove('screen-expand'), 500); 
-    }
-    if (screenId === 'screen-badges') loadBadges();
-    if (screenId === 'screen-leaderboard') loadLeaderboard();
-    if (screenId === 'screen-welcome') updateLevelStatusDisplay();
-    if (typeof injectRabbitSVGs === 'function') setTimeout(injectRabbitSVGs, 50);
-}
-
-function selectMode(mode) {
-    state.mode = mode;
-    document.querySelectorAll('.mode-card').forEach(card => card.classList.remove('selected'));
-    document.getElementById(`mode-${mode}`)?.classList.add('selected');
-    const timerDisplay = document.getElementById('timer-display');
-    if (timerDisplay) timerDisplay.style.display = mode === 'timed' ? 'flex' : 'none';
-    updatePowerupButtons();
-}
-
-// ===== INICIO DEL JUEGO =====
-function startGame() {
-    if (window.effectsManager) window.effectsManager.ensureAudio();
-    state.score = 0; state.levelScore = 0; state.lives = 3; state.streak = 0; state.maxStreak = 0;
-    state.currentQuestion = 0; state.currentLevel = 1; state.answeredCorrectly = {}; state.topicScores = {};
-    state.isFrozen = false; state.powerupsUsedThisLevel = false; state.levelPerfect = true;
-    state.levelStars = {};
-    if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
-    state._freezeTimeout = null;
-    document.body.className = 'level-1';
-    startLevel(1);
-}
-
-function startLevel(levelNum) {
-    if (!state.unlockedLevels[levelNum]) {
-        console.warn('Nivel ' + levelNum + ' bloqueado. No se puede iniciar.');
-        return;
-    }
-    
-    state.currentLevel = levelNum; state.currentQuestion = 0; state.lives = 3; state.streak = 0;
-    state.levelScore = 0; state.isFrozen = false; state.powerupsUsedThisLevel = false; state.levelPerfect = true;
-    state.bonusQuestionActive = false; state.correctInLevel = 0;
-    if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
-    state._freezeTimeout = null;
-    
-    document.body.className = `level-${levelNum}`;
-    
-    const rawQuestions = levelQuestionsMap[levelNum] || fondoEmergenciaQuestions;
-    state.questions = shuffleArray(deepCloneQuestions(rawQuestions)).slice(0, 10);
-    
-    if (Math.random() < 0.33 && levelNum >= 2) {
-        const bonusIndex = Math.floor(Math.random() * state.questions.length);
-        state.questions[bonusIndex].isBonus = true;
-        state.questions[bonusIndex].originalPoints = state.questions[bonusIndex].points;
-        state.questions[bonusIndex].points = state.questions[bonusIndex].points * 2;
-        state.bonusQuestionActive = true;
-    }
-    
-    state.totalQuestions = state.questions.length;
-    updatePowerupButtons();
-    updateLevelDisplay(); updateScore(); updateLives(); updateStreak(); updateProgress();
-    showScreen('screen-question');
-    updateRabbitReaction('thinking');
-    playSound('levelstart');
-    loadQuestion();
-}
-
-function goToNextLevel() {
-    const nextLevel = state.currentLevel + 1;
-    if (nextLevel <= 4 && state.unlockedLevels[nextLevel]) {
-        startLevel(nextLevel);
-    } else if (nextLevel > 4) {
-        showFinalResults();
-    } else {
-        console.warn('Nivel ' + nextLevel + ' bloqueado.');
-        showScreen('screen-welcome');
-    }
-}
-
-function updateLevelDisplay() {
-    const ld = document.getElementById('level-display');
-    if (!ld) return;
-    ld.textContent = `Nivel ${state.currentLevel}`;
-    ld.style.background = levelColors[state.currentLevel] || '#10B981';
-}
-
-function shuffleArray(array) { const arr = [...array]; for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
-
-// ===== REACCIONES DEL CONEJO =====
-function updateRabbitReaction(reaction) {
-    document.querySelectorAll('.rabbit-svg').forEach(rabbit => {
-        rabbit.className = 'rabbit-svg';
-        void rabbit.offsetWidth;
-        rabbit.className = 'rabbit-svg ' + reaction;
-    });
-    
-    const speech = document.getElementById('question-speech');
-    const messages = {
-        'thinking': [
-            '¡Piensa bien tu respuesta! 🤔', 'Tú puedes hacerlo 💪', 'Analiza con cuidado 📊',
-            'Confío en tu razonamiento 🧠', 'Lee cada opción con atención 👀',
-            '¿Cuál será la correcta? 🤓', 'Tómate tu tiempo ⏳', 'Confía en lo que sabes 📚'
-        ],
-        'nervous': [
-            '¡El tiempo se acaba! ⏰', '¡Rápido, confía en ti! 😰', '¡No te congeles! ❄️',
-            '¡Elige ya, tú sabes! ⚡', '¡Últimos segundos! 🚨', '¡Vamos, no te detengas! 🏃'
-        ],
-        'bored': [
-            '¡Despierta, campeón! ☕', '¡Vamos, tú puedes! 😴', '¡No te duermas en clase! 💤',
-            '¡Espabila esa mente! 🧃', '¡Que no decaiga el ánimo! 🎈', '¿Necesitas un café virtual? ☕✨'
-        ],
-        'impressed': [
-            '¡Impresionante racha! 🤩', '¡Eres increíble! 🌟', '¡Qué genio financiero! 🧠',
-            '¡Nadie te para hoy! 🔥', '¡Estás arrasando! 💥', '¡Eres una máquina! ⚙️💨',
-            '¡Conti Conti está orgulloso! 🐰✨'
-        ],
-        'celebrating': [
-            '¡Perfecto, nivel impecable! 🥳', '¡Eres el orgullo de Contabilidad! 🎉',
-            '¡Nivel superado con honores! 🏆', '¡Así se hace, crack! 🌟',
-            '¡Cada vez más cerca de la cima! ⛰️', '¡Qué satisfacción da aprender! 🎓✨'
-        ],
-        'deep-think': [
-            '¡Nivel experto activado! 🔬', '¡Piensa profundamente! 🧐', '¡Confía en tus cálculos! 📐',
-            'Esto es para mentes brillantes 💡', '¡Activa tu modo calculadora! 🧮', 'Los números no mienten 🔢'
-        ],
-        'confident': [
-            '¡Eliminamos dos, ahora es fácil! 😎', '¡El 50/50 te respalda! ✨',
-            '¡Tú tienes el control! 🕶️', '¡Camino despejado hacia el éxito! 🛤️',
-            '¡Ahora solo quedan las buenas! ✅', '¡Con esta ayuda es pan comido! 🍞'
-        ],
-        'frozen': [
-            '¡Tiempo congelado! 🥶', '¡Relájate y piensa tranquilo! ❄️', '¡Sin prisa, el reloj se detuvo! ⛄',
-            '¡Respira hondo, tienes tiempo! 🌬️', '¡Aprovecha estos segundos extra! ⏸️', '¡El frío te da claridad mental! 🧊'
-        ],
-        'determined': [
-            '¡Ahora sí, con todo! 😤', '¡Esta no la fallo! 💪🔥', '¡Con más ganas que nunca! 🦾',
-            '¡A corregir el rumbo! 🧭', '¡El error me hizo más fuerte! ⚡', '¡Voy con todo en esta! 🎯',
-            'Cada error es una lección aprendida 📚', '¡Los genios también se equivocan y aprenden! 🧠💡'
-        ],
-        'graduate': [
-            '¡Lo lograste, eres un crack! 🎓', '¡Graduado con honores financieros! 🏅',
-            '¡Conti Conti te admira! 👨‍🎓🐰', '¡Tu futuro financiero es brillante! 💰✨',
-            '¡De estudiante a MAESTRO! 🧠👑', '¡Hoy celebras tu conocimiento! 🎉📚'
-        ],
-        'correct': [
-            '¡Respuesta correcta! ✨', '¡Bien hecho! 🌟', '¡Así se hace! 💪',
-            '¡Esa es la actitud! 🎯', '¡Vas por buen camino! 🛤️'
-        ],
-        'incorrect': [
-            '¡No era esa, pero no pasa nada! 💪', '¡Aprender es equivocarse! 📚',
-            '¡Revisa la explicación! 👀', '¡La próxima la tienes! 🎯',
-            '¡Error detectado, conocimiento ganado! 🧠'
-        ]
-    };
-    
-    const list = messages[reaction] || messages['thinking'];
-    if (speech) {
-        speech.textContent = list[Math.floor(Math.random() * list.length)];
-        speech.className = 'character-speech state-' + reaction;
-        speech.style.animation = 'none';
-        speech.offsetHeight;
-        speech.style.animation = 'speechBubbleIn 0.4s ease-out';
-    }
-}
-
-// ===== CARGA DE PREGUNTAS =====
-function loadQuestion() {
-    if (state.currentQuestion >= state.totalQuestions) { endLevel(); return; }
-    
-    clearInterval(state.timerInterval);
-    state.timerInterval = null;
-    if (state._boredTimeout) clearTimeout(state._boredTimeout);
-    if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
-    state._freezeTimeout = null;
-    state.isFrozen = false;
-    
-    state.questionStartTime = Date.now();
-    
-    const question = state.questions[state.currentQuestion];
-    const optionsGrid = document.getElementById('options-grid');
-    const matchingContainer = document.getElementById('matching-container');
-    const dragContainer = document.getElementById('drag-container');
-    const sliderContainer = document.getElementById('slider-container');
-    const feedbackBox = document.getElementById('feedback-box');
-    const btnNext = document.getElementById('btn-next');
-    
-    if (optionsGrid) { optionsGrid.innerHTML = ''; optionsGrid.style.display = 'none'; }
-    if (matchingContainer) { matchingContainer.innerHTML = ''; matchingContainer.style.display = 'none'; }
-    if (dragContainer) { dragContainer.innerHTML = ''; dragContainer.style.display = 'none'; }
-    if (sliderContainer) { sliderContainer.innerHTML = ''; sliderContainer.style.display = 'none'; }
-    if (feedbackBox) { feedbackBox.className = 'feedback-box'; feedbackBox.innerHTML = ''; }
-    if (btnNext) btnNext.style.display = 'none';
-    
-    const qImg = document.getElementById('question-image');
-    if (qImg) qImg.style.display = 'none';
-    
-    const qText = document.getElementById('question-text');
-    if (qText) qText.textContent = question.question;
-    
-    if (state.currentLevel === 4) updateRabbitReaction('deep-think');
-    else updateRabbitReaction('thinking');
-    
-    switch (question.type) {
-        case 'multiple': loadMultipleChoice(question); break;
-        case 'matching': loadMatching(question); break;
-        case 'slider': loadSlider(question); break;
-        case 'drag': loadDrag(question); break;
-    }
-    
-    if (state.mode === 'timed') startTimer();
-    updateProgress();
-    
-    if (question.isBonus && optionsGrid && optionsGrid.style.display === 'flex') {
-        document.querySelectorAll('.option-btn').forEach(btn => btn.classList.add('bonus-question'));
-    }
-}
-
-// ===== TIPOS DE PREGUNTAS =====
-function loadMultipleChoice(question) {
-    const optionsGrid = document.getElementById('options-grid');
-    if (!optionsGrid) return;
-    optionsGrid.style.display = 'flex';
-    const indices = question.options.map((_, i) => i);
-    const shuffledIndices = shuffleArray(indices);
-    question._shuffledIndices = shuffledIndices;
-    
-    shuffledIndices.forEach((originalIndex) => {
-        const btn = document.createElement('button');
-        btn.className = 'option-btn';
-        if (question.isBonus) btn.classList.add('bonus-question');
-        btn.textContent = question.options[originalIndex];
-        btn.dataset.originalIndex = originalIndex;
-        btn.addEventListener('click', () => checkMultipleAnswer(originalIndex, question));
-        optionsGrid.appendChild(btn);
-    });
-}
-
-function loadMatching(question) {
-    const matchingContainer = document.getElementById('matching-container');
-    if (!matchingContainer) return;
-    matchingContainer.style.display = 'grid';
-    let selectedLeft = null;
-    const matches = {};
-    const leftItems = shuffleArray(question.pairs.map(p => ({ id: p.id, text: p.left })));
-    const rightItems = shuffleArray(question.pairs.map(p => ({ id: p.id, text: p.right })));
-    
-    leftItems.forEach(item => {
-        const div = document.createElement('div'); div.className = 'matching-item'; div.textContent = item.text;
-        div.dataset.pairId = item.id; div.dataset.side = 'left';
-        div.addEventListener('click', function() {
-            if (this.classList.contains('matched')) return;
-            if (window.effectsManager) window.effectsManager.ensureAudio();
-            document.querySelectorAll('.matching-item[data-side="left"]').forEach(el => { if (!el.classList.contains('matched')) el.classList.remove('selected'); });
-            this.classList.add('selected'); selectedLeft = this;
-        });
-        matchingContainer.appendChild(div);
-    });
-    
-    rightItems.forEach(item => {
-        const div = document.createElement('div'); div.className = 'matching-item'; div.textContent = item.text;
-        div.dataset.pairId = item.id; div.dataset.side = 'right';
-        div.addEventListener('click', function() {
-            if (this.classList.contains('matched')) return;
-            if (window.effectsManager) window.effectsManager.ensureAudio();
-            if (selectedLeft && !this.classList.contains('matched')) {
-                if (selectedLeft.dataset.pairId === this.dataset.pairId) {
-                    selectedLeft.classList.add('matched'); this.classList.add('matched');
-                    matches[this.dataset.pairId] = true; selectedLeft = null;
-                    if (Object.keys(matches).length === question.pairs.length) {
-                        clearInterval(state.timerInterval);
-                        state.timerInterval = null;
-                        showFeedback(`¡Perfecto! ${question.explanation || 'Emparejaste todos los conceptos correctamente.'}`, 'correct');
-                        triggerVisualCoinsFromElement(matchingContainer, 16);
-                        handleCorrectAnswer(question.points);
-                    }
-                } else {
-                    const leftEl = selectedLeft;
-                    leftEl.style.borderColor = 'var(--rojo-alerta)'; this.style.borderColor = 'var(--rojo-alerta)';
-                    setTimeout(() => { leftEl.style.borderColor = '#CBD5E1'; this.style.borderColor = '#CBD5E1'; leftEl.classList.remove('selected'); }, 500);
-                    selectedLeft = null;
-                }
-            }
-        });
-        matchingContainer.appendChild(div);
-    });
-}
-
-function loadSlider(question) {
-    const sliderContainer = document.getElementById('slider-container');
-    if (!sliderContainer) return;
-    sliderContainer.style.display = 'block';
-    
-    const valueDisplay = document.createElement('div'); valueDisplay.className = 'slider-value';
-    valueDisplay.textContent = question.min; valueDisplay.id = 'slider-value-display';
-    
-    const track = document.createElement('div'); track.className = 'slider-track';
-    const fill = document.createElement('div'); fill.className = 'slider-fill'; fill.style.width = '0%';
-    
-    const input = document.createElement('input'); input.type = 'range'; input.className = 'slider-input';
-    input.min = question.min; input.max = question.max; input.step = '0.1'; input.value = question.min;
-    
-    input.addEventListener('input', () => {
-        fill.style.width = `${((input.value - question.min) / (question.max - question.min)) * 100}%`;
-        valueDisplay.textContent = input.value;
-    });
-    
-    track.appendChild(fill); track.appendChild(input);
-    
-    const submitBtn = document.createElement('button'); submitBtn.className = 'main-btn';
-    submitBtn.textContent = 'Confirmar Respuesta ✅';
-    submitBtn.addEventListener('click', () => {
-        if (window.effectsManager) window.effectsManager.ensureAudio();
-        clearInterval(state.timerInterval);
-        state.timerInterval = null;
-        const userAnswer = parseFloat(input.value);
-        if (Math.abs(userAnswer - question.correctAnswer) <= question.tolerance) {
-            showFeedback(`¡Correcto! ${question.explanation}`, 'correct');
-            triggerVisualCoinsFromElement(submitBtn, 14);
-            handleCorrectAnswer(question.points);
-        } else {
-            showFeedback(`Incorrecto. ${question.explanation}`, 'incorrect');
-            handleIncorrectAnswer(question);
-        }
-    });
-    
-    sliderContainer.appendChild(valueDisplay); sliderContainer.appendChild(track); sliderContainer.appendChild(submitBtn);
-}
-
-function loadDrag(question) {
-    const dragContainer = document.getElementById('drag-container');
-    if (!dragContainer) return;
-    dragContainer.style.display = 'flex';
-    
-    question.items.forEach((item, index) => {
-        const dropZone = document.createElement('div'); dropZone.className = 'drop-zone';
-        dropZone.textContent = `${index + 1}. Soltar aquí`; dropZone.dataset.index = index;
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-        dropZone.addEventListener('drop', (e) => {
-            if (window.effectsManager) window.effectsManager.ensureAudio();
-            e.preventDefault(); dropZone.classList.remove('drag-over');
-            const draggedIndex = e.dataTransfer.getData('text/plain');
-            dropZone.textContent = `${index + 1}. ${question.items[draggedIndex]}`;
-            dropZone.dataset.filled = draggedIndex;
-            checkDragComplete(question);
-        });
-        dragContainer.appendChild(dropZone);
-    });
-    
-    const itemsContainer = document.createElement('div');
-    itemsContainer.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;';
-    
-    shuffleArray(question.items).forEach((item) => {
-        const draggable = document.createElement('div'); draggable.className = 'draggable-item';
-        draggable.textContent = item; draggable.draggable = true;
-        draggable.dataset.originalIndex = question.items.indexOf(item);
-        draggable.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', draggable.dataset.originalIndex); draggable.style.opacity = '0.5'; });
-        draggable.addEventListener('dragend', () => { draggable.style.opacity = '1'; });
-        enableTouchDragForItem(draggable, question);
-        itemsContainer.appendChild(draggable);
-    });
-    
-    dragContainer.appendChild(itemsContainer);
-}
-
-function enableTouchDragForItem(draggable, question) {
-    draggable.addEventListener('touchstart', () => {
-        if (window.effectsManager) window.effectsManager.ensureAudio();
-    }, { passive: true });
-
-    draggable.addEventListener('touchmove', (e) => {
-        if (draggable.style.pointerEvents === 'none') return;
-        e.preventDefault();
-        const touch = e.touches[0];
-        document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
-        const el = document.elementFromPoint(touch.clientX, touch.clientY);
-        const zone = el && el.closest ? el.closest('.drop-zone') : null;
-        if (zone && !zone.dataset.filled) zone.classList.add('drag-over');
-    }, { passive: false });
-
-    draggable.addEventListener('touchend', (e) => {
-        if (draggable.style.pointerEvents === 'none') return;
-        const touch = e.changedTouches[0];
-        const el = document.elementFromPoint(touch.clientX, touch.clientY);
-        const zone = el && el.closest ? el.closest('.drop-zone') : null;
-        document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
-        
-        if (window.effectsManager) {
-            window.effectsManager.playSound('coin');
-        }
-        
-        if (zone && !zone.dataset.filled) {
-            const index = parseInt(zone.dataset.index, 10);
-            zone.textContent = `${index + 1}. ${question.items[draggable.dataset.originalIndex]}`;
-            zone.dataset.filled = draggable.dataset.originalIndex;
-            draggable.style.opacity = '0.3';
-            draggable.style.pointerEvents = 'none';
-            
-            if (window.effectsManager) {
-                const rect = zone.getBoundingClientRect();
-                window.effectsManager.triggerExplosion(
-                    rect.left + rect.width / 2,
-                    rect.top + rect.height / 2,
-                    0.5, '#93C5FD'
-                );
-            }
-            
-            checkDragComplete(question);
-        }
-    });
-}
-
-function checkDragComplete(question) {
-    const dragContainer = document.getElementById('drag-container');
-    const dropZones = document.querySelectorAll('.drop-zone');
-    let allFilled = true, allCorrect = true;
-    dropZones.forEach((zone, index) => {
-        if (!zone.dataset.filled) allFilled = false;
-        else if (parseInt(zone.dataset.filled) !== index) allCorrect = false;
-    });
-    if (allFilled) { 
-        clearInterval(state.timerInterval);
-        state.timerInterval = null;
-        if (allCorrect) {
-            showFeedback(`¡Excelente orden! ${question.explanation || ''}`, 'correct');
-            triggerVisualCoinsFromElement(dragContainer, 16);
-            handleCorrectAnswer(question.points); 
-        } else {
-            showFeedback(`Orden incorrecto. Revisa el flujo lógico de los procesos financieros.`, 'incorrect');
-            handleIncorrectAnswer(question); 
-        }
-    }
-}
-
-// ===== MANEJO DE RESPUESTAS =====
-function checkMultipleAnswer(originalIndex, question) {
-    if (window.effectsManager) window.effectsManager.ensureAudio();
-    const options = document.querySelectorAll('.option-btn');
-    options.forEach(btn => btn.disabled = true);
-    
-    const shuffledIndices = question._shuffledIndices;
-    const correctDisplayIndex = shuffledIndices.indexOf(question.correct);
-    let clickedDisplayIndex = -1;
-    options.forEach((btn, i) => { if (parseInt(btn.dataset.originalIndex) === originalIndex) clickedDisplayIndex = i; });
-    
-    const responseTime = (Date.now() - state.questionStartTime) / 1000;
-    clearInterval(state.timerInterval);
-    state.timerInterval = null;
-    
-    if (originalIndex === question.correct) {
-        if (options[clickedDisplayIndex]) options[clickedDisplayIndex].classList.add('correct');
-        let totalPoints = question.points;
-        let coinCount = 12;
-        
-        if (responseTime < 3) {
-            const speedBonus = Math.round(question.points * 0.5);
-            totalPoints += speedBonus;
-            coinCount += 8;
-            showSpeedBonus(speedBonus);
-        }
-        
-        if (options[clickedDisplayIndex]) {
-            triggerVisualCoinsFromElement(options[clickedDisplayIndex], coinCount);
-        }
-        
-        const bonusMsg = question.isBonus ? ' 🎁 ¡PREGUNTA BONUS! Puntuación DOBLE.' : '';
-        showFeedback(`¡Correcto! ${question.explanation}${bonusMsg}`, question.isBonus ? 'bonus' : 'correct');
-        handleCorrectAnswer(totalPoints);
-    } else {
-        if (options[clickedDisplayIndex]) options[clickedDisplayIndex].classList.add('incorrect');
-        if (options[correctDisplayIndex]) options[correctDisplayIndex].classList.add('correct');
-        
-        showFeedback(`Incorrecto. ${question.explanation}`, 'incorrect');
-        handleIncorrectAnswer(question);
-    }
-}
-
-function handleCorrectAnswer(points) {
-    if (state._boredTimeout) clearTimeout(state._boredTimeout);
-    
-    state.score += points;
-    state.levelScore += points;
-    state.streak++;
-    state.correctInLevel++;
-    if (state.streak > state.maxStreak) state.maxStreak = state.streak;
-    
-    const question = state.questions[state.currentQuestion];
-    if (question && question.topic) {
-        if (!state.topicScores[question.topic]) state.topicScores[question.topic] = { correct: 0, total: 0 };
-        state.topicScores[question.topic].correct++;
-        state.topicScores[question.topic].total++;
-    }
-    
-    updateScore(); updateStreak();
-    
-    playSound('correct');
-    if (window.effectsManager) window.effectsManager.triggerConfetti();
-    
-    const responseTime = (Date.now() - state.questionStartTime) / 1000;
-    if (responseTime < 3 && window.effectsManager) {
-        window.effectsManager.triggerScreenFlash(180);
-    }
-    
-    updateRabbitReaction('correct');
-    if (state.streak >= 5) {
-        document.getElementById('streak-display')?.classList.add('on-fire');
-        if (window.effectsManager) window.effectsManager.triggerCoinRain();
-        setTimeout(() => updateRabbitReaction('impressed'), 350);
-    } else if (state.streak >= 3) {
-        if (window.effectsManager) window.effectsManager.triggerCoinRain();
-        setTimeout(() => updateRabbitReaction('impressed'), 350);
-    }
-    
-    const btnNext = document.getElementById('btn-next');
-    if (btnNext) btnNext.style.display = 'block';
-    checkBadges();
-}
-
-function handleIncorrectAnswer(question) {
-    if (state._boredTimeout) clearTimeout(state._boredTimeout);
-    
-    state.lives--; state.streak = 0; state.levelPerfect = false;
-    document.getElementById('streak-display')?.classList.remove('on-fire');
-    
-    if (question && question.topic) {
-        if (!state.topicScores[question.topic]) state.topicScores[question.topic] = { correct: 0, total: 0 };
-        state.topicScores[question.topic].total++;
-    }
-    
-    updateLives(); updateStreak();
-    
-    playSound('incorrect');
-    
-    updateRabbitReaction('incorrect');
-    if (state.lives <= 0) {
-        setTimeout(() => updateRabbitReaction('determined'), 350);
-        setTimeout(() => endLevel(), 1500);
-    } else {
-        setTimeout(() => updateRabbitReaction('determined'), 350);
-    }
-    
-    const btnNext = document.getElementById('btn-next');
-    if (btnNext) btnNext.style.display = 'block';
-}
-
-function showFeedback(message, type) {
-    const fb = document.getElementById('feedback-box');
-    if (!fb) return;
-    fb.textContent = message;
-    fb.className = `feedback-box ${type}`;
-}
-
-function nextQuestion() {
-    clearInterval(state.timerInterval);
-    state.timerInterval = null;
-    state.isFrozen = false;
-    if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
-    state._freezeTimeout = null;
-    
-    state.currentQuestion++;
-    document.getElementById('streak-display')?.classList.remove('on-fire');
-    loadQuestion();
-}
-
-// ===== FIN DE NIVEL =====
-function endLevel() {
-    clearInterval(state.timerInterval);
-    state.timerInterval = null;
-    if (state._boredTimeout) clearTimeout(state._boredTimeout);
-    if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
-    state._freezeTimeout = null;
-    state.isFrozen = false;
-    
-    const totalQ = state.totalQuestions || 10;
-    const starCount = state.levelPerfect ? 3 : (state.correctInLevel >= totalQ * 0.7 ? 2 : 1);
-    state.levelStars[state.currentLevel] = starCount;
-    
-    unlockNextLevel(state.currentLevel);
-    
-    if (state.levelPerfect && state.lives === 3 && !state.badges.perfectScore) {
-        state.badges.perfectScore = true;
-        playSound('achievement');
-        if (window.effectsManager) window.effectsManager.triggerFireworks();
-        setTimeout(() => {
-            if (window.effectsManager) window.effectsManager.triggerToast('¡Nueva insignia: Puntaje Perfecto!', { icon: '💯', bg: 'linear-gradient(135deg, #FFD700, #FFA500)', duration: 3500 });
-        }, 300);
-        saveBadges();
-    }
-    if (state.lives === 3 && !state.badges.survivor) {
-        state.badges.survivor = true;
-        playSound('achievement');
-        if (window.effectsManager) window.effectsManager.triggerFireworks();
-        setTimeout(() => {
-            if (window.effectsManager) window.effectsManager.triggerToast('¡Nueva insignia: Sobreviviente!', { icon: '🛡️', bg: 'linear-gradient(135deg, #10B981, #059669)', duration: 3500 });
-        }, 300);
-        saveBadges();
-    }
-    if (!state.powerupsUsedThisLevel && !state.badges.noPowerups) {
-        state.badges.noPowerups = true;
-        playSound('achievement');
-        if (window.effectsManager) window.effectsManager.triggerFireworks();
-        setTimeout(() => {
-            if (window.effectsManager) window.effectsManager.triggerToast('¡Nueva insignia: Poder Natural!', { icon: '💪', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)', duration: 3500 });
-        }, 300);
-        saveBadges();
-    }
-    
-    if (state.currentLevel < 4) {
-        const transTitle = document.getElementById('transition-title');
-        const transSpeech = document.getElementById('transition-speech');
-        const lvlScoreDisp = document.getElementById('level-score-display');
-        
-        if (transTitle) transTitle.textContent = `${levelNames[state.currentLevel]} Completado`;
-        if (transSpeech) transSpeech.textContent = `¡Excelente! Nivel ${state.currentLevel} superado 🎉`;
-        if (lvlScoreDisp) lvlScoreDisp.textContent = state.levelScore;
-        
-        let starsHTML = '<div class="star-rating">';
-        for (let i = 1; i <= 3; i++) {
-            starsHTML += `<span class="star ${i <= starCount ? 'earned' : ''}">⭐</span>`;
-        }
-        starsHTML += '</div>';
-        const scoreCard = document.querySelector('#screen-level-transition .share-card');
-        if (scoreCard && !document.getElementById('level-stars')) {
-            const starsDiv = document.createElement('div');
-            starsDiv.id = 'level-stars';
-            starsDiv.innerHTML = starsHTML;
-            scoreCard.appendChild(starsDiv);
-        } else if (document.getElementById('level-stars')) {
-            document.getElementById('level-stars').innerHTML = starsHTML;
-        }
-        
-        const btnNextLevel = document.getElementById('btn-next-level');
-        if (btnNextLevel) btnNextLevel.textContent = `Siguiente: ${levelNames[state.currentLevel + 1]} ➡️`;
-        
-        updateRabbitReaction(state.levelPerfect ? 'celebrating' : 'thinking');
-        showScreen('screen-level-transition');
-        playSound('levelup');
-        if (window.effectsManager) window.effectsManager.triggerFireworks();
-        
-        if (window.effectsManager) {
-            window.effectsManager.triggerConfetti(2000, 2);
-            setTimeout(() => {
-                if (window.effectsManager) window.effectsManager.triggerConfetti(1500, 1.5);
-            }, 800);
-        }
-    } else {
-        updateRabbitReaction('graduate');
-        showFinalResults();
-        playSound('levelup');
-        if (window.effectsManager) window.effectsManager.triggerFireworks();
-    }
-}
-
-function showFinalResults() {
-    const finalScore = document.getElementById('final-score');
-    if (finalScore) finalScore.textContent = state.score;
-    
-    const topicAnalysis = document.getElementById('topic-analysis');
-    if (topicAnalysis) {
-        topicAnalysis.innerHTML = '';
-        
-        const topicNames = {
-            'presupuesto': 'Presupuesto', 'ahorro': 'Ahorro', 'inversion': 'Inversión', 'credito': 'Crédito',
-            'contabilidad': 'Contabilidad', 'finanzas': 'Finanzas', 'fondo-emergencia': 'Fondo de Emergencia',
-            'tributacion': 'Tributación', 'nomina': 'Nómina', 'estados-financieros': 'Estados Financieros',
-            'analisis-financiero': 'Análisis Financiero', 'inventario': 'Inventarios',
-            'matematica-financiera': 'Matemática Financiera'
-        };
-        
-        const topicColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#E63946', '#6366F1', '#14B8A6', '#F97316', '#84CC16'];
-        let colorIndex = 0;
-        
-        for (const [topic, scores] of Object.entries(state.topicScores)) {
-            const percentage = scores.total > 0 ? Math.round((scores.correct / scores.total) * 100) : 0;
-            const bar = document.createElement('div'); bar.className = 'topic-bar';
-            bar.innerHTML = `<span class="topic-label">${topicNames[topic] || topic}</span><div class="topic-progress"><div class="topic-fill" style="width:${percentage}%;background:${topicColors[colorIndex]}"></div></div><span class="topic-score">${percentage}%</span>`;
-            topicAnalysis.appendChild(bar);
-            colorIndex = (colorIndex + 1) % topicColors.length;
-        }
-    }
-    
-    const shareBadges = document.getElementById('share-badges');
-    if (shareBadges) {
-        shareBadges.innerHTML = '';
-        for (const [badge, unlocked] of Object.entries(state.badges)) {
-            if (unlocked) {
-                const badgeEl = document.createElement('span'); badgeEl.className = 'share-badge';
-                badgeEl.textContent = getBadgeIcon(badge);
-                shareBadges.appendChild(badgeEl);
-            }
-        }
-    }
-    
-    const speech = document.getElementById('result-character-speech');
-    const maxScore = 7000;
-    if (speech) {
-        if (state.score >= maxScore * 0.9) speech.textContent = '¡Rendimiento excepcional! Conti Conti te admira. 🏆🐰';
-        else if (state.score >= maxScore * 0.7) speech.textContent = '¡Excelente resultado! Bases muy sólidas. 👏🐰';
-        else if (state.score >= maxScore * 0.4) speech.textContent = '¡Buen esfuerzo! Sigue practicando. 📚🐰';
-        else speech.textContent = '¡El aprendizaje es un camino diario! 💡🐰';
-    }
-    
-    showScreen('screen-results');
-    if (window.effectsManager) window.effectsManager.triggerFireworks();
-    saveToLeaderboard();
-}
-
-function restartGame() {
-    clearInterval(state.timerInterval);
-    state.timerInterval = null;
-    if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
-    state._freezeTimeout = null;
-    state.isFrozen = false;
-    state.currentQuestion = 0; state.score = 0; state.levelScore = 0; state.lives = 3;
-    state.streak = 0; state.currentLevel = 1; state.powerupsUsedThisLevel = false; state.levelPerfect = true;
-    state.levelStars = {}; state.bonusQuestionActive = false; state.correctInLevel = 0;
-    document.body.className = 'level-1';
-    document.getElementById('streak-display')?.classList.remove('on-fire');
-    updateScore(); updateLives(); updateStreak(); updateProgress(); updateLevelDisplay();
-    startGame();
-}
-
-function goToFinalScreen() {
-    updateRabbitReaction('graduate');
-    showScreen('screen-final');
-    if (window.effectsManager) window.effectsManager.triggerFireworks();
-}
-
-// ===== POWER-UPS =====
-function usePowerup(type) {
-    if (state.powerups[type] <= 0) return;
-    if (state.currentQuestion >= state.totalQuestions) return;
-    if ((type === 'time' || type === 'freeze') && state.mode !== 'timed') return;
-    
-    state.powerups[type]--;
-    state.powerupsUsedThisLevel = true;
-    updatePowerupButtons();
-    playSound('powerup');
-    
-    const btn = document.getElementById(`powerup-${type}`);
-    if (btn) { btn.classList.add('flash'); setTimeout(() => btn.classList.remove('flash'), 300); }
-    
-    switch (type) {
-        case 'fifty': applyFiftyFifty(); updateRabbitReaction('confident'); break;
-        case 'time': if (state.mode === 'timed') { state.timer += 15; updateTimerDisplay(); } break;
-        case 'freeze': 
-            if (state._freezeTimeout) clearTimeout(state._freezeTimeout);
-            state.isFrozen = true; 
-            updateRabbitReaction('frozen');
-            const td = document.getElementById('timer-display');
-            if (td) td.style.backgroundColor = '#10B981';
-            state._freezeTimeout = setTimeout(() => { 
-                state.isFrozen = false; 
-                state._freezeTimeout = null;
-                updateRabbitReaction('thinking'); 
-                if (td) td.style.backgroundColor = 'var(--azul-oscuro)'; 
-            }, 10000);
-            break;
-        case 'hint': applyHint(); break;
-    }
-}
-
-function applyFiftyFifty() {
-    const question = state.questions[state.currentQuestion];
-    if (!question || question.type !== 'multiple') return;
-    const options = document.querySelectorAll('.option-btn');
-    const shuffledIndices = question._shuffledIndices;
-    const correctDisplayIndex = shuffledIndices.indexOf(question.correct);
-    const incorrectIndexes = [];
-    options.forEach((btn, i) => { if (i !== correctDisplayIndex) incorrectIndexes.push(i); });
-    shuffleArray(incorrectIndexes).slice(0, 2).forEach(index => { 
-        if (options[index]) {
-            options[index].style.opacity = '0.3'; 
-            options[index].style.pointerEvents = 'none'; 
-        }
-    });
-}
-
-function applyHint() {
-    const question = state.questions[state.currentQuestion];
-    if (!question) return;
-    const fb = document.getElementById('feedback-box');
-    if (!fb) return;
-    
-    const hintText = question.hint
-        ? question.hint
-        : (question.explanation
-            ? question.explanation.split('.')[0] + '.'
-            : 'Analiza cada opción con calma, ¡tú puedes lograrlo!');
-    
-    fb.textContent = `💡 Pista: ${hintText}`;
-    fb.className = 'feedback-box correct';
-}
-
-// ===== TEMPORIZADOR =====
-function startTimer() {
-    clearInterval(state.timerInterval);
-    state.timerInterval = null;
-    
-    if (state.currentLevel === 1) state.timer = 30;
-    else if (state.currentLevel === 2) state.timer = 25;
-    else state.timer = 20;
-    
-    updateTimerDisplay();
-    const timerDisplay = document.getElementById('timer-display');
-    if (timerDisplay) timerDisplay.classList.remove('warning');
-    
-    state.timerInterval = setInterval(() => {
-        if (state.isFrozen) return;
-        state.timer--;
-        updateTimerDisplay();
-        
-        if (state.timer <= 5 && state.timer > 0) {
-            if (timerDisplay) timerDisplay.classList.add('warning');
-            updateRabbitReaction('nervous');
-            if (window.effectsManager) {
-                window.effectsManager.playTick();
-            }
-        }
-        if (state.timer <= 0) {
-            clearInterval(state.timerInterval);
-            state.timerInterval = null;
-            if (timerDisplay) timerDisplay.classList.remove('warning');
-            
-            if (window.effectsManager) {
-                window.effectsManager.playIncorrectFallback();
-            }
-            
-            showFeedback(`¡Tiempo agotado! ${state.questions[state.currentQuestion].explanation}`, 'incorrect');
-            handleIncorrectAnswer(state.questions[state.currentQuestion]);
-        }
-    }, 1000);
-    
-    state._boredTimeout = setTimeout(() => {
-        const nextBtn = document.getElementById('btn-next');
-        if (state.currentQuestion < state.totalQuestions && (!nextBtn || nextBtn.style.display === 'none')) {
-            updateRabbitReaction('bored');
-        }
-    }, 15000);
-}
-
-function updateTimerDisplay() {
-    const td = document.getElementById('timer-display');
-    if (td) td.textContent = `⏱️ ${state.timer}s`;
-}
-
-// ===== UI UPDATES =====
-function updateScore() {
-    const badge = document.getElementById('score-badge');
-    if (!badge) return;
-    badge.textContent = `⭐ ${state.score} pts`;
-    badge.classList.add('pop');
-    setTimeout(() => badge.classList.remove('pop'), 300);
-    
-    if (window.effectsManager && typeof window.effectsManager.triggerScoreBadgeFlash === 'function') {
-        window.effectsManager.triggerScoreBadgeFlash();
-    }
-}
-
-function updateLives() {
-    const display = document.getElementById('lives-display');
-    if (!display) return;
-    let hearts = '';
-    for (let i = 0; i < 3; i++) hearts += i < state.lives ? '❤️' : '🖤';
-    display.textContent = hearts;
-}
-
-function updateStreak() {
-    const sd = document.getElementById('streak-display');
-    if (sd) sd.textContent = `🔥 ${state.streak}`;
-}
-
-function updateProgress() {
-    const pf = document.getElementById('progress-fill');
-    if (pf) pf.style.width = `${(state.currentQuestion / state.totalQuestions) * 100}%`;
-}
-
-function updatePowerupButtons() {
-    ['fifty', 'time', 'freeze', 'hint'].forEach(type => {
-        const btn = document.getElementById(`powerup-${type}`);
-        if (!btn) return;
-        const small = btn.querySelector('small');
-        if (small) small.textContent = `(${state.powerups[type]})`;
-        
-        const isTimePowerupInNormalMode = (type === 'time' || type === 'freeze') && state.mode !== 'timed';
-        btn.disabled = state.powerups[type] <= 0 || isTimePowerupInNormalMode;
-    });
-}
-
-// ===== INSIGNIAS =====
-function checkBadges() {
-    if (state.score >= 2000 && !state.badges.financierPro) {
-        state.badges.financierPro = true;
-        playSound('achievement');
-        if (window.effectsManager) window.effectsManager.triggerFireworks();
-        setTimeout(() => {
-            if (window.effectsManager) window.effectsManager.triggerToast('¡Nueva insignia: Financiero Pro!', { icon: '🏆', bg: 'linear-gradient(135deg, #F59E0B, #D97706)', duration: 3500 });
-        }, 300);
-        saveBadges();
-    }
-    if (state.streak >= 5 && !state.badges.streaker) {
-        state.badges.streaker = true;
-        playSound('achievement');
-        if (window.effectsManager) window.effectsManager.triggerFireworks();
-        setTimeout(() => {
-            if (window.effectsManager) window.effectsManager.triggerToast('¡Nueva insignia: Rachador!', { icon: '🔥', bg: 'linear-gradient(135deg, #EF4444, #DC2626)', duration: 3500 });
-        }, 300);
-        saveBadges();
-    }
-    if (state.mode === 'timed' && (Date.now() - state.questionStartTime) < 3000 && !state.badges.speedDemon) {
-        state.badges.speedDemon = true;
-        playSound('achievement');
-        if (window.effectsManager) window.effectsManager.triggerFireworks();
-        setTimeout(() => {
-            if (window.effectsManager) window.effectsManager.triggerToast('¡Nueva insignia: Velocista!', { icon: '⚡', bg: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', duration: 3500 });
-        }, 300);
-        saveBadges();
-    }
-}
-
-function getBadgeIcon(badge) {
-    const icons = { perfectScore: '💯', speedDemon: '⚡', survivor: '🛡️', streaker: '🔥', financierPro: '🏆', noPowerups: '💪' };
-    return icons[badge] || '🏅';
-}
-
-function getBadgeName(badge) {
-    const names = { perfectScore: 'Puntaje Perfecto', speedDemon: 'Velocista', survivor: 'Sobreviviente', streaker: 'Rachador', financierPro: 'Financiero Pro', noPowerups: 'Poder Natural' };
-    return names[badge] || badge;
-}
-
-function loadBadges() {
-    const saved = safeLocalGet('conti_badges', null);
-    if (saved) {
-        try {
-            state.badges = { ...state.badges, ...JSON.parse(saved) };
-        } catch (e) {
-            console.warn('No se pudo leer conti_badges guardado, se ignora.');
-        }
-    }
-    const grid = document.getElementById('badges-grid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    for (const [badge, unlocked] of Object.entries(state.badges)) {
-        const el = document.createElement('div'); el.className = `badge-item ${unlocked ? 'unlocked' : ''}`;
-        el.innerHTML = `<div class="badge-icon">${getBadgeIcon(badge)}</div><div class="badge-name">${getBadgeName(badge)}</div>`;
-        grid.appendChild(el);
-    }
-}
-
-function saveBadges() {
-    safeLocalSet('conti_badges', JSON.stringify(state.badges));
-}
-
-// ===== LEADERBOARD =====
-
-function showNamePromptModal(onSubmit) {
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-        position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55);
-        z-index: 3000; display: flex; align-items: center; justify-content: center;
-        font-family: 'Poppins', sans-serif; padding: 20px; box-sizing: border-box;
-    `;
-
-    const box = document.createElement('div');
-    box.style.cssText = `
-        background: white; padding: 26px 24px; border-radius: 18px;
-        max-width: 340px; width: 100%; text-align: center;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.32);
-    `;
-    box.innerHTML = `
-        <div style="font-weight:800;font-size:1.15rem;margin-bottom:8px;color:#1E293B;">¡Buen trabajo! 🎉</div>
-        <div style="margin-bottom:16px;color:#64748B;font-size:0.9rem;">Ingresa tu nombre para el ranking</div>
-        <input id="conti-name-input" type="text" maxlength="20" placeholder="Jugador"
-            style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid #CBD5E1;
-                   margin-bottom:16px;font-family:inherit;font-size:1rem;box-sizing:border-box;outline:none;">
-        <div style="display:flex;gap:10px;justify-content:center;">
-            <button id="conti-name-skip" style="flex:1;padding:11px 0;border-radius:10px;border:none;
-                background:#E2E8F0;color:#334155;font-weight:700;cursor:pointer;font-family:inherit;">Omitir</button>
-            <button id="conti-name-ok" style="flex:1;padding:11px 0;border-radius:10px;border:none;
-                background:linear-gradient(135deg, #2563EB, #1D4ED8);color:white;font-weight:700;
-                cursor:pointer;font-family:inherit;">Guardar</button>
-        </div>
-    `;
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-
-    const input = box.querySelector('#conti-name-input');
-    input.focus();
-
-    const close = (value) => {
-        overlay.remove();
-        onSubmit(value);
-    };
-
-    box.querySelector('#conti-name-ok').addEventListener('click', () => close(input.value.trim() || 'Jugador'));
-    box.querySelector('#conti-name-skip').addEventListener('click', () => close(null));
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') close(input.value.trim() || 'Jugador');
-    });
-    
-    document.addEventListener('keydown', function escapeHandler(e) {
-        if (e.key === 'Escape') {
-            close(null);
-            document.removeEventListener('keydown', escapeHandler);
-        }
-    });
-}
-
-function saveToLeaderboard() {
-    showNamePromptModal((playerName) => {
-        if (!playerName) return;
-        const leaderboard = JSON.parse(safeLocalGet('conti_leaderboard', '[]'));
-        leaderboard.push({ name: playerName, score: state.score, badges: Object.values(state.badges).filter(Boolean).length, date: new Date().toLocaleDateString() });
-        leaderboard.sort((a, b) => b.score - a.score);
-        safeLocalSet('conti_leaderboard', JSON.stringify(leaderboard.slice(0, 20)));
-        loadLeaderboard();
-    });
-}
-
-function loadLeaderboard() {
-    let leaderboard = [];
-    try {
-        leaderboard = JSON.parse(safeLocalGet('conti_leaderboard', '[]'));
-    } catch (e) {
-        console.warn('No se pudo leer conti_leaderboard guardado, se ignora.');
-    }
-    const tbody = document.getElementById('leaderboard-body');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    leaderboard.forEach((entry, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td class="${index < 3 ? `rank-${index+1}` : ''}">${index+1}</td><td>${entry.name}</td><td>${entry.score} pts</td><td>${'🏅'.repeat(entry.badges)}</td>`;
-        tbody.appendChild(row);
-    });
-}
-
-// ===== COMPARTIR =====
-function shareResults() {
-    const text = `🎉 ¡Acabo de conseguir ${state.score} puntos en ContiChallenge: Desafío Contable y Financiero! ¿Puedes superarme? 🏆`;
-    if (navigator.share) {
-        navigator.share({ title: 'ContiChallenge', text, url: window.location.href }).catch(() => {});
-    } else {
-        navigator.clipboard.writeText(text).then(() => {
-            if (window.effectsManager) {
-                window.effectsManager.triggerToast('¡Copiado! Compártelo donde quieras.', { icon: '📋', duration: 2500 });
-            }
-        }).catch(() => {
-            if (window.effectsManager) {
-                window.effectsManager.triggerToast('No se pudo copiar automáticamente.', { icon: '⚠️', duration: 2500 });
-            }
-        });
-    }
-}
+const levelQuestionsMap = { 1: fondoEmergenciaQuestions, 2: nivel2Questions, 3: nivel3Questions, 4: nivelAvanzadoQuestions };
+const levelNames = { 1: '🟢 Fondo de Emergencia', 2: '🔵 Contabilidad y Nómina', 3: '🟣 Estados Financieros', 4: '🔴 Cálculos Avanzados' };
+const levelColors = { 1: '#10B981', 2: '#3B82F6', 3: '#8B5CF6', 4: '#EF4444' };
+
+function deepCloneQuestions(arr) { try { return JSON.parse(JSON.stringify(arr)); } catch (e) { return arr; } }
+function safeLocalGet(key, fallback) { try { return localStorage.getItem(key) || fallback; } catch (e) { return fallback; } }
+function safeLocalSet(key, value) { try { localStorage.setItem(key, value); return true; } catch (e) { return false; } }
+function playSound(type) { const alwaysPlay = ['correct','incorrect','levelup','levelstart','achievement','powerup']; if (!alwaysPlay.includes(type) && state.mode === 'normal') return; if (window.effectsManager) window.effectsManager.playSound(type); }
+document.addEventListener('DOMContentLoaded', () => { loadUnlockedLevels(); setupSplashScreen(); loadBadges(); loadLeaderboard(); setupPowerups(); createSpeedBonusToast(); updateLevelStatusDisplay(); if (typeof injectRabbitSVGs === 'function') injectRabbitSVGs(); });
+function loadUnlockedLevels() { const saved = safeLocalGet('conti_unlocked_levels', null); if (saved) { try { state.unlockedLevels = { ...state.unlockedLevels, ...JSON.parse(saved) }; } catch (e) {} } }
+function saveUnlockedLevels() { safeLocalSet('conti_unlocked_levels', JSON.stringify(state.unlockedLevels)); }
+function unlockNextLevel(l) { const n = l + 1; if (n <= 4 && !state.unlockedLevels[n]) { state.unlockedLevels[n] = true; saveUnlockedLevels(); updateLevelStatusDisplay(); } }
+function updateLevelStatusDisplay() { for (let i = 2; i <= 4; i++) { const el = document.getElementById('status-level-' + i); if (el) { el.textContent = state.unlockedLevels[i] ? '✅ Disponible' : '🔒 Bloqueado'; el.style.color = state.unlockedLevels[i] ? '#10B981' : '#94A3B8'; } } }
+function createSpeedBonusToast() { if (document.getElementById('speed-bonus-toast')) return; const t = document.createElement('div'); t.className = 'speed-bonus-toast'; t.id = 'speed-bonus-toast'; document.body.appendChild(t); }
+function showSpeedBonus(p) { const t = document.getElementById('speed-bonus-toast'); if (!t) return; t.textContent = `⚡ ¡Velocidad bonus! +${p} pts`; t.classList.add('show'); setTimeout(() => t.classList.add('hide'), 1500); setTimeout(() => { t.classList.remove('show', 'hide'); }, 2000); }
+function triggerVisualCoinsFromElement(e, c = 12) { if (window.effectsManager) window.effectsManager.triggerCoinExplosionFromElement(e, c); }
+function setupSplashScreen() { const s = document.getElementById('splash-screen'); setTimeout(() => { if (s && !s.classList.contains('hidden')) s.classList.add('hidden'); }, 60000); }
+function setupPowerups() { document.getElementById('powerup-fifty')?.addEventListener('click', () => usePowerup('fifty')); document.getElementById('powerup-time')?.addEventListener('click', () => usePowerup('time')); document.getElementById('powerup-freeze')?.addEventListener('click', () => usePowerup('freeze')); document.getElementById('powerup-hint')?.addEventListener('click', () => usePowerup('hint')); }
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); const sc = document.getElementById(id); if (sc) { sc.classList.add('active'); sc.classList.add('screen-expand'); setTimeout(() => sc.classList.remove('screen-expand'), 500); } if (id === 'screen-badges') loadBadges(); if (id === 'screen-leaderboard') loadLeaderboard(); if (id === 'screen-welcome') updateLevelStatusDisplay(); if (typeof injectRabbitSVGs === 'function') setTimeout(injectRabbitSVGs, 50); }
+function selectMode(m) { state.mode = m; document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected')); document.getElementById(`mode-${m}`)?.classList.add('selected'); const td = document.getElementById('timer-display'); if (td) td.style.display = m === 'timed' ? 'flex' : 'none'; updatePowerupButtons(); }
+function startGame() { if (window.effectsManager) window.effectsManager.ensureAudio(); state.score = 0; state.levelScore = 0; state.lives = 3; state.streak = 0; state.maxStreak = 0; state.currentQuestion = 0; state.currentLevel = 1; state.answeredCorrectly = {}; state.topicScores = {}; state.isFrozen = false; state.powerupsUsedThisLevel = false; state.levelPerfect = true; state.levelStars = {}; if (state._freezeTimeout) clearTimeout(state._freezeTimeout); state._freezeTimeout = null; document.body.className = 'level-1'; startLevel(1); }
+function startLevel(lv) { if (!state.unlockedLevels[lv]) return; state.currentLevel = lv; state.currentQuestion = 0; state.lives = 3; state.streak = 0; state.levelScore = 0; state.isFrozen = false; state.powerupsUsedThisLevel = false; state.levelPerfect = true; state.bonusQuestionActive = false; state.correctInLevel = 0; if (state._freezeTimeout) clearTimeout(state._freezeTimeout); state._freezeTimeout = null; document.body.className = `level-${lv}`; const rq = levelQuestionsMap[lv] || fondoEmergenciaQuestions; state.questions = shuffleArray(deepCloneQuestions(rq)).slice(0, 10); if (Math.random() < 0.33 && lv >= 2) { const bi = Math.floor(Math.random() * state.questions.length); state.questions[bi].isBonus = true; state.questions[bi].originalPoints = state.questions[bi].points; state.questions[bi].points *= 2; state.bonusQuestionActive = true; } state.totalQuestions = state.questions.length; updatePowerupButtons(); updateLevelDisplay(); updateScore(); updateLives(); updateStreak(); updateProgress(); showScreen('screen-question'); updateRabbitReaction('thinking'); playSound('levelstart'); loadQuestion(); }
+function goToNextLevel() { const nl = state.currentLevel + 1; if (nl <= 4 && state.unlockedLevels[nl]) startLevel(nl); else if (nl > 4) showFinalResults(); else showScreen('screen-welcome'); }
+function updateLevelDisplay() { const ld = document.getElementById('level-display'); if (!ld) return; ld.textContent = `Nivel ${state.currentLevel}`; ld.style.background = levelColors[state.currentLevel] || '#10B981'; }
+function shuffleArray(a) { const arr = [...a]; for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+function updateRabbitReaction(r) { document.querySelectorAll('.rabbit-svg').forEach(ra => { ra.className = 'rabbit-svg'; void ra.offsetWidth; ra.className = 'rabbit-svg ' + r; }); const sp = document.getElementById('question-speech'); const msgs = { thinking: ['¡Piensa bien tu respuesta! 🤔','Tú puedes hacerlo 💪','Analiza con cuidado 📊','Confío en tu razonamiento 🧠','Lee cada opción con atención 👀','¿Cuál será la correcta? 🤓','Tómate tu tiempo ⏳','Confía en lo que sabes 📚'], nervous: ['¡El tiempo se acaba! ⏰','¡Rápido, confía en ti! 😰','¡No te congeles! ❄️','¡Elige ya, tú sabes! ⚡','¡Últimos segundos! 🚨','¡Vamos, no te detengas! 🏃'], bored: ['¡Despierta, campeón! ☕','¡Vamos, tú puedes! 😴','¡No te duermas en clase! 💤','¡Espabila esa mente! 🧃','¡Que no decaiga el ánimo! 🎈','¿Necesitas un café virtual? ☕✨'], impressed: ['¡Impresionante racha! 🤩','¡Eres increíble! 🌟','¡Qué genio financiero! 🧠','¡Nadie te para hoy! 🔥','¡Estás arrasando! 💥','¡Eres una máquina! ⚙️💨','¡Conti Conti está orgulloso! 🐰✨'], celebrating: ['¡Perfecto, nivel impecable! 🥳','¡Eres el orgullo de Contabilidad! 🎉','¡Nivel superado con honores! 🏆','¡Así se hace, crack! 🌟','¡Cada vez más cerca de la cima! ⛰️','¡Qué satisfacción da aprender! 🎓✨'], 'deep-think': ['¡Nivel experto activado! 🔬','¡Piensa profundamente! 🧐','¡Confía en tus cálculos! 📐','Esto es para mentes brillantes 💡','¡Activa tu modo calculadora! 🧮','Los números no mienten 🔢'], confident: ['¡Eliminamos dos, ahora es fácil! 😎','¡El 50/50 te respalda! ✨','¡Tú tienes el control! 🕶️','¡Camino despejado hacia el éxito! 🛤️','¡Ahora solo quedan las buenas! ✅','¡Con esta ayuda es pan comido! 🍞'], frozen: ['¡Tiempo congelado! 🥶','¡Relájate y piensa tranquilo! ❄️','¡Sin prisa, el reloj se detuvo! ⛄','¡Respira hondo, tienes tiempo! 🌬️','¡Aprovecha estos segundos extra! ⏸️','¡El frío te da claridad mental! 🧊'], determined: ['¡Ahora sí, con todo! 😤','¡Esta no la fallo! 💪🔥','¡Con más ganas que nunca! 🦾','¡A corregir el rumbo! 🧭','¡El error me hizo más fuerte! ⚡','¡Voy con todo en esta! 🎯','Cada error es una lección aprendida 📚','¡Los genios también se equivocan y aprenden! 🧠💡'], graduate: ['¡Lo lograste, eres un crack! 🎓','¡Graduado con honores financieros! 🏅','¡Conti Conti te admira! 👨‍🎓🐰','¡Tu futuro financiero es brillante! 💰✨','¡De estudiante a MAESTRO! 🧠👑','¡Hoy celebras tu conocimiento! 🎉📚'], correct: ['¡Respuesta correcta! ✨','¡Bien hecho! 🌟','¡Así se hace! 💪','¡Esa es la actitud! 🎯','¡Vas por buen camino! 🛤️'], incorrect: ['¡No era esa, pero no pasa nada! 💪','¡Aprender es equivocarse! 📚','¡Revisa la explicación! 👀','¡La próxima la tienes! 🎯','¡Error detectado, conocimiento ganado! 🧠'] }; const list = msgs[r] || msgs['thinking']; if (sp) { sp.textContent = list[Math.floor(Math.random() * list.length)]; sp.className = 'character-speech state-' + r; sp.style.animation = 'none'; sp.offsetHeight; sp.style.animation = 'speechBubbleIn 0.4s ease-out'; } }
+function loadQuestion() { if (state.currentQuestion >= state.totalQuestions) { endLevel(); return; } clearInterval(state.timerInterval); state.timerInterval = null; if (state._boredTimeout) clearTimeout(state._boredTimeout); if (state._freezeTimeout) clearTimeout(state._freezeTimeout); state._freezeTimeout = null; state.isFrozen = false; state.questionStartTime = Date.now(); const q = state.questions[state.currentQuestion]; const og = document.getElementById('options-grid'); const mc = document.getElementById('matching-container'); const dc = document.getElementById('drag-container'); const sc = document.getElementById('slider-container'); const fb = document.getElementById('feedback-box'); const bn = document.getElementById('btn-next'); if (og) { og.innerHTML = ''; og.style.display = 'none'; } if (mc) { mc.innerHTML = ''; mc.style.display = 'none'; } if (dc) { dc.innerHTML = ''; dc.style.display = 'none'; } if (sc) { sc.innerHTML = ''; sc.style.display = 'none'; } if (fb) { fb.className = 'feedback-box'; fb.innerHTML = ''; } if (bn) bn.style.display = 'none'; const qi = document.getElementById('question-image'); if (qi) qi.style.display = 'none'; const qt = document.getElementById('question-text'); if (qt) qt.textContent = q.question; if (state.currentLevel === 4) updateRabbitReaction('deep-think'); else updateRabbitReaction('thinking'); switch (q.type) { case 'multiple': loadMultipleChoice(q); break; case 'matching': loadMatching(q); break; case 'slider': loadSlider(q); break; case 'drag': loadDrag(q); break; } if (state.mode === 'timed') startTimer(); updateProgress(); if (q.isBonus && og && og.style.display === 'flex') document.querySelectorAll('.option-btn').forEach(b => b.classList.add('bonus-question')); }
+function loadMultipleChoice(q) { const og = document.getElementById('options-grid'); if (!og) return; og.style.display = 'flex'; const idx = q.options.map((_, i) => i); const si = shuffleArray(idx); q._shuffledIndices = si; si.forEach(oi => { const b = document.createElement('button'); b.className = 'option-btn'; if (q.isBonus) b.classList.add('bonus-question'); b.textContent = q.options[oi]; b.dataset.originalIndex = oi; b.addEventListener('click', () => checkMultipleAnswer(oi, q)); og.appendChild(b); }); }
+function loadMatching(q) { const mc = document.getElementById('matching-container'); if (!mc) return; mc.style.display = 'grid'; let sl = null; const matches = {}; const li = shuffleArray(q.pairs.map(p => ({ id: p.id, text: p.left }))); const ri = shuffleArray(q.pairs.map(p => ({ id: p.id, text: p.right }))); li.forEach(item => { const d = document.createElement('div'); d.className = 'matching-item'; d.textContent = item.text; d.dataset.pairId = item.id; d.dataset.side = 'left'; d.addEventListener('click', function() { if (this.classList.contains('matched')) return; if (window.effectsManager) window.effectsManager.ensureAudio(); document.querySelectorAll('.matching-item[data-side="left"]').forEach(el => { if (!el.classList.contains('matched')) el.classList.remove('selected'); }); this.classList.add('selected'); sl = this; }); mc.appendChild(d); }); ri.forEach(item => { const d = document.createElement('div'); d.className = 'matching-item'; d.textContent = item.text; d.dataset.pairId = item.id; d.dataset.side = 'right'; d.addEventListener('click', function() { if (this.classList.contains('matched')) return; if (window.effectsManager) window.effectsManager.ensureAudio(); if (sl && !this.classList.contains('matched')) { if (sl.dataset.pairId === this.dataset.pairId) { sl.classList.add('matched'); this.classList.add('matched'); matches[this.dataset.pairId] = true; sl = null; if (Object.keys(matches).length === q.pairs.length) { clearInterval(state.timerInterval); state.timerInterval = null; showFeedback(`¡Perfecto! ${q.explanation || 'Emparejaste todos los conceptos correctamente.'}`, 'correct'); triggerVisualCoinsFromElement(mc, 16); handleCorrectAnswer(q.points); } } else { const le = sl; le.style.borderColor = 'var(--rojo-alerta)'; this.style.borderColor = 'var(--rojo-alerta)'; setTimeout(() => { le.style.borderColor = '#CBD5E1'; this.style.borderColor = '#CBD5E1'; le.classList.remove('selected'); }, 500); sl = null; } } }); mc.appendChild(d); }); }
+function loadSlider(q) { const sc = document.getElementById('slider-container'); if (!sc) return; sc.style.display = 'block'; const vd = document.createElement('div'); vd.className = 'slider-value'; vd.textContent = q.min; vd.id = 'slider-value-display'; const tk = document.createElement('div'); tk.className = 'slider-track'; const fl = document.createElement('div'); fl.className = 'slider-fill'; fl.style.width = '0%'; const inp = document.createElement('input'); inp.type = 'range'; inp.className = 'slider-input'; inp.min = q.min; inp.max = q.max; inp.step = '0.1'; inp.value = q.min; inp.addEventListener('input', () => { fl.style.width = `${((inp.value - q.min) / (q.max - q.min)) * 100}%`; vd.textContent = inp.value; }); tk.appendChild(fl); tk.appendChild(inp); const sb = document.createElement('button'); sb.className = 'main-btn'; sb.textContent = 'Confirmar Respuesta ✅'; sb.addEventListener('click', () => { if (window.effectsManager) window.effectsManager.ensureAudio(); clearInterval(state.timerInterval); state.timerInterval = null; const ua = parseFloat(inp.value); if (Math.abs(ua - q.correctAnswer) <= q.tolerance) { showFeedback(`¡Correcto! ${q.explanation}`, 'correct'); triggerVisualCoinsFromElement(sb, 14); handleCorrectAnswer(q.points); } else { showFeedback(`Incorrecto. ${q.explanation}`, 'incorrect'); handleIncorrectAnswer(q); } }); sc.appendChild(vd); sc.appendChild(tk); sc.appendChild(sb); }
+function loadDrag(q) { const dc = document.getElementById('drag-container'); if (!dc) return; dc.style.display = 'flex'; q.items.forEach((item, idx) => { const dz = document.createElement('div'); dz.className = 'drop-zone'; dz.textContent = `${idx + 1}. Soltar aquí`; dz.dataset.index = idx; dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag-over'); }); dz.addEventListener('dragleave', () => dz.classList.remove('drag-over')); dz.addEventListener('drop', (e) => { if (window.effectsManager) window.effectsManager.ensureAudio(); e.preventDefault(); dz.classList.remove('drag-over'); const di = e.dataTransfer.getData('text/plain'); dz.textContent = `${idx + 1}. ${q.items[di]}`; dz.dataset.filled = di; checkDragComplete(q); }); dc.appendChild(dz); }); const ic = document.createElement('div'); ic.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;'; shuffleArray(q.items).forEach((item) => { const dg = document.createElement('div'); dg.className = 'draggable-item'; dg.textContent = item; dg.draggable = true; dg.dataset.originalIndex = q.items.indexOf(item); dg.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', dg.dataset.originalIndex); dg.style.opacity = '0.5'; }); dg.addEventListener('dragend', () => { dg.style.opacity = '1'; }); enableTouchDragForItem(dg, q); ic.appendChild(dg); }); dc.appendChild(ic); }
+function enableTouchDragForItem(dg, q) { dg.addEventListener('touchstart', () => { if (window.effectsManager) window.effectsManager.ensureAudio(); }, { passive: true }); dg.addEventListener('touchmove', (e) => { if (dg.style.pointerEvents === 'none') return; e.preventDefault(); const t = e.touches[0]; document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over')); const el = document.elementFromPoint(t.clientX, t.clientY); const z = el && el.closest ? el.closest('.drop-zone') : null; if (z && !z.dataset.filled) z.classList.add('drag-over'); }, { passive: false }); dg.addEventListener('touchend', (e) => { if (dg.style.pointerEvents === 'none') return; const t = e.changedTouches[0]; const el = document.elementFromPoint(t.clientX, t.clientY); const z = el && el.closest ? el.closest('.drop-zone') : null; document.querySelectorAll('.drop-zone').forEach(zz => zz.classList.remove('drag-over')); if (window.effectsManager) window.effectsManager.playSound('coin'); if (z && !z.dataset.filled) { const idx = parseInt(z.dataset.index, 10); z.textContent = `${idx + 1}. ${q.items[dg.dataset.originalIndex]}`; z.dataset.filled = dg.dataset.originalIndex; dg.style.opacity = '0.3'; dg.style.pointerEvents = 'none'; if (window.effectsManager) { const r = z.getBoundingClientRect(); window.effectsManager.triggerExplosion(r.left + r.width / 2, r.top + r.height / 2, 0.5, '#93C5FD'); } checkDragComplete(q); } }); }
+function checkDragComplete(q) { const dzs = document.querySelectorAll('.drop-zone'); let af = true, ac = true; dzs.forEach((z, i) => { if (!z.dataset.filled) af = false; else if (parseInt(z.dataset.filled) !== i) ac = false; }); if (af) { clearInterval(state.timerInterval); state.timerInterval = null; if (ac) { showFeedback(`¡Excelente orden! ${q.explanation || ''}`, 'correct'); triggerVisualCoinsFromElement(document.getElementById('drag-container'), 16); handleCorrectAnswer(q.points); } else { showFeedback('Orden incorrecto. Revisa el flujo lógico de los procesos financieros.', 'incorrect'); handleIncorrectAnswer(q); } } }
+function checkMultipleAnswer(oi, q) { if (window.effectsManager) window.effectsManager.ensureAudio(); const opts = document.querySelectorAll('.option-btn'); opts.forEach(b => b.disabled = true); const si = q._shuffledIndices; const cdi = si.indexOf(q.correct); let cdi2 = -1; opts.forEach((b, i) => { if (parseInt(b.dataset.originalIndex) === oi) cdi2 = i; }); const rt = (Date.now() - state.questionStartTime) / 1000; clearInterval(state.timerInterval); state.timerInterval = null; if (oi === q.correct) { if (opts[cdi2]) opts[cdi2].classList.add('correct'); let tp = q.points; let cc = 12; if (rt < 3) { const sb = Math.round(q.points * 0.5); tp += sb; cc += 8; showSpeedBonus(sb); } if (opts[cdi2]) triggerVisualCoinsFromElement(opts[cdi2], cc); const bm = q.isBonus ? ' 🎁 ¡PREGUNTA BONUS! Puntuación DOBLE.' : ''; showFeedback(`¡Correcto! ${q.explanation}${bm}`, q.isBonus ? 'bonus' : 'correct'); handleCorrectAnswer(tp); } else { if (opts[cdi2]) opts[cdi2].classList.add('incorrect'); if (opts[cdi]) opts[cdi].classList.add('correct'); showFeedback(`Incorrecto. ${q.explanation}`, 'incorrect'); handleIncorrectAnswer(q); } }
+function handleCorrectAnswer(p) { if (state._boredTimeout) clearTimeout(state._boredTimeout); state.score += p; state.levelScore += p; state.streak++; state.correctInLevel++; if (state.streak > state.maxStreak) state.maxStreak = state.streak; const q = state.questions[state.currentQuestion]; if (q && q.topic) { if (!state.topicScores[q.topic]) state.topicScores[q.topic] = { correct: 0, total: 0 }; state.topicScores[q.topic].correct++; state.topicScores[q.topic].total++; } updateScore(); updateStreak(); playSound('correct'); if (window.effectsManager) window.effectsManager.triggerConfetti(); const rt = (Date.now() - state.questionStartTime) / 1000; if (rt < 3 && window.effectsManager) window.effectsManager.triggerScreenFlash(180); updateRabbitReaction('correct'); if (state.streak >= 5) { document.getElementById('streak-display')?.classList.add('on-fire'); if (window.effectsManager) window.effectsManager.triggerCoinRain(); setTimeout(() => updateRabbitReaction('impressed'), 350); } else if (state.streak >= 3) { if (window.effectsManager) window.effectsManager.triggerCoinRain(); setTimeout(() => updateRabbitReaction('impressed'), 350); } const bn = document.getElementById('btn-next'); if (bn) bn.style.display = 'block'; checkBadges(); }
+function handleIncorrectAnswer(q) { if (state._boredTimeout) clearTimeout(state._boredTimeout); state.lives--; state.streak = 0; state.levelPerfect = false; document.getElementById('streak-display')?.classList.remove('on-fire'); if (q && q.topic) { if (!state.topicScores[q.topic]) state.topicScores[q.topic] = { correct: 0, total: 0 }; state.topicScores[q.topic].total++; } updateLives(); updateStreak(); playSound('incorrect'); updateRabbitReaction('incorrect'); if (state.lives <= 0) { setTimeout(() => updateRabbitReaction('determined'), 350); setTimeout(() => endLevel(), 1500); } else { setTimeout(() => updateRabbitReaction('determined'), 350); } const bn = document.getElementById('btn-next'); if (bn) bn.style.display = 'block'; }
+function showFeedback(m, t) { const fb = document.getElementById('feedback-box'); if (!fb) return; fb.textContent = m; fb.className = `feedback-box ${t}`; }
+function nextQuestion() { clearInterval(state.timerInterval); state.timerInterval = null; state.isFrozen = false; if (state._freezeTimeout) clearTimeout(state._freezeTimeout); state._freezeTimeout = null; state.currentQuestion++; document.getElementById('streak-display')?.classList.remove('on-fire'); loadQuestion(); }
+function endLevel() { clearInterval(state.timerInterval); state.timerInterval = null; if (state._boredTimeout) clearTimeout(state._boredTimeout); if (state._freezeTimeout) clearTimeout(state._freezeTimeout); state._freezeTimeout = null; state.isFrozen = false; const tq = state.totalQuestions || 10; const sc = state.levelPerfect ? 3 : (state.correctInLevel >= tq * 0.7 ? 2 : 1); state.levelStars[state.currentLevel] = sc; unlockNextLevel(state.currentLevel); if (state.levelPerfect && state.lives === 3 && !state.badges.perfectScore) { state.badges.perfectScore = true; playSound('achievement'); if (window.effectsManager) window.effectsManager.triggerFireworks(); setTimeout(() => { if (window.effectsManager) window.effectsManager.triggerToast('¡Nueva insignia: Puntaje Perfecto!', { icon: '💯', bg: 'linear-gradient(135deg, #FFD700, #FFA500)', duration: 3500 }); }, 300); saveBadges(); } if (state.lives === 3 && !state.badges.survivor) { state.badges.survivor = true; playSound('achievement'); if (window.effectsManager) window.effectsManager.triggerFireworks(); setTimeout(() => { if (window.effectsManager) window.effectsManager.triggerToast('¡Nueva insignia: Sobreviviente!', { icon: '🛡️', bg: 'linear-gradient(135deg, #10B981, #059669)', duration: 3500 }); }, 300); saveBadges(); } if (!state.powerupsUsedThisLevel && !state.badges.noPowerups) { state.badges.noPowerups = true; playSound('achievement'); if (window.effectsManager) window.effectsManager.triggerFireworks(); setTimeout(() => { if (window.effectsManager) window.effectsManager.triggerToast('¡Nueva insignia: Poder Natural!', { icon: '💪', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)', duration: 3500 }); }, 300); saveBadges(); } if (state.currentLevel < 4) { document.getElementById('transition-title') && (document.getElementById('transition-title').textContent = `${levelNames[state.currentLevel]} Completado`); document.getElementById('transition-speech') && (document.getElementById('transition-speech').textContent = `¡Excelente! Nivel ${state.currentLevel} superado 🎉`); document.getElementById('level-score-display') && (document.getElementById('level-score-display').textContent = state.levelScore); let sh = '<div class="star-rating">'; for (let i = 1; i <= 3; i++) sh += `<span class="star ${i <= sc ? 'earned' : ''}">⭐</span>`; sh += '</div>'; const scd = document.querySelector('#screen-level-transition .share-card'); if (scd && !document.getElementById('level-stars')) { const sd = document.createElement('div'); sd.id = 'level-stars'; sd.innerHTML = sh; scd.appendChild(sd); } else if (document.getElementById('level-stars')) document.getElementById('level-stars').innerHTML = sh; const bnl = document.getElementById('btn-next-level'); if (bnl) bnl.textContent = `Siguiente: ${levelNames[state.currentLevel + 1]} ➡️`; updateRabbitReaction(state.levelPerfect ? 'celebrating' : 'thinking'); showScreen('screen-level-transition'); playSound('levelup'); if (window.effectsManager) window.effectsManager.triggerFireworks(); if (window.effectsManager) { window.effectsManager.triggerConfetti(2000, 2); setTimeout(() => { if (window.effectsManager) window.effectsManager.triggerConfetti(1500, 1.5); }, 800); } } else { updateRabbitReaction('graduate'); showFinalResults(); playSound('levelup'); if (window.effectsManager) window.effectsManager.triggerFireworks(); } }
+function showFinalResults() { document.getElementById('final-score') && (document.getElementById('final-score').textContent = state.score); const ta = document.getElementById('topic-analysis'); if (ta) { ta.innerHTML = ''; const tn = { presupuesto:'Presupuesto',ahorro:'Ahorro',inversion:'Inversión',credito:'Crédito',contabilidad:'Contabilidad',finanzas:'Finanzas','fondo-emergencia':'Fondo de Emergencia',tributacion:'Tributación',nomina:'Nómina','estados-financieros':'Estados Financieros','analisis-financiero':'Análisis Financiero',inventario:'Inventarios','matematica-financiera':'Matemática Financiera' }; const tc = ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#E63946','#6366F1','#14B8A6','#F97316','#84CC16']; let ci = 0; for (const [tp, sc] of Object.entries(state.topicScores)) { const pc = sc.total > 0 ? Math.round((sc.correct / sc.total) * 100) : 0; const b = document.createElement('div'); b.className = 'topic-bar'; b.innerHTML = `<span class="topic-label">${tn[tp]||tp}</span><div class="topic-progress"><div class="topic-fill" style="width:${pc}%;background:${tc[ci]}"></div></div><span class="topic-score">${pc}%</span>`; ta.appendChild(b); ci = (ci + 1) % tc.length; } } const sb = document.getElementById('share-badges'); if (sb) { sb.innerHTML = ''; for (const [bd, un] of Object.entries(state.badges)) { if (un) { const be = document.createElement('span'); be.className = 'share-badge'; be.textContent = getBadgeIcon(bd); sb.appendChild(be); } } } const sp = document.getElementById('result-character-speech'); const ms = 7000; if (sp) { if (state.score >= ms * 0.9) sp.textContent = '¡Rendimiento excepcional! Conti Conti te admira. 🏆🐰'; else if (state.score >= ms * 0.7) sp.textContent = '¡Excelente resultado! Bases muy sólidas. 👏🐰'; else if (state.score >= ms * 0.4) sp.textContent = '¡Buen esfuerzo! Sigue practicando. 📚🐰'; else sp.textContent = '¡El aprendizaje es un camino diario! 💡🐰'; } showScreen('screen-results'); if (window.effectsManager) window.effectsManager.triggerFireworks(); saveToLeaderboard(); }
+function restartGame() { clearInterval(state.timerInterval); state.timerInterval = null; if (state._freezeTimeout) clearTimeout(state._freezeTimeout); state._freezeTimeout = null; state.isFrozen = false; state.currentQuestion = 0; state.score = 0; state.levelScore = 0; state.lives = 3; state.streak = 0; state.currentLevel = 1; state.powerupsUsedThisLevel = false; state.levelPerfect = true; state.levelStars = {}; state.bonusQuestionActive = false; state.correctInLevel = 0; document.body.className = 'level-1'; document.getElementById('streak-display')?.classList.remove('on-fire'); updateScore(); updateLives(); updateStreak(); updateProgress(); updateLevelDisplay(); startGame(); }
+function goToFinalScreen() { updateRabbitReaction('graduate'); showScreen('screen-final'); if (window.effectsManager) window.effectsManager.triggerFireworks(); }
+function usePowerup(t) { if (state.powerups[t] <= 0 || state.currentQuestion >= state.totalQuestions) return; if ((t === 'time' || t === 'freeze') && state.mode !== 'timed') return; state.powerups[t]--; state.powerupsUsedThisLevel = true; updatePowerupButtons(); playSound('powerup'); const btn = document.getElementById(`powerup-${t}`); if (btn) { btn.classList.add('flash'); setTimeout(() => btn.classList.remove('flash'), 300); } switch (t) { case 'fifty': applyFiftyFifty(); updateRabbitReaction('confident'); break; case 'time': if (state.mode === 'timed') { state.timer += 15; updateTimerDisplay(); } break; case 'freeze': if (state._freezeTimeout) clearTimeout(state._freezeTimeout); state.isFrozen = true; updateRabbitReaction('frozen'); const td = document.getElementById('timer-display'); if (td) td.style.backgroundColor = '#10B981'; state._freezeTimeout = setTimeout(() => { state.isFrozen = false; state._freezeTimeout = null; updateRabbitReaction('thinking'); if (td) td.style.backgroundColor = 'var(--azul-oscuro)'; }, 10000); break; case 'hint': applyHint(); break; } }
+function applyFiftyFifty() { const q = state.questions[state.currentQuestion]; if (!q || q.type !== 'multiple') return; const opts = document.querySelectorAll('.option-btn'); const si = q._shuffledIndices; const cdi = si.indexOf(q.correct); const ii = []; opts.forEach((b, i) => { if (i !== cdi) ii.push(i); }); shuffleArray(ii).slice(0, 2).forEach(i => { if (opts[i]) { opts[i].style.opacity = '0.3'; opts[i].style.pointerEvents = 'none'; } }); }
+function applyHint() { const q = state.questions[state.currentQuestion]; if (!q) return; const fb = document.getElementById('feedback-box'); if (!fb) return; const ht = q.hint || (q.explanation ? q.explanation.split('.')[0] + '.' : 'Analiza cada opción con calma, ¡tú puedes lograrlo!'); fb.textContent = `💡 Pista: ${ht}`; fb.className = 'feedback-box correct'; }
+function startTimer() { clearInterval(state.timerInterval); state.timerInterval = null; if (state.currentLevel === 1) state.timer = 30; else if (state.currentLevel === 2) state.timer = 25; else state.timer = 20; updateTimerDisplay(); const td = document.getElementById('timer-display'); if (td) td.classList.remove('warning'); state.timerInterval = setInterval(() => { if (state.isFrozen) return; state.timer--; updateTimerDisplay(); if (state.timer <= 5 && state.timer > 0) { if (td) td.classList.add('warning'); updateRabbitReaction('nervous'); if (window.effectsManager) window.effectsManager.playTick(); } if (state.timer <= 0) { clearInterval(state.timerInterval); state.timerInterval = null; if (td) td.classList.remove('warning'); if (window.effectsManager) window.effectsManager.playIncorrectFallback(); showFeedback(`¡Tiempo agotado! ${state.questions[state.currentQuestion].explanation}`, 'incorrect'); handleIncorrectAnswer(state.questions[state.currentQuestion]); } }, 1000); state._boredTimeout = setTimeout(() => { const bn = document.getElementById('btn-next'); if (state.currentQuestion < state.totalQuestions && (!bn || bn.style.display === 'none')) updateRabbitReaction('bored'); }, 15000); }
+function updateTimerDisplay() { const td = document.getElementById('timer-display'); if (td) td.textContent = `⏱️ ${state.timer}s`; }
+function updateScore() { const b = document.getElementById('score-badge'); if (!b) return; b.textContent = `⭐ ${state.score} pts`; b.classList.add('pop'); setTimeout(() => b.classList.remove('pop'), 300); if (window.effectsManager && typeof window.effectsManager.triggerScoreBadgeFlash === 'function') window.effectsManager.triggerScoreBadgeFlash(); }
+function updateLives() { const d = document.getElementById('lives-display'); if (!d) return; let h = ''; for (let i = 0; i < 3; i++) h += i < state.lives ? '❤️' : '🖤'; d.textContent = h; }
+function updateStreak() { const s = document.getElementById('streak-display'); if (s) s.textContent = `🔥 ${state.streak}`; }
+function updateProgress() { const p = document.getElementById('progress-fill'); if (p) p.style.width = `${(state.currentQuestion / state.totalQuestions) * 100}%`; }
+function updatePowerupButtons() { ['fifty','time','freeze','hint'].forEach(t => { const b = document.getElementById(`powerup-${t}`); if (!b) return; const s = b.querySelector('small'); if (s) s.textContent = `(${state.powerups[t]})`; const ip = (t === 'time' || t === 'freeze') && state.mode !== 'timed'; b.disabled = state.powerups[t] <= 0 || ip; }); }
+function checkBadges() { if (state.score >= 2000 && !state.badges.financierPro) { state.badges.financierPro = true; playSound('achievement'); if (window.effectsManager) window.effectsManager.triggerFireworks(); setTimeout(() => { if (window.effectsManager) window.effectsManager.triggerToast('¡Nueva insignia: Financiero Pro!', { icon: '🏆', bg: 'linear-gradient(135deg, #F59E0B, #D97706)', duration: 3500 }); }, 300); saveBadges(); } if (state.streak >= 5 && !state.badges.streaker) { state.badges.streaker = true; playSound('achievement'); if (window.effectsManager) window.effectsManager.triggerFireworks(); setTimeout(() => { if (window.effectsManager) window.effectsManager.triggerToast('¡Nueva insignia: Rachador!', { icon: '🔥', bg: 'linear-gradient(135deg, #EF4444, #DC2626)', duration: 3500 }); }, 300); saveBadges(); } if (state.mode === 'timed' && (Date.now() - state.questionStartTime) < 3000 && !state.badges.speedDemon) { state.badges.speedDemon = true; playSound('achievement'); if (window.effectsManager) window.effectsManager.triggerFireworks(); setTimeout(() => { if (window.effectsManager) window.effectsManager.triggerToast('¡Nueva insignia: Velocista!', { icon: '⚡', bg: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', duration: 3500 }); }, 300); saveBadges(); } }
+function getBadgeIcon(b) { const icons = { perfectScore:'💯',speedDemon:'⚡',survivor:'🛡️',streaker:'🔥',financierPro:'🏆',noPowerups:'💪' }; return icons[b] || '🏅'; }
+function getBadgeName(b) { const names = { perfectScore:'Puntaje Perfecto',speedDemon:'Velocista',survivor:'Sobreviviente',streaker:'Rachador',financierPro:'Financiero Pro',noPowerups:'Poder Natural' }; return names[b] || b; }
+function loadBadges() { const saved = safeLocalGet('conti_badges', null); if (saved) { try { state.badges = { ...state.badges, ...JSON.parse(saved) }; } catch (e) {} } const grid = document.getElementById('badges-grid'); if (!grid) return; grid.innerHTML = ''; for (const [bd, un] of Object.entries(state.badges)) { const el = document.createElement('div'); el.className = `badge-item ${un ? 'unlocked' : ''}`; el.innerHTML = `<div class="badge-icon">${getBadgeIcon(bd)}</div><div class="badge-name">${getBadgeName(bd)}</div>`; grid.appendChild(el); } }
+function saveBadges() { safeLocalSet('conti_badges', JSON.stringify(state.badges)); }
+function showNamePromptModal(ons) { const ov = document.createElement('div'); ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:3000;display:flex;align-items:center;justify-content:center;font-family:Poppins,sans-serif;padding:20px;box-sizing:border-box;'; const bx = document.createElement('div'); bx.style.cssText = 'background:white;padding:26px 24px;border-radius:18px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.32);'; bx.innerHTML = '<div style="font-weight:800;font-size:1.15rem;margin-bottom:8px;color:#1E293B;">¡Buen trabajo! 🎉</div><div style="margin-bottom:16px;color:#64748B;font-size:0.9rem;">Ingresa tu nombre para el ranking</div><input id="conti-name-input" type="text" maxlength="20" placeholder="Jugador" style="width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid #CBD5E1;margin-bottom:16px;font-family:inherit;font-size:1rem;box-sizing:border-box;outline:none;"><div style="display:flex;gap:10px;justify-content:center;"><button id="conti-name-skip" style="flex:1;padding:11px 0;border-radius:10px;border:none;background:#E2E8F0;color:#334155;font-weight:700;cursor:pointer;font-family:inherit;">Omitir</button><button id="conti-name-ok" style="flex:1;padding:11px 0;border-radius:10px;border:none;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;font-weight:700;cursor:pointer;font-family:inherit;">Guardar</button></div>'; ov.appendChild(bx); document.body.appendChild(ov); const inp = bx.querySelector('#conti-name-input'); inp.focus(); const cls = (v) => { ov.remove(); ons(v); }; bx.querySelector('#conti-name-ok').addEventListener('click', () => cls(inp.value.trim() || 'Jugador')); bx.querySelector('#conti-name-skip').addEventListener('click', () => cls(null)); inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') cls(inp.value.trim() || 'Jugador'); }); document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { cls(null); document.removeEventListener('keydown', esc); } }); }
+function saveToLeaderboard() { showNamePromptModal((pn) => { if (!pn) return; const lb = JSON.parse(safeLocalGet('conti_leaderboard', '[]')); lb.push({ name: pn, score: state.score, badges: Object.values(state.badges).filter(Boolean).length, date: new Date().toLocaleDateString() }); lb.sort((a, b) => b.score - a.score); safeLocalSet('conti_leaderboard', JSON.stringify(lb.slice(0, 20))); loadLeaderboard(); }); }
+function loadLeaderboard() { let lb = []; try { lb = JSON.parse(safeLocalGet('conti_leaderboard', '[]')); } catch (e) {} const tb = document.getElementById('leaderboard-body'); if (!tb) return; tb.innerHTML = ''; lb.forEach((e, i) => { const r = document.createElement('tr'); r.innerHTML = `<td class="${i < 3 ? `rank-${i+1}` : ''}">${i+1}</td><td>${e.name}</td><td>${e.score} pts</td><td>${'🏅'.repeat(e.badges)}</td>`; tb.appendChild(r); }); }
+function shareResults() { const tx = `🎉 ¡Acabo de conseguir ${state.score} puntos en ContiChallenge: Desafío Contable y Financiero! ¿Puedes superarme? 🏆`; if (navigator.share) { navigator.share({ title: 'ContiChallenge', text: tx, url: window.location.href }).catch(() => {}); } else { navigator.clipboard.writeText(tx).then(() => { if (window.effectsManager) window.effectsManager.triggerToast('¡Copiado! Compártelo donde quieras.', { icon: '📋', duration: 2500 }); }).catch(() => { if (window.effectsManager) window.effectsManager.triggerToast('No se pudo copiar automáticamente.', { icon: '⚠️', duration: 2500 }); }); } }
